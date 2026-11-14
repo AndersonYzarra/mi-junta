@@ -1,8 +1,8 @@
 # Alcance de Mi Junta
 
-Versión: 0.1
+Versión: 0.2
 
-Fuente: 01-project-brief.md v0.1, 00-constitucion.md v1.1 y las decisiones del Product Owner del 14/11/2026 (sección 7). En este documento el rol que crea y gestiona la junta se llama "organizador" mientras PREG-010 siga abierta.
+Fuente: 01-project-brief.md v0.3, 00-constitucion.md v1.3, 03-reglas-de-negocio.md v0.2, las decisiones del Product Owner del 14/11/2026 (sección 7) y las decisiones del Product Owner del 14/11/2026 sobre la auditoría QA (auditorias/qa-clase1.md). El rol que crea y gestiona la junta se llama "organizador" (PREG-010, resuelta).
 
 **IDs de este documento:** `F-NN` identifica una funcionalidad dentro del alcance y `NO-NN` una funcionalidad fuera del alcance. Los supuestos siguen la serie `S-NN` de 01-project-brief.md.
 
@@ -14,24 +14,24 @@ Fuente: 01-project-brief.md v0.1, 00-constitucion.md v1.1 y las decisiones del P
 
 | ID | Funcionalidad | Descripción | Prioridad | Trazabilidad |
 |---|---|---|---|---|
-| F-01 | Cuenta con consentimiento | El usuario crea su cuenta e inicia sesión solo después de aceptar la política de privacidad y el consentimiento para recibir notificaciones. | M | PRINCIPIO-005, PRINCIPIO-007, PREG-001 |
-| F-02 | Crear junta e invitar por código | El organizador crea las juntas que necesite, sin límite, con nombre, cuota en S/, cantidad de participantes, frecuencia, fecha de vencimiento y días de aviso previo, elige si también participa, y comparte un código con el que cada invitado se une después de crear su cuenta. | M | PRINCIPIO-003, PREG-013, PREG-024, PREG-025, PREG-027, sección 7 |
-| F-03 | Sorteo auditable | El organizador ejecuta el sorteo de turnos y el sistema guarda la semilla, la entrada, el resultado, quién lo ejecutó y cuándo, sin sobrescribirlo nunca. | M | PRINCIPIO-008, PREG-005 |
+| F-01 | Cuenta con consentimiento | El usuario crea su cuenta con nombre, correo y contraseña e inicia sesión solo después de aceptar la política de privacidad y el consentimiento para recibir notificaciones. Verifica su correo antes de crear una junta o unirse a una, y puede recuperar su contraseña por correo. | M | PRINCIPIO-005, PRINCIPIO-007, PREG-001, PREG-036, PREG-043 |
+| F-02 | Crear junta e invitar por código | El organizador crea las juntas que necesite, sin límite, con nombre, cuota en S/, cantidad de participantes, frecuencia, fecha de vencimiento y días de aviso previo, elige si también participa, y comparte un código con el que cada invitado se une después de crear su cuenta. Antes de fijar el orden de turnos puede editar la junta y quitar participantes, y los participantes pueden salir. | M | PRINCIPIO-003, PREG-013, PREG-024, PREG-025, PREG-027, PREG-028, PREG-032, PREG-033, sección 7 |
+| F-03 | Sorteo auditable | El organizador ejecuta el sorteo de turnos y el sistema guarda la semilla, la entrada, el resultado, quién lo ejecutó y cuándo, sin sobrescribirlo nunca. Todo miembro puede ver el registro y reproducirlo. Al sortear se crean las rondas y las cuotas. | M | PRINCIPIO-008, PREG-005, PREG-029, PREG-031, PREG-035 |
 | F-04 | Registro de pagos | El organizador marca cada cuota como pagada con su fecha, y el dinero se mueve fuera de la app. | M | PRINCIPIO-004, S-02, PREG-020 |
-| F-05 | Estado compartido de la junta | Cada miembro ve su propio turno y el estado de sus pagos, y de los demás solo ve los cuatro datos permitidos: nombre, turno, estado de pago en la ronda actual y fecha y estado de su próximo pago. | M | PRINCIPIO-006, PREG-003, PREG-004 |
-| F-06 | Recordatorios por correo | El sistema envía a cada participante un correo antes del vencimiento (según los días de aviso que fijó el organizador), otro el día del vencimiento y otros después, hasta que su cuota quede registrada como pagada. | M | PRINCIPIO-007, PREG-009, PREG-025, PREG-026, R-01, R-11, sección 7 |
+| F-05 | Estado compartido de la junta | Cada miembro ve su propio turno y el estado de sus cuotas, y de los demás solo ve los cuatro datos permitidos: nombre, turno, estado de su cuota en la ronda actual y fecha y estado de su próxima cuota. El organizador ve además todas las cuotas y pagos de su junta, sin datos personales. | M | PRINCIPIO-006, PREG-003, PREG-004, PREG-034, PREG-039 |
+| F-06 | Recordatorios por correo | El sistema envía a cada participante un correo antes del vencimiento (según los días de aviso que fijó el organizador), otro el día del vencimiento y hasta 5 después, cada 2 días, mientras su cuota siga "Pendiente". | M | PRINCIPIO-007, PREG-009, PREG-025, PREG-026, PREG-030, PREG-041, R-01, R-11, sección 7 |
 
-> El funcionamiento sin conexión (PRINCIPIO-009), la accesibilidad y el rendimiento (PRINCIPIO-010) y la calidad verificada por tests (PRINCIPIO-011) no son funcionalidades aparte. Son condiciones que cumple cada funcionalidad Must.
+> El funcionamiento sin conexión (PRINCIPIO-009), la accesibilidad y el rendimiento (PRINCIPIO-010) y la calidad verificada por tests (PRINCIPIO-011) no son funcionalidades aparte. Son condiciones que cumple cada funcionalidad Must. Sin conexión, todas las funcionalidades Must se pueden consultar, pero solo se permiten las acciones de RN-170: registrar, desmarcar, informar, confirmar o rechazar pagos.
 
 ### Should have
 
 | ID | Funcionalidad | Descripción | Prioridad | Por qué no es Must | Trazabilidad |
 |---|---|---|---|---|---|
 | F-07 | Notificaciones push | El sistema envía los mismos recordatorios de F-06 como notificación push en los navegadores que lo permiten. | S | El correo ya cubre el canal mínimo. En iPhone el push solo funciona desde iOS 16.4 y con la app agregada a la pantalla de inicio. | PRINCIPIO-007, R-10 |
-| F-08 | Pago informado por el participante | El participante informa que pagó, y el pago queda pendiente hasta que el organizador lo confirma. | S | F-04 ya permite registrar todos los pagos. Falta definir qué pasa si el organizador rechaza el pago o no responde. | PREG-017, PREG-020 |
-| F-09 | Reglas escritas de la junta | Al crear la junta, el organizador escribe sus reglas (atrasos, multas, retiros) como texto que todos los miembros pueden leer, y la app no las aplica. | S | Hoy las juntas funcionan sin reglas escritas. | PREG-016, PRINCIPIO-012 g |
-| F-10 | Orden de turnos sin sorteo | El organizador asigna el orden de turnos a mano, por ejemplo según la necesidad, y queda registro de quién lo decidió y cuándo. | S | El sorteo es el caso habitual. | PREG-018, PRINCIPIO-008 |
-| F-11 | Segundo factor por correo | El usuario que lo desee activa un código enviado a su correo, y desde entonces no inicia sesión sin ese código. | S | Es opcional para el usuario, así que la junta funciona sin él. | PRINCIPIO-005, PREG-023 |
+| F-08 | Pago informado por el participante | El participante informa que pagó, con su fecha de pago, y la cuota queda "Por confirmar" hasta que el organizador lo confirma o lo rechaza. El organizador recibe un aviso. | S | F-04 ya permite registrar todos los pagos. | PREG-017, PREG-020, PREG-030 |
+| F-09 | Reglas escritas de la junta | Al crear la junta, o después mientras no se fije el orden de turnos, el organizador escribe sus reglas (atrasos, multas, retiros) como un texto de hasta 2,000 caracteres que todos los miembros pueden leer, y la app no las aplica. | S | Hoy las juntas funcionan sin reglas escritas. | PREG-016, PRINCIPIO-012 g |
+| F-10 | Orden de turnos sin sorteo | En lugar del sorteo, el organizador asigna el orden de turnos a mano, por ejemplo según la necesidad, y queda un registro inmutable de quién lo decidió y cuándo. | S | El sorteo es el caso habitual. | PREG-018, PRINCIPIO-008 |
+| F-11 | Segundo factor por correo | El usuario que lo desee activa un código enviado a su correo, y desde entonces no inicia sesión sin ese código. | S | Es opcional para el usuario, así que la junta funciona sin él. PRINCIPIO-005 v1.3 lo exige desde que se publique F-11. | PRINCIPIO-005, PREG-023, PREG-037 |
 
 ### Could have
 
@@ -62,12 +62,14 @@ Todas las funcionalidades de esta sección tienen prioridad W (Won't) en esta ve
 | NO-10 | Registrar préstamos o garantías entre participantes | Es una operación de dinero sin regla escrita (PRINCIPIO-012 g) y se acerca a la línea de préstamos (NO-04). |
 | NO-11 | Validar el DNI con RENIEC u otro servicio de identidad | Solo se valida el formato `^\d{8}$` (PRINCIPIO-003). Un servicio externo requiere aprobación (PRINCIPIO-012 h) y el brief no lo pide. |
 | NO-12 | Otros idiomas u otras monedas | PRINCIPIO-002 fija el español de Perú y PRINCIPIO-003 fija los montos en S/. |
+| NO-13 | Salir de una junta después de fijar el orden de turnos, reemplazar a un participante o transferir el rol de organizador | Mover turnos o deudas después del sorteo es una decisión sobre dinero sin regla escrita (PRINCIPIO-012 g). Los cambios de turno quedan para F-13 (PREG-032). |
+| NO-14 | Pedir o guardar la fecha de nacimiento o la foto del usuario | Ninguna funcionalidad de esta versión las usa, y guardarlas suma datos personales sin necesidad (PREG-001, PREG-004, PREG-007). |
 
 ---
 
 ## 3. MVP (Minimum Viable Product)
 
-El MVP está formado por F-01 a F-06. Con solo eso, una organizadora como Carmen crea su cuenta aceptando la política de privacidad. Crea una o varias juntas con la cuota en S/, la cantidad de participantes, la frecuencia (semanal, quincenal, mensual o cada cierta cantidad de días), la fecha de vencimiento y los días de aviso previo, y decide si ella también participa. Después comparte el código de la junta con sus familiares, que crean su cuenta y se unen con ese código. Ejecuta el sorteo, que queda registrado y se puede reproducir con su semilla. En cada ronda recibe las cuotas fuera de la app (Yape, Plin o efectivo) y las marca como pagadas. Mientras tanto, la app envía a cada participante un correo antes del vencimiento, otro ese mismo día y otros después mientras no pague, en lugar de los 30 a 40 mensajes de WhatsApp que hoy envía ella. Una participante como Lucía abre la app, incluso sin conexión, y ve su turno, si su pago quedó registrado y quién falta pagar, sin preguntarle a nadie. Hay cosas que el MVP no hace: el participante no informa su propio pago, no hay notificaciones push, no hay segundo factor, el orden de turnos siempre sale del sorteo y las reglas de la junta se siguen acordando fuera de la app. Aun así, con los pagos que registra F-04 ya se pueden medir KPI-01, KPI-03 y KPI-04, y KPI-05 depende sobre todo de F-06.
+El MVP está formado por F-01 a F-06. Con solo eso, una organizadora como Carmen crea su cuenta aceptando la política de privacidad. Crea una o varias juntas con la cuota en S/, la cantidad de participantes, la frecuencia (semanal, quincenal, mensual o cada cierta cantidad de días), la fecha de vencimiento y los días de aviso previo, y decide si ella también participa. Después comparte el código de la junta con sus familiares, que crean su cuenta y se unen con ese código. Cuando se llenan los cupos, ejecuta el sorteo, que queda registrado y que cualquier miembro puede reproducir con su semilla. En cada ronda recibe las cuotas fuera de la app (Yape, Plin o efectivo) y las marca como pagadas. Mientras tanto, la app envía a cada participante un correo antes del vencimiento, otro ese mismo día y hasta 5 después mientras no pague, en lugar de los 30 a 40 mensajes de WhatsApp que hoy envía ella. Una participante como Lucía abre la app, incluso sin conexión, y ve su turno, si su pago quedó registrado y quién falta pagar, sin preguntarle a nadie. Hay cosas que el MVP no hace: el participante no informa su propio pago, no hay notificaciones push, no hay segundo factor, el orden de turnos siempre sale del sorteo y las reglas de la junta se siguen acordando fuera de la app. Aun así, con los pagos que registra F-04 ya se pueden medir KPI-01, KPI-03 y KPI-04, y KPI-05 depende sobre todo de F-06.
 
 ---
 
@@ -91,7 +93,7 @@ Siguen vigentes los supuestos S-01 a S-08 de 01-project-brief.md. Estos supuesto
 
 ### Técnicas
 - La app es web, hecha con Next.js y TypeScript sobre PostgreSQL, con versiones exactas en `package.json` y en el lockfile (PRINCIPIO-009).
-- Funciona sin conexión en todas las funcionalidades Must. Cómo se resuelven los conflictos y si se permite sortear sin conexión están [REQUIERE DECISIÓN] (PREG-005).
+- Sin conexión, todas las funcionalidades Must se pueden consultar y solo se permiten las acciones de pagos de RN-170. El sorteo exige conexión (RN-029). Al sincronizar, el servidor aplica los cambios en orden y rechaza el que ya no cumple las reglas, y la app muestra el rechazo (RN-171, RN-172, PREG-005).
 - Cada pantalla funciona sin scroll horizontal entre 360 px y 1440 px, cumple WCAG 2.2 nivel A y los límites de Lighthouse, y cada endpoint responde en ≤ 500 ms en el percentil 95 (PRINCIPIO-010).
 - La cobertura de tests es ≥ 80 % de líneas en todo el código y del 100 % de líneas y ramas en los módulos de sorteo y de cálculo de cuotas (PRINCIPIO-011).
 - El DNI y el celular se cifran con AES-256-GCM, las contraseñas se guardan con Argon2id o bcrypt y todo el tráfico usa TLS 1.2 o superior (PRINCIPIO-005).
@@ -141,8 +143,9 @@ Tomadas el 14/11/2026:
 6. **Segundo factor:** pasa a Should (F-11) porque es opcional para el usuario.
 7. **Reglas de la junta:** en esta versión solo se registran como texto visible (F-09). Aplicarlas automáticamente queda fuera del alcance (NO-06).
 
-### Valores que estas decisiones dejan pendientes
-- Formato, vigencia y cantidad de usos del código de invitación: [REQUIERE DECISIÓN] (PREG-024).
-- Valores mínimo y máximo de los días de aviso previo: [REQUIERE DECISIÓN] (PREG-025).
-- Cada cuánto se envía un recordatorio después del vencimiento, y si hay un máximo de envíos: [REQUIERE DECISIÓN] (PREG-026).
-- Valores mínimo y máximo de la frecuencia "cada cierta cantidad de días", y cómo se calculan los vencimientos quincenales y mensuales: [REQUIERE DECISIÓN] (PREG-027).
+### Valores que estas decisiones dejaban pendientes
+Todos quedaron resueltos el 14/11/2026, y sus valores están en 03-reglas-de-negocio.md §1.1:
+- Formato, vigencia y cantidad de usos del código de invitación: PREG-024 (RN-015 a RN-021).
+- Valores mínimo y máximo de los días de aviso previo: PREG-025 (RN-010 a RN-012).
+- Cada cuánto se envía un recordatorio después del vencimiento, y si hay un máximo de envíos: PREG-026 (RN-066, RN-070 y RN-071). Por eso el punto 3 de arriba ("hasta que la cuota quede registrada como pagada") tiene un tope de 5 envíos después del vencimiento.
+- Valores mínimo y máximo de la frecuencia "cada cierta cantidad de días", y cómo se calculan los vencimientos quincenales y mensuales: PREG-027 (RN-008 y RN-046 a RN-050). PREG-028 subió después el mínimo de N a 2.

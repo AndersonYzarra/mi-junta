@@ -1,8 +1,8 @@
 # Preguntas abiertas
 
-Versión: 1.4
+Versión: 1.5
 
-Decisiones pendientes detectadas al redactar la constitución, el Project Brief y el alcance. Mientras una pregunta siga abierta, todo lo que dependa de ella se marca [REQUIERE DECISIÓN]. Una pregunta resuelta conserva su ID y lleva la línea "Estado: Resuelta" con la fecha y la decisión.
+Decisiones pendientes detectadas al redactar la constitución, el Project Brief y el alcance. Mientras una pregunta siga abierta, todo lo que dependa de ella se marca [REQUIERE DECISIÓN]. Una pregunta resuelta conserva su ID y lleva la línea "Estado: Resuelta" con la fecha y la decisión. Una pregunta con "Estado: Propuesta" tiene una respuesta redactada por un agente que no rige hasta que el Product Owner la apruebe (PRINCIPIO-012). Al aprobarla, "Propuesta" se cambia por "Resuelta".
 
 ---
 
@@ -11,6 +11,7 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - A quién preguntar: asesor legal del proyecto.
 - Bloquea: PRINCIPIO-005, PRINCIPIO-007, el texto de la política de privacidad, el uso de datos reales en desarrollo, y PREG-006, PREG-007 y PREG-009.
 - Plan de resolución: consulta legal antes de redactar las HU de registro y de consentimiento. Con la respuesta se actualizan 00-constitucion.md y 03-reglas-de-negocio.md.
+- Actualización del 14/11/2026 (auditoría QA): preguntar también al asesor si se necesitan dos casillas separadas, una para la política y otra para las notificaciones (hoy es una sola, RN-082), y si se pueden seguir enviando recordatorios a un usuario que todavía no aceptó una versión nueva de la política (RN-168). La decisión de PREG-036 dejó de pedir la fecha de nacimiento y la foto (RN-149), lo que reduce los datos que cubre esta pregunta.
 
 ### PREG-002: ¿Cuál es la unidad mínima de un monto (S/ 0.01 o S/ 0.10) y qué regla de redondeo se usa?
 - Contexto: se indicó "hasta céntimos válidos en Perú, por ejemplo S/ 20.80". La moneda más pequeña en circulación es S/ 0.10, pero Yape y Plin aceptan S/ 0.01. Al dividir un pozo entre participantes puede sobrar una fracción, y hace falta saber a quién se le asigna.
@@ -38,6 +39,7 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - Bloquea: PRINCIPIO-008, PRINCIPIO-009, las RN de sincronización en 03-reglas-de-negocio.md y el diseño de arquitectura.
 - Plan de resolución: definir antes del diseño de arquitectura. Las opciones son que gane el servidor, que gane el último cambio o que haya revisión manual, y si el sorteo exige conexión.
 - Avance del 14/11/2026: el sorteo exige conexión (RN-029 de 03-reglas-de-negocio.md). Sigue abierta la regla de resolución de conflictos.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Sin conexión solo se consulta y se registran, desmarcan, informan, confirman o rechazan pagos (RN-170). El servidor aplica los cambios en el orden en que se hicieron y rechaza el que ya no cumple las reglas, por ejemplo marcar una cuota que otro dispositivo ya marcó (RN-171). La app muestra el cambio rechazado y el motivo (RN-172), cuenta los cambios sin enviar (RN-174), guarda los datos de todas las juntas del usuario (RN-175) y conserva los cambios si la sesión venció (RN-176). El servidor guarda la hora en que se hizo cada cambio (RN-173).
 
 ### PREG-006: ¿Un participante puede pedir que se borren sus datos, o solo el organizador puede borrar la información de una junta?
 - Contexto: se indicó que el organizador puede borrar los datos de la junta en cualquier momento o guardarlos para siempre. No se definió qué pasa cuando un participante quiere que se eliminen sus propios datos.
@@ -108,6 +110,7 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - Bloquea: 02-alcance.md y las RN de creación de juntas, atrasos y retiros en 03-reglas-de-negocio.md.
 - Plan de resolución: decidir antes de redactar las RN de creación de juntas.
 - Avance del 14/11/2026: en esta versión las reglas solo se registran como texto visible para todos los miembros (F-09 de 02-alcance.md), y la app no las aplica (NO-06). Siguen abiertas cuáles reglas se registran y si son obligatorias u opcionales.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Las reglas son un texto libre y opcional de hasta 2,000 caracteres, sin una lista fija de temas, y solo se editan antes de fijar el orden de turnos (RN-106, RN-110).
 
 ### PREG-017: Cuando un participante informa su pago, ¿qué pasa si el organizador lo rechaza o no responde?
 - Contexto: el Product Owner indicó que un participante puede registrar su pago y que el organizador lo aprueba. Faltan definir el plazo para aprobar, qué pasa si se rechaza o no hay respuesta, si se adjunta una evidencia (por ejemplo, una captura de Yape) y con qué fecha queda registrado el pago.
@@ -115,12 +118,14 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - Bloquea: las RN de registro de pagos en 03-reglas-de-negocio.md, KPI-04 y PREG-020.
 - Plan de resolución: decidir antes de redactar las RN de pagos.
 - Avance del 14/11/2026: si el organizador rechaza el pago informado, la cuota vuelve a "Pendiente". Si no responde, la cuota sigue en "Por confirmar" sin plazo. No se adjunta evidencia (RN-063 a RN-065 de 03-reglas-de-negocio.md). Sigue abierta la fecha de pago que queda registrada.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). El participante indica la fecha de pago al informarlo, con los mismos límites que el organizador (RN-054, RN-132, RN-137). Al confirmarlo, el pago se registra con esa fecha (RN-138). Solo se informa una cuota "Pendiente" (RN-135). El organizador no informa sus propias cuotas, sino que las registra (RN-136), y recibe un aviso cada vez que un participante informa un pago (RN-139).
 
 ### PREG-018: ¿Se puede asignar el orden de turnos sin sorteo, por ejemplo según la necesidad de los participantes?
 - Contexto: el orden casi siempre se decide por sorteo, pero a veces se asigna a quien tiene más necesidad. PRINCIPIO-008 solo regula el sorteo. Si se permite asignar el orden a mano, hace falta definir quién lo decide y cómo se deja registro.
 - A quién preguntar: Product Owner.
 - Bloquea: PRINCIPIO-008 y las RN del sorteo y de los cambios de turno en 03-reglas-de-negocio.md.
 - Plan de resolución: decidir antes de redactar las RN del sorteo.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Sí se permite (F-10, Should). El orden manual y el sorteo se excluyen: cada junta fija su orden una sola vez (RN-125). Exige todos los cupos llenos (RN-126) y debe dar a cada participante un turno distinto de 1 a n (RN-127). Es inmutable (RN-128), anula el código de invitación (RN-129) y guarda quién lo asignó y cuándo (RN-038, RN-039).
 
 ### PREG-019: ¿El organizador recibe algún beneficio por organizar la junta?
 - Contexto: el Product Owner indicó que organizar es voluntario, pero que el organizador podría recibir un beneficio, por ejemplo cobrar primero, quedarse con una comisión o no pagar una cuota. Cualquier beneficio en dinero cambia el cálculo de cuotas, y un agente de IA no puede decidirlo sin una regla escrita (PRINCIPIO-012 g).
@@ -161,6 +166,7 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - Bloquea: F-02 de 02-alcance.md y las RN de invitación en 03-reglas-de-negocio.md.
 - Plan de resolución: decidir antes de redactar las RN de invitación.
 - Estado: Resuelta el 14/11/2026. El código tiene 8 caracteres de `ABCDEFGHJKLMNPQRSTUVWXYZ23456789` y sirve para todo el grupo hasta que se llenan los cupos o se ejecuta el sorteo. El organizador puede regenerarlo, y entonces el código anterior se anula (RN-015 a RN-021 de 03-reglas-de-negocio.md).
+- Aclaración del 14/11/2026 (PREG-038): con los cupos llenos el código se rechaza, pero no se anula. Si se libera un cupo antes del sorteo, vuelve a servir (RN-018). Se anula para siempre al fijar el orden de turnos o al regenerarse.
 
 ### PREG-025: ¿Cuál es el mínimo y el máximo de días de aviso previo que el organizador puede fijar para los recordatorios?
 - Contexto: el organizador fija al crear la junta cuántos días antes del vencimiento se envía el primer recordatorio (sección 7 de 02-alcance.md). No se definió el rango permitido ni el valor que aparece por defecto. En una junta semanal, el aviso previo no puede superar la duración del periodo.
@@ -188,15 +194,124 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - A quién preguntar: Product Owner.
 - Bloquea: RN-008, RN-010 y RN-012 de 03-reglas-de-negocio.md y el formulario de creación de juntas (F-02).
 - Plan de resolución: decidir antes de redactar las HU de creación de juntas. Las opciones son subir el mínimo de N a 2, permitir 0 días de aviso cuando N = 1, o no enviar el aviso previo en esas juntas.
+- Actualización del 14/11/2026 (auditoría QA): el mismo problema afecta al valor por defecto (3) cuando N = 2 o N = 3.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). N va de 2 a 60 (RN-008). Si al elegir la frecuencia los días de aviso no son menores que el periodo, pasan a periodo − 1 (RN-098).
 
 ### PREG-029: ¿Qué pasa si llega la fecha de vencimiento de la ronda 1 y la junta todavía tiene cupos libres o no hizo el sorteo?
 - Contexto: RN-009 permite que la ronda 1 venza el mismo día en que se crea la junta, y RN-027 solo permite sortear con todos los cupos llenos. Por eso una cuota puede vencer antes de que se sepa quién recibe el pozo, y los recordatorios de F-06 saldrían para una junta incompleta.
 - A quién preguntar: Product Owner.
 - Bloquea: RN-009, RN-027 y RN-068 a RN-071 de 03-reglas-de-negocio.md, y las HU de creación de juntas y de sorteo.
 - Plan de resolución: decidir antes de redactar las HU del sorteo. Las opciones son correr las fechas de vencimiento hasta el sorteo, no generar cuotas ni recordatorios antes del sorteo, o exigir una distancia mínima entre la creación y la ronda 1.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). No se generan cuotas ni recordatorios antes de fijar el orden de turnos (RN-105, RN-042). Si al fijarlo la ronda 1 ya venció, se rechaza y el organizador cambia la fecha (RN-122, RN-106). Los recordatorios cuyo momento ya pasó no se envían (RN-141).
 
 ### PREG-030: ¿Una cuota "Por confirmar" debe seguir recibiendo recordatorios?
 - Contexto: F-06 envía recordatorios hasta que la cuota quede registrada como pagada. Con F-08, una cuota que el participante ya informó queda "Por confirmar" y no "Pagada", así que según RN-069 y RN-070 seguiría recibiendo recordatorios aunque el participante ya pagó. Esto puede tensionar la relación con el grupo (R-09) y aumentar el riesgo de spam (R-11).
 - A quién preguntar: Product Owner.
 - Bloquea: RN-069 a RN-072 de 03-reglas-de-negocio.md y la HU de pago informado (F-08).
 - Plan de resolución: decidir antes de redactar las HU de F-08. Las opciones son seguir enviando recordatorios, pausarlos mientras la cuota esté "Por confirmar", o enviar el recordatorio al organizador para que confirme.
+- Actualización del 14/11/2026 (auditoría QA): RN-068 ya filtraba por "Pendiente" y RN-069 y RN-070 por "no Pagada". La decisión tiene que unificar las tres.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Los recordatorios se pausan mientras la cuota esté "Por confirmar" (RN-140), y RN-068 a RN-070 aplican solo a cuotas "Pendiente". Si el organizador rechaza el pago, los recordatorios siguen según el calendario de RN-070 y cuentan para el máximo de RN-071. Además, el organizador recibe un aviso al momento (RN-139).
+
+### PREG-031: ¿Qué estados tiene una junta y cuándo se generan sus rondas y cuotas?
+- Contexto: RN-013 y RN-042 creaban rondas y cuotas sin decir en qué momento, y ninguna regla definía los estados de la junta, aunque RN-018, RN-027 y KPI-06 dependen de ellos (QA-02).
+- A quién preguntar: Product Owner.
+- Bloquea: el módulo de cálculo de cuotas (PRINCIPIO-011), las HU de creación de juntas y de sorteo, y KPI-01 y KPI-06.
+- Plan de resolución: aprobar o cambiar la propuesta antes de redactar las HU.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Estados "Abierta", "Completa", "En curso" y "Terminada", con el diagrama de la sección 2.1 de 03 (RN-099 a RN-104). Las rondas y las cuotas se generan al fijar el orden de turnos (RN-013, RN-042, RN-105).
+
+### PREG-032: ¿Un participante puede salir de una junta, o el organizador quitarlo?
+- Contexto: el contraejemplo de RN-019 daba por hecho que un participante podía salir, pero ninguna regla lo definía (QA-03). Afecta turnos y dinero (PRINCIPIO-012 g).
+- A quién preguntar: Product Owner.
+- Bloquea: RN-018, las HU de participantes y F-13.
+- Plan de resolución: aprobar o cambiar la propuesta antes de redactar las HU de participantes.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Antes de fijar el orden de turnos, un participante puede salir y el organizador puede quitarlo, y el cupo se libera (RN-111 a RN-113). Después nadie sale (RN-114). El organizador no puede dejar su junta ni transferir el rol (RN-115). Reemplazar participantes y cambiar turnos queda fuera de esta versión (NO-13 de 02-alcance.md).
+
+### PREG-033: ¿Qué datos de una junta se pueden editar después de crearla?
+- Contexto: todas las reglas validaban solo la creación (QA-04). Cambiar la cuota es una decisión sobre dinero (PRINCIPIO-012 g).
+- A quién preguntar: Product Owner.
+- Bloquea: las HU de edición de juntas.
+- Plan de resolución: aprobar o cambiar la propuesta antes de redactar las HU.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Antes de fijar el orden de turnos se edita todo con las mismas validaciones de la creación (RN-106, RN-107), sin bajar la cantidad de participantes por debajo de los cupos ocupados (RN-108) y sin que el organizador pase a participar si no hay cupo (RN-109). Después solo se edita el nombre (RN-110).
+
+### PREG-034: ¿Qué datos de la junta recibe el organizador, y quién puede ver el registro del sorteo?
+- Contexto: PRINCIPIO-006 v1.2 limitaba también al organizador a cuatro datos de los demás, y así no podía gestionar pagos (QA-01). Tampoco se definía quién puede verificar el sorteo (QA-25).
+- A quién preguntar: Product Owner. Cambia la constitución, así que requiere aprobación humana (PRINCIPIO-012).
+- Bloquea: F-04, F-05, F-08, F-14 y el contrato de la API de miembros.
+- Plan de resolución: aprobar o cambiar PRINCIPIO-006 y PRINCIPIO-008 de 00-constitucion.md v1.3.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). PRINCIPIO-006 separa los datos personales, que nadie recibe de otro miembro, de los datos de la junta. El organizador recibe todas las cuotas y pagos de su junta (RN-120). Todo miembro ve el registro del sorteo para reproducirlo (RN-121).
+
+### PREG-035: ¿Cómo se arma la lista de entrada del sorteo y qué generador se deriva de la semilla?
+- Contexto: "orden de entrada" no estaba definido, los ejemplos guardaban nombres que se pueden repetir, y el generador derivado de la semilla no estaba especificado, así que no se podía reproducir el sorteo fuera del sistema (QA-06).
+- A quién preguntar: Product Owner y arquitecto de software. Cambia el sorteo, así que requiere aprobación humana (PRINCIPIO-012).
+- Bloquea: F-03 y los tests al 100 % del módulo de sorteo (PRINCIPIO-011).
+- Plan de resolución: aprobar o cambiar el anexo A de 03-reglas-de-negocio.md.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). La lista de entrada son los identificadores de usuario ordenados por el momento en que cada uno ocupó su cupo (RN-123). El algoritmo `fisher-yates-v1` usa HMAC-SHA256 sobre la semilla y muestreo por rechazo, con un vector de prueba (RN-124, anexo A).
+
+### PREG-036: ¿Qué datos pide la cuenta y cómo se verifican y recuperan?
+- Contexto: RN-085 y RN-086 validaban un DNI y un celular que ninguna regla pedía. Faltaban la unicidad, la verificación del correo, la recuperación de la contraseña y la duración de la sesión (QA-09).
+- A quién preguntar: Product Owner y responsable de seguridad. Toca la autenticación, así que requiere aprobación humana (PRINCIPIO-012). Relacionada con PREG-001.
+- Bloquea: F-01 y las HU de registro y de inicio de sesión.
+- Plan de resolución: aprobar o cambiar la propuesta antes de redactar las HU de registro.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Obligatorios: nombre de 2 a 80 caracteres, correo y contraseña (RN-146, RN-147). DNI y celular opcionales (RN-148). La fecha de nacimiento y la foto no se piden (RN-149, NO-14). El correo y el DNI son únicos (RN-150, RN-151). El correo se verifica con un enlace de 86,400 s antes de crear una junta o unirse a una (RN-152 a RN-154). La contraseña se recupera con un enlace de un solo uso de 3600 s, que no revela si el correo existe (RN-155 a RN-157). Cambiarla cierra las demás sesiones (RN-158), y una sesión se cierra a los 30 días sin uso (RN-159).
+
+### PREG-037: ¿Cómo funciona el ciclo completo del código de verificación?
+- Contexto: PREG-023 fijó la longitud, la vigencia y los intentos, pero no si el código es de un solo uso, cómo se reenvía ni cómo se activa y desactiva el segundo factor (QA-10).
+- A quién preguntar: responsable de seguridad, con visto bueno del Product Owner. Toca la autenticación (PRINCIPIO-012).
+- Bloquea: F-11.
+- Plan de resolución: aprobar o cambiar la propuesta antes de redactar las HU de F-11.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Un solo uso (RN-162). Un código nuevo anula el anterior (RN-163). Máximo 5 códigos cada 900 s (RN-164). La activación se confirma con un código (RN-165, RN-166), y la desactivación pide la contraseña y un código (RN-167).
+
+### PREG-038: ¿Se pueden reutilizar los códigos de invitación, y cómo se evita que se adivinen?
+- Contexto: RN-016 solo evitaba repetir códigos vigentes, así que un código anulado podía volver a salir en otra junta. Tampoco había un límite de intentos ni un mensaje para un código inexistente (QA-24).
+- A quién preguntar: Product Owner y responsable de seguridad.
+- Bloquea: las HU de invitación.
+- Plan de resolución: aprobar o cambiar la propuesta antes de redactar las HU de invitación.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Ningún código se reutiliza nunca (RN-016). Un código inexistente se rechaza (RN-116). Una cuenta con 10 códigos inválidos en 3600 s no puede unirse a una junta durante los 3600 s siguientes (RN-117). Además, RN-018 rechaza el código mientras no haya cupos, pero no lo anula: si se libera un cupo, el código vuelve a servir.
+
+### PREG-039: ¿Qué es la "ronda actual" y qué se muestra de quien no tiene próxima cuota?
+- Contexto: PRINCIPIO-006 y RN-022 usaban "ronda actual" y "próximo pago" sin definirlos, y no decían qué entregar de un organizador que no participa (QA-12).
+- A quién preguntar: Product Owner.
+- Bloquea: F-05 y el contrato de la API de miembros.
+- Plan de resolución: aprobar o cambiar las definiciones de 04-glosario.md.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Ronda actual: la de número más bajo que vence hoy o después. Si todas vencieron, la última. Próxima cuota: la de la ronda siguiente a la actual (04-glosario.md). Si no hay próxima cuota, sus campos van vacíos (RN-119). Del organizador que no participa solo se entrega el nombre y el rol (RN-118).
+
+### PREG-040: ¿Qué casos borde se aceptan al registrar y corregir pagos?
+- Contexto: no estaba definido qué pasa al marcar una cuota ya pagada, al desmarcar una no pagada, con fechas de pago muy antiguas, con pagos adelantados ni al corregir una fecha (QA-17).
+- A quién preguntar: Product Owner.
+- Bloquea: F-04 y KPI-03 y KPI-04.
+- Plan de resolución: aprobar o cambiar la propuesta antes de redactar las HU de pagos.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Solo se registra un pago en una cuota "Pendiente" (RN-130) y solo se desmarca una cuota "Pagada" (RN-131). La fecha de pago no puede ser anterior a la creación de la junta (RN-132). Se permiten pagos de rondas futuras (RN-133). La fecha de pago no se edita: se desmarca y se vuelve a registrar (RN-134).
+
+### PREG-041: ¿Con qué tolerancia, conteo y contenido salen los recordatorios?
+- Contexto: "a las 09:00" no tenía una tolerancia que se pudiera medir. Tampoco estaba definido si un rebote o un push cuentan para el máximo de 5, qué pasa con un recordatorio cuyo momento ya pasó, ni qué dice el mensaje (QA-19).
+- A quién preguntar: Product Owner.
+- Bloquea: F-06 y F-07.
+- Plan de resolución: aprobar o cambiar la propuesta antes de redactar las HU de recordatorios.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Salen entre las 09:00:00 y las 09:15:00 (RN-066). No se envía un recordatorio cuyo momento ya pasó (RN-141). Un correo y su push cuentan como uno (RN-142), y un recordatorio cuenta como enviado cuando el proveedor lo acepta (RN-143). El mensaje lleva la junta, la ronda, el monto y el vencimiento (RN-144), sin datos de otros miembros (RN-145).
+
+### PREG-042: ¿Qué pasa con el contador de intentos fallidos al terminar el bloqueo?
+- Contexto: RN-075 no decía si el contador vuelve a 0 al terminar el bloqueo ni si los intentos durante el bloqueo cuentan. El contraejemplo de RN-076 sugería un reinicio diario (QA-23).
+- A quién preguntar: responsable de seguridad. Toca la autenticación (PRINCIPIO-012).
+- Bloquea: las HU de inicio de sesión.
+- Plan de resolución: aprobar o cambiar la propuesta.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Al terminar el bloqueo el contador vuelve a 0 (RN-160). Durante el bloqueo los intentos se rechazan sin contarse (RN-161). El riesgo de que alguien bloquee una cuenta ajena se acepta y queda como R-13 en 01-project-brief.md.
+
+### PREG-043: ¿Qué pasa cuando se publica una versión nueva de la política de privacidad?
+- Contexto: RN-083 guarda la versión aceptada al crear la cuenta, pero no estaba definido qué pasa con los usuarios existentes cuando cambia la política (QA-26).
+- A quién preguntar: Product Owner y asesor legal (relacionada con PREG-001).
+- Bloquea: F-01.
+- Plan de resolución: aprobar o cambiar la propuesta junto con PREG-001.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). El usuario acepta la versión nueva antes de volver a ver sus juntas (RN-168), y se guarda cada versión aceptada con su fecha y hora (RN-169). Si se siguen enviando recordatorios mientras no la acepta queda en PREG-001.
+
+### PREG-044: ¿Qué formatos y textos se usan en la entrada de datos y en los mensajes?
+- Contexto: faltaban la longitud del nombre de la junta, el formato de entrada de los montos, el formato de la hora y los mensajes de error. Tampoco estaba claro si "usted" y los formatos de Perú aplican a correos y push (QA-21, QA-22, QA-33).
+- A quién preguntar: Product Owner. El formato de la hora y el alcance a correos y push cambian PRINCIPIO-002 y PRINCIPIO-003 (PRINCIPIO-012).
+- Bloquea: los prototipos de prototipos/ y las HU con formularios.
+- Plan de resolución: aprobar o cambiar la propuesta antes de diseñar los prototipos.
+- Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Nombre de la junta de 3 a 60 caracteres (RN-096). El monto se ingresa solo con dígitos y punto decimal (RN-097). Hora en HH:MM de 24 horas (RN-177). "Usted", S/ y DD/MM/AAAA también en correos y push (RN-090 a RN-093). Catálogo de mensajes en la sección 2.9 de 03.
+
+### PREG-045: ¿Una persona extranjera, con carné de extranjería en lugar de DNI, puede registrar su documento?
+- Contexto: PRINCIPIO-003 y RN-085 solo aceptan el DNI peruano (`^\d{8}$`). Desde la v0.2 de 03-reglas-de-negocio.md el DNI es opcional (RN-148), así que una persona extranjera puede crear su cuenta sin documento, pero no puede registrar su carné de extranjería. El lanzamiento es para todos los segmentos (01-project-brief.md §2) (QA-40).
+- A quién preguntar: Product Owner, con visto bueno del asesor legal (relacionada con PREG-001).
+- Bloquea: RN-085, RN-148 y RN-151 de 03-reglas-de-negocio.md, y PRINCIPIO-003 si se acepta otro documento.
+- Plan de resolución: decidir antes de redactar las HU de registro. Las opciones son mantener solo el DNI, o aceptar también el carné de extranjería con su propio formato, lo que requiere cambiar PRINCIPIO-003 con aprobación humana (PRINCIPIO-012).

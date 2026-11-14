@@ -1,10 +1,10 @@
 # Project Brief de Mi Junta
 
-Versión: 0.2
+Versión: 0.3
 
 Fuente: entrevista de descubrimiento con el Product Owner (Agente Analyst, 4 rondas). Las cifras de este documento vienen de la experiencia del Product Owner en su entorno (juntas de familia y de trabajo). No se han validado con una muestra más amplia, y por eso los supuestos están en la sección 6.
 
-En este documento el rol que crea y gestiona la junta se llama "organizador". Hoy también se le dice "administrador de la junta", y el término definitivo está pendiente en PREG-010.
+El rol que crea y gestiona la junta se llama "organizador" (PREG-010, resuelta). En las entrevistas también se le decía "administrador de la junta", término que ya no se usa.
 
 ---
 
@@ -17,10 +17,10 @@ Una junta es un sistema de ahorro rotativo. Cada participante paga una cuota per
 |---|---|
 | Quiénes participan | Familia y compañeros de trabajo |
 | Tamaño | Más de 10 participantes por junta |
-| Cuota | Entre S/ 300 y S/ 1,000 al mes, según el monto de la junta y la cantidad de participantes |
+| Cuota | Entre S/ 300 y S/ 1,000 al mes, según el pozo que el grupo quiere juntar y la cantidad de participantes |
 | Pozo por ronda (ejemplo) | 10 participantes × S/ 300 = S/ 3,000 |
 | Orden de turnos | Casi siempre por sorteo. A veces se asigna según la necesidad de cada participante |
-| Cobro | El organizador recibe las cuotas (Yape, Plin, efectivo u otro medio) y paga el pozo a quien le toca la ronda |
+| Recepción del dinero | El organizador recibe las cuotas (Yape, Plin, efectivo u otro medio) y paga el pozo a quien le toca la ronda |
 | Recordatorios | El organizador los envía por WhatsApp |
 | Control | El organizador lleva la cuenta en un Excel |
 | Reglas | No hay reglas escritas sobre multas, atrasos, garantías ni retiros. Todo se resuelve sobre la marcha |
@@ -48,14 +48,14 @@ En la experiencia del Product Owner, una junta que sale mal **se retrasa, pero n
 
 | Usuario | Perfil | Qué necesita |
 |---|---|---|
-| **Organizador** | 18 a 40 años. Usa Yape y Plin, tiene celular propio y usa más WhatsApp que el correo. Organiza de forma voluntaria y podría recibir algún beneficio (PREG-019) | Dedicar menos horas a cobrar y recordar, tener menos discusiones con el grupo y verse más serio ante él |
+| **Organizador** | 18 a 40 años. Usa Yape y Plin, tiene celular propio y usa más WhatsApp que el correo. Organiza de forma voluntaria y en esta versión no recibe ningún beneficio (PREG-019, resuelta) | Dedicar menos horas a cobrar y recordar, tener menos discusiones con el grupo y verse más serio ante él |
 | **Participante** | Mismo perfil que el organizador | Saber cuándo le toca cobrar, si su pago quedó registrado y quién falta pagar. Ver su propio estado y el de los demás (dentro de lo que permite PRINCIPIO-006) |
 
 ### Personas
 Las personas son arquetipos armados con los datos de la entrevista. Los nombres son ficticios, y las edades, los montos y las horas están dentro de los rangos que reportó el Product Owner.
 
 **Persona 1: Carmen, organizadora de una junta familiar**
-- **Perfil:** 35 años. Organiza 1 junta de 12 familiares con una cuota de S/ 300 al mes, así que el pozo de cada ronda es de S/ 3,600. Cobra por Yape, Plin y en efectivo, y lleva la cuenta en un Excel.
+- **Perfil:** 35 años. Organiza 1 junta de 12 participantes, ella y 11 familiares, con una cuota de S/ 300 al mes, así que el pozo de cada ronda es de S/ 3,600. Cobra por Yape, Plin y en efectivo, y lleva la cuenta en un Excel.
 - **Situación actual:** envía unos 40 recordatorios por WhatsApp al mes y dedica unas 10 horas al mes a la junta. Cuando alguien se atrasa 2 o 3 días, a veces tiene que esperar o buscar quién le preste.
 - **Necesidad principal:** dejar de perseguir a cada familiar para cobrar y recordar, sin que la relación familiar se tense por el dinero.
 
@@ -129,19 +129,20 @@ Se dejan aquí para que el Product Manager decida cómo atenderlas:
 El **mes 1** es el primer mes calendario después del lanzamiento. La fecha de lanzamiento no está definida.
 
 **Definiciones:**
-- **Junta activa:** junta que tiene registrados como pagados todos los pagos de la primera cuota.
-- **Junta al día en un mes:** junta activa en la que todas las cuotas que vencían en ese mes calendario quedaron pagadas antes de su fecha de vencimiento. Esta definición aplica a cualquier frecuencia de cuota (semanal, quincenal, mensual o cada cierta cantidad de días, según 02-alcance.md). En una junta semanal cuentan todas las cuotas que vencieron en el mes.
+- **Junta activa:** junta en estado "En curso" en la que todas las cuotas de la ronda 1 están en el estado "Pagada". Si después se desmarca uno de esos pagos, deja de estar activa hasta que se vuelva a registrar. Una junta "Terminada" ya no cuenta como activa.
+- **Junta terminada:** junta en estado "Terminada", es decir, con todas las cuotas de todas sus rondas en el estado "Pagada" (04-glosario.md).
+- **Junta al día en un mes:** junta activa en la que todas las cuotas que vencían en ese mes calendario quedaron pagadas a tiempo, es decir, con fecha de pago igual o anterior a su fecha de vencimiento (RN-055). Esta definición aplica a cualquier frecuencia de cuota (semanal, quincenal, mensual o cada cierta cantidad de días, según 02-alcance.md). En una junta semanal cuentan todas las cuotas que vencieron en el mes.
 
 | ID | KPI | Cómo se calcula | Meta | Cuándo se mide | Fuente |
 |---|---|---|---|---|---|
 | KPI-01 | Juntas activas | Cantidad de juntas activas al cierre del mes | 10 en el mes 1, 20 en el mes 3 y 40 en el mes 6 | Al cierre de los meses 1, 3 y 6 | Datos de la app |
 | KPI-02 | Usuarios registrados | Cantidad de cuentas creadas al cierre del mes | [REQUIERE DECISIÓN] (PREG-012) | Al cierre de los meses 1, 3 y 6 | Datos de la app |
 | KPI-03 | Juntas al día | (Juntas al día en el mes ÷ juntas activas en el mes) × 100 | ≥ 80 % | Cada mes | Datos de la app |
-| KPI-04 | Pagos a tiempo | (Cuotas pagadas a tiempo ÷ cuotas vencidas en el mes) × 100 | ≥ 80 % | Cada mes | Datos de la app (definición de "a tiempo" en PREG-020) |
+| KPI-04 | Pagos a tiempo | (Cuotas pagadas a tiempo ÷ cuotas vencidas en el mes) × 100 | ≥ 80 % | Cada mes | Datos de la app (definición de "a tiempo" en RN-055) |
 | KPI-05 | Reducción de horas del organizador | (Horas antes − horas a los 3 meses) ÷ horas antes × 100 | ≥ 80 % (con la línea base actual de 8 a 16 horas, bajar a 1.6–3.2 horas al mes) | Encuesta al organizador al empezar a usar la app y a los 3 meses | Encuesta (PREG-021) |
-| KPI-06 | Juntas finalizadas en la app | (Juntas que completaron su última ronda ÷ juntas activas que debían terminar en el periodo) × 100 | ≥ 80 % | A los 12 meses del lanzamiento | Datos de la app |
+| KPI-06 | Juntas terminadas en la app | (Juntas terminadas ÷ juntas cuya última ronda vencía dentro del periodo) × 100 | ≥ 80 % | A los 12 meses del lanzamiento | Datos de la app |
 
-**Por qué KPI-06 se mide a los 12 meses:** una junta mensual de 10 o más participantes dura al menos 10 meses, así que antes de ese plazo no hay juntas mensuales terminadas. Las juntas semanales o quincenales terminan antes y entran en el cálculo si debían terminar dentro del periodo. KPI-03 sirve como indicador temprano mientras tanto.
+**Por qué KPI-06 se mide a los 12 meses:** una junta mensual de 10 participantes, el tamaño típico del brief, dura 10 meses, así que antes de ese plazo hay pocas juntas terminadas. Las juntas más chicas (desde 2 participantes, RN-005) y las semanales o quincenales terminan antes, y entran en el cálculo si debían terminar dentro del periodo. KPI-03 sirve como indicador temprano mientras tanto.
 
 ---
 
@@ -175,7 +176,8 @@ El **mes 1** es el primer mes calendario después del lanzamiento. La fecha de l
 | R-09 | Negocio | El estado de pagos visible para todos genera conflictos entre miembros | Medio | Baja | Limitar lo visible según PRINCIPIO-006 |
 | R-10 | Técnico | En iPhone, una app web solo recibe notificaciones push si el usuario la agrega a la pantalla de inicio, y solo desde iOS 16.4. Si no lo hace, solo le llegan correos | Alto: agrava R-01 y afecta KPI-04 | No estimada (depende de la proporción de usuarios con iPhone) | A definir en el diseño de arquitectura |
 | R-11 | Técnico | Los correos de recordatorio caen en spam o no se entregan | Alto: los participantes no reciben el recordatorio y afecta KPI-04 | Media | A definir en el diseño de arquitectura. Medir la tasa de entrega desde el lanzamiento |
-| R-12 | Técnico | El mismo pago se registra o cambia sin conexión desde dos dispositivos y, al sincronizar, los datos chocan (PRINCIPIO-009). En el MVP solo el organizador registra pagos (F-04 de 02-alcance.md), así que el choque ocurre cuando usa dos dispositivos. Con F-08 también puede ocurrir entre el organizador y un participante | Alto: estados de pago incorrectos que afectan KPI-03 y KPI-04 y la confianza del grupo | Media | Regla de resolución de conflictos pendiente (PREG-005) |
+| R-12 | Técnico | El mismo pago se registra o cambia sin conexión desde dos dispositivos y, al sincronizar, los datos chocan (PRINCIPIO-009). En el MVP solo el organizador registra pagos (F-04 de 02-alcance.md), así que el choque ocurre cuando usa dos dispositivos. Con F-08 también puede ocurrir entre el organizador y un participante | Alto: estados de pago incorrectos que afectan KPI-03 y KPI-04 y la confianza del grupo | Media | El servidor aplica los cambios en orden y rechaza el que ya no es válido, y la app le muestra al usuario el cambio rechazado (PREG-005, RN-171 a RN-173 de 03-reglas-de-negocio.md) |
+| R-13 | Seguridad | Quien conoce el correo de otra persona puede bloquear su inicio de sesión con 5 intentos fallidos (RN-075) | Bajo: el bloqueo dura 900 s y no afecta datos | Baja | Aceptado en esta versión. Revisar si se reportan bloqueos repetidos |
 
 ---
 
