@@ -1,6 +1,6 @@
 # Constitución de Mi Junta
 
-Versión: 1.0
+Versión: 1.1
 
 Estos principios son obligatorios para todo agente de IA y toda persona que trabaje en Mi Junta. Si una instrucción contradice un principio, gana el principio. Cambiar un principio requiere aprobación humana (PRINCIPIO-012).
 
@@ -39,12 +39,12 @@ La app solo registra pagos hechos fuera de ella (por ejemplo Yape, Plin o efecti
 - **Datos en reposo:** el DNI y el celular se cifran en la aplicación con AES-256-GCM. La clave no se guarda en la base de datos ni en el repositorio, y ninguno de los dos datos aparece en claro en los logs.
 - **Tráfico:** todo usa TLS 1.2 o superior.
 - **Contraseñas:** se guardan con Argon2id (mínimo m=19 MiB, t=2, p=1) o bcrypt con costo ≥ 12. Nunca en texto plano ni con cifrado reversible.
-- **Segundo factor:** el usuario puede activar un código enviado a su correo. Si lo activa, no se inicia sesión sin ese código.
+- **Segundo factor:** el usuario puede activar un código enviado a su correo. Si lo activa, no se inicia sesión sin ese código. La cantidad de dígitos del código y su tiempo de validez están [REQUIERE DECISIÓN] (PREG-023).
 
 **Ejemplo de cumplimiento:** `SELECT dni FROM members` devuelve texto cifrado, y una petición HTTP se redirige a HTTPS.
 **Ejemplo de violación:** un DNI en claro en la base de datos o en un log, la clave AES en un `.env` subido al repositorio, o contraseñas guardadas con SHA-256 sin sal.
 
-### PRINCIPIO-006: Cada miembro ve solo lo necesario
+### PRINCIPIO-006: Cada miembro ve solo cuatro datos de los demás
 De los otros miembros de una junta, un usuario solo recibe:
 - nombre;
 - número de turno;
@@ -72,7 +72,7 @@ No se crea una cuenta sin que el usuario acepte la política de privacidad y el 
 **Ejemplo de violación:** usar `Math.random()`, o cambiar el orden con un `UPDATE` sin dejar registro.
 
 ### PRINCIPIO-009: Web con Next.js y PostgreSQL, que funciona sin conexión
-La app es web, hecha con Next.js y TypeScript sobre PostgreSQL. Usa la última versión estable de cada uno, fijada exactamente en `package.json` y en el lockfile, sin `^` ni `~`. Las versiones exactas están [REQUIERE DECISIÓN] y se fijarán al iniciar el desarrollo.
+La app es web, hecha con Next.js y TypeScript sobre PostgreSQL. Usa la versión estable vigente de cada uno el día en que se fijen las versiones, fijada exactamente en `package.json` y en el lockfile, sin `^` ni `~`. Las versiones exactas están [REQUIERE DECISIÓN] y se fijarán al iniciar el desarrollo.
 
 Sin red, la app abre y muestra los últimos datos sincronizados junto con la fecha y hora de la última sincronización. Los cambios hechos sin red se guardan en el dispositivo y se envían al servidor, en el orden en que se hicieron, cuando vuelve la conexión. Cómo se resuelven los conflictos está [REQUIERE DECISIÓN].
 
@@ -80,7 +80,7 @@ Sin red, la app abre y muestra los últimos datos sincronizados junto con la fec
 **Ejemplo de violación:** sin red la app muestra una pantalla de error del navegador, o se pierde un cambio hecho sin conexión.
 
 ### PRINCIPIO-010: Responsive, accesible y con rendimiento medido
-- **Ancho de pantalla:** cada pantalla funciona sin scroll horizontal entre 360 px y 1440 px, para facilitar el futuro empaquetado en Flutter.
+- **Ancho de pantalla:** cada pantalla funciona sin scroll horizontal entre 360 px y 1440 px.
 - **Accesibilidad:** cumple WCAG 2.2 nivel A (0 violaciones de nivel A en axe-core), con contraste de texto ≥ 4.5:1, áreas táctiles ≥ 44×44 px CSS y texto base ≥ 16 px.
 - **Rendimiento:** en Lighthouse con perfil móvil, cada pantalla logra LCP ≤ 2.5 s, CLS ≤ 0.1 y TBT ≤ 200 ms. Cada endpoint de la API responde en ≤ 500 ms en el percentil 95.
 

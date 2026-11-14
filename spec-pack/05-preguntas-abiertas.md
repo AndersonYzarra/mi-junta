@@ -1,8 +1,8 @@
 # Preguntas abiertas
 
-Versión: 1.0
+Versión: 1.1
 
-Decisiones pendientes detectadas al redactar la constitución. Mientras una pregunta siga abierta, todo lo que dependa de ella se marca [REQUIERE DECISIÓN].
+Decisiones pendientes detectadas al redactar la constitución y el Project Brief. Mientras una pregunta siga abierta, todo lo que dependa de ella se marca [REQUIERE DECISIÓN].
 
 ---
 
@@ -65,3 +65,81 @@ Decisiones pendientes detectadas al redactar la constitución. Mientras una preg
 - A quién preguntar: Product Owner.
 - Bloquea: 04-glosario.md, PRINCIPIO-006 y todas las HU que mencionen el rol.
 - Plan de resolución: decidir antes de redactar 04-glosario.md y usar ese término en todo el spec-pack.
+
+### PREG-011: ¿Cuál será el precio del plan VIP en S/ y cómo se cobrará sin violar PRINCIPIO-004?
+- Contexto: el Product Owner propuso un plan VIP de unos US$ 1 al mes para gestionar varias juntas a la vez, y lo dejó para después del lanzamiento. PRINCIPIO-003 exige montos en S/. PRINCIPIO-004 prohíbe integrar pasarelas de pago, lo que hoy impide cobrar una suscripción dentro de la app.
+- A quién preguntar: Product Owner.
+- Bloquea: la sección 4 de 01-project-brief.md, PRINCIPIO-004 y cualquier HU del plan VIP.
+- Plan de resolución: decidir después del lanzamiento. Si se decide cobrar dentro de la app, primero se propone un cambio a PRINCIPIO-004 que requiere aprobación humana (PRINCIPIO-012).
+
+### PREG-012: ¿Cuál es la meta de usuarios registrados en los meses 1, 3 y 6?
+- Contexto: el Product Owner fijó metas de juntas activas (10, 20 y 40), pero no de usuarios registrados. Con más de 10 participantes por junta, 40 juntas serían unos 400 usuarios, pero ese número es una estimación, no una meta aprobada.
+- A quién preguntar: Product Owner.
+- Bloquea: KPI-02 de 01-project-brief.md.
+- Plan de resolución: decidir antes del lanzamiento y registrar la meta en 01-project-brief.md.
+
+### PREG-013: En el lanzamiento, ¿un organizador puede gestionar varias juntas a la vez o solo una?
+- Contexto: la idea del plan VIP supone que el plan gratis permite una sola junta. Pero el plan VIP quedó para después del lanzamiento, y hoy un organizador administra 1 o 2 juntas a la vez.
+- A quién preguntar: Product Owner.
+- Bloquea: 02-alcance.md, las RN de creación de juntas en 03-reglas-de-negocio.md y PREG-011.
+- Plan de resolución: decidir antes de redactar 02-alcance.md.
+
+### PREG-014: ¿Cuándo y con qué condiciones se integrarán las notificaciones por WhatsApp?
+- Contexto: los usuarios usan más WhatsApp que el correo (riesgo R-01 de 01-project-brief.md). El Product Owner decidió mantener PRINCIPIO-007 y ver WhatsApp como mejora después del lanzamiento. Los mensajes automáticos de WhatsApp Business tienen un costo por mensaje.
+- A quién preguntar: Product Owner.
+- Bloquea: PRINCIPIO-007 y las RN de notificaciones en 03-reglas-de-negocio.md.
+- Plan de resolución: revisar con los resultados de KPI-05 y del supuesto S-03 a los 3 meses del lanzamiento. Si se aprueba, se propone el cambio a PRINCIPIO-007 con aprobación humana (PRINCIPIO-012).
+
+### PREG-015: ¿Se usará el historial de pagos de Mi Junta para evaluar préstamos, y cómo se pedirá ese consentimiento?
+- Contexto: el Product Owner planea una futura línea de préstamos conectada con Mi Junta y prefiere pedir el consentimiento para ese uso cuando exista la funcionalidad. La Ley N.° 29733 exige un consentimiento por cada finalidad. Falta definir si se podrán usar los datos registrados antes de ese consentimiento.
+- A quién preguntar: asesor legal (relacionada con PREG-001) y Product Owner.
+- Bloquea: PRINCIPIO-007, el texto de la política de privacidad y el riesgo R-07 de 01-project-brief.md.
+- Plan de resolución: resolver junto con PREG-001 antes de publicar la política de privacidad del lanzamiento.
+
+### PREG-016: ¿Qué reglas puede o debe definir el organizador al crear una junta?
+- Contexto: hoy las juntas no tienen reglas escritas. El Product Owner indicó que el organizador debe definir las reglas al crear la junta. Faltan definir cuáles son (multas por atraso, días de tolerancia, retiro de un participante, reemplazos, garantías), si son obligatorias u opcionales, y si la app solo las muestra o también las aplica. PRINCIPIO-012 g) impide decidir sobre montos o multas sin una regla escrita.
+- A quién preguntar: Product Owner.
+- Bloquea: 02-alcance.md y las RN de creación de juntas, atrasos y retiros en 03-reglas-de-negocio.md.
+- Plan de resolución: decidir antes de redactar las RN de creación de juntas.
+
+### PREG-017: Cuando un participante informa su pago, ¿qué pasa si el organizador lo rechaza o no responde?
+- Contexto: el Product Owner indicó que un participante puede registrar su pago y que el organizador lo aprueba. Faltan definir el plazo para aprobar, qué pasa si se rechaza o no hay respuesta, si se adjunta una evidencia (por ejemplo, una captura de Yape) y con qué fecha queda registrado el pago.
+- A quién preguntar: Product Owner.
+- Bloquea: las RN de registro de pagos en 03-reglas-de-negocio.md, KPI-04 y PREG-020.
+- Plan de resolución: decidir antes de redactar las RN de pagos.
+
+### PREG-018: ¿Se puede asignar el orden de turnos sin sorteo, por ejemplo según la necesidad de los participantes?
+- Contexto: el orden casi siempre se decide por sorteo, pero a veces se asigna a quien tiene más necesidad. PRINCIPIO-008 solo regula el sorteo. Si se permite asignar el orden a mano, hace falta definir quién lo decide y cómo se deja registro.
+- A quién preguntar: Product Owner.
+- Bloquea: PRINCIPIO-008 y las RN del sorteo y de los cambios de turno en 03-reglas-de-negocio.md.
+- Plan de resolución: decidir antes de redactar las RN del sorteo.
+
+### PREG-019: ¿El organizador recibe algún beneficio por organizar la junta?
+- Contexto: el Product Owner indicó que organizar es voluntario, pero que el organizador podría recibir un beneficio, por ejemplo cobrar primero, quedarse con una comisión o no pagar una cuota. Cualquier beneficio en dinero cambia el cálculo de cuotas, y un agente de IA no puede decidirlo sin una regla escrita (PRINCIPIO-012 g).
+- A quién preguntar: Product Owner.
+- Bloquea: las RN de cálculo de cuotas y del sorteo en 03-reglas-de-negocio.md.
+- Plan de resolución: decidir antes de redactar las RN de cálculo de cuotas, junto con PREG-002.
+
+### PREG-020: ¿Qué fecha cuenta para saber si un pago llegó "a tiempo", y el día de vencimiento cuenta como a tiempo?
+- Contexto: KPI-03 y KPI-04 dependen de comparar la fecha de pago con la fecha de vencimiento. El pago puede tener varias fechas (cuando se hizo, cuando se registró en la app, cuando lo aprobó el organizador), y la definición acordada dice "antes de la fecha de vencimiento", sin aclarar si el mismo día cuenta.
+- A quién preguntar: Product Owner.
+- Bloquea: KPI-03 y KPI-04 de 01-project-brief.md y las RN de vencimiento en 03-reglas-de-negocio.md.
+- Plan de resolución: decidir junto con PREG-017 antes de redactar las RN de pagos.
+
+### PREG-021: ¿Qué preguntas tendrá la encuesta de horas del organizador y cómo se aplicará?
+- Contexto: KPI-05 se mide con una encuesta al organizador al empezar a usar la app y a los 3 meses. La línea base actual (8 a 16 horas al mes) viene de un solo entorno. Faltan definir las preguntas, el medio de envío y la cantidad mínima de respuestas para que el resultado sea válido. Si la encuesta usa un servicio externo, ese servicio necesita aprobación (PRINCIPIO-012 h).
+- A quién preguntar: Product Owner.
+- Bloquea: KPI-05 de 01-project-brief.md.
+- Plan de resolución: definir la encuesta antes del lanzamiento, para medir la línea base con las primeras 10 juntas.
+
+### PREG-022: ¿Existen apps o servicios que ya resuelvan la organización de juntas en Perú?
+- Contexto: el Product Owner no conoce competidores (supuesto S-07 de 01-project-brief.md). Si existen, la propuesta de valor debe diferenciarse de ellos.
+- A quién preguntar: Agente Analyst, con una revisión de competidores validada por el Product Owner.
+- Bloquea: la sección 3 de 01-project-brief.md.
+- Plan de resolución: revisar las tiendas de apps y las soluciones locales antes de cerrar la versión 1.0 de 01-project-brief.md.
+
+### PREG-023: ¿Cuántos dígitos tiene el código del segundo factor y cuánto tiempo es válido?
+- Contexto: PRINCIPIO-005 permite activar un segundo factor con un código enviado al correo, pero no fija la longitud del código, su tiempo de validez ni cuántos intentos fallidos se permiten. Sin esos valores no se puede escribir un test que verifique el principio (PRINCIPIO-011).
+- A quién preguntar: arquitecto de software o responsable de seguridad, con visto bueno del Product Owner.
+- Bloquea: PRINCIPIO-005 y las RN de autenticación en 03-reglas-de-negocio.md.
+- Plan de resolución: decidir antes de redactar las HU de inicio de sesión y registrar los valores en PRINCIPIO-005, con aprobación humana (PRINCIPIO-012).
