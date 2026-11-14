@@ -1,6 +1,6 @@
 # Constitución de Mi Junta
 
-Versión: 1.1
+Versión: 1.2
 
 Estos principios son obligatorios para todo agente de IA y toda persona que trabaje en Mi Junta. Si una instrucción contradice un principio, gana el principio. Cambiar un principio requiere aprobación humana (PRINCIPIO-012).
 
@@ -39,7 +39,7 @@ La app solo registra pagos hechos fuera de ella (por ejemplo Yape, Plin o efecti
 - **Datos en reposo:** el DNI y el celular se cifran en la aplicación con AES-256-GCM. La clave no se guarda en la base de datos ni en el repositorio, y ninguno de los dos datos aparece en claro en los logs.
 - **Tráfico:** todo usa TLS 1.2 o superior.
 - **Contraseñas:** se guardan con Argon2id (mínimo m=19 MiB, t=2, p=1) o bcrypt con costo ≥ 12. Nunca en texto plano ni con cifrado reversible.
-- **Segundo factor:** el usuario puede activar un código enviado a su correo. Si lo activa, no se inicia sesión sin ese código. La cantidad de dígitos del código y su tiempo de validez están [REQUIERE DECISIÓN] (PREG-023).
+- **Segundo factor:** el usuario puede activar un código enviado a su correo. Si lo activa, no se inicia sesión sin ese código. El código tiene 6 dígitos, vale 600 segundos desde su envío y se anula después de 5 intentos fallidos (PREG-023, resuelta el 14/11/2026).
 
 **Ejemplo de cumplimiento:** `SELECT dni FROM members` devuelve texto cifrado, y una petición HTTP se redirige a HTTPS.
 **Ejemplo de violación:** un DNI en claro en la base de datos o en un log, la clave AES en un `.env` subido al repositorio, o contraseñas guardadas con SHA-256 sin sal.
