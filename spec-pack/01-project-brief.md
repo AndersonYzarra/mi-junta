@@ -1,6 +1,6 @@
 # Project Brief de Mi Junta
 
-Versión: 0.1
+Versión: 0.2
 
 Fuente: entrevista de descubrimiento con el Product Owner (Agente Analyst, 4 rondas). Las cifras de este documento vienen de la experiencia del Product Owner en su entorno (juntas de familia y de trabajo). No se han validado con una muestra más amplia, y por eso los supuestos están en la sección 6.
 
@@ -75,6 +75,8 @@ Se dejan aquí para que el Product Manager decida cómo atenderlas:
 - El organizador quiere dejar definidas las reglas de la junta (multas, atrasos, retiros) al crearla, para no resolverlas sobre la marcha (PREG-016).
 - A veces el orden de turnos se decide según la necesidad de los participantes y no por sorteo (PREG-018).
 
+**Cómo las atiende el alcance:** 02-alcance.md las incluye como funcionalidades Should, después del MVP. Son F-08 (el participante informa su pago), F-09 (reglas escritas, solo como texto que la app no aplica) y F-10 (orden de turnos sin sorteo).
+
 ### Segmentos
 
 | Segmento | Persona | Diferencias observadas | Necesidad diferenciada | Estado |
@@ -117,7 +119,7 @@ Se dejan aquí para que el Product Manager decida cómo atenderlas:
 | Comisiones sobre el dinero de la junta | No existen. La app no toca el dinero (PRINCIPIO-004) |
 
 ### Fuentes de ingreso futuras (fuera de este proyecto)
-- **Plan VIP:** idea del Product Owner. El plan gratis permitiría una junta a la vez y el VIP permitiría varias, por un monto mensual pequeño, alrededor de US$ 1. Queda para después del lanzamiento. El precio en S/, el límite del plan gratis y el medio de cobro están [REQUIERE DECISIÓN] (PREG-011, PREG-013). Cobrar una suscripción dentro de la app hoy choca con PRINCIPIO-004, que prohíbe integrar pasarelas de pago.
+- **Plan VIP:** idea del Product Owner, por un monto mensual pequeño, alrededor de US$ 1. Queda para después del lanzamiento. La idea original era que el plan gratis permitiera una sola junta y el VIP varias, pero el lanzamiento permite varias juntas sin límite (PREG-013, resuelta). Por eso, qué ofrece el plan VIP, su precio en S/ y el medio de cobro están [REQUIERE DECISIÓN] (PREG-011). Cobrar una suscripción dentro de la app hoy choca con PRINCIPIO-004, que prohíbe integrar pasarelas de pago.
 - **Línea de préstamos:** es la fuente de ingresos principal que espera el Product Owner. Es un proyecto aparte que se conectaría con Mi Junta. Puede requerir autorización de la SBS, y el uso de datos para evaluar créditos requiere un consentimiento propio (PREG-015).
 
 ---
@@ -128,7 +130,7 @@ El **mes 1** es el primer mes calendario después del lanzamiento. La fecha de l
 
 **Definiciones:**
 - **Junta activa:** junta que tiene registrados como pagados todos los pagos de la primera cuota.
-- **Junta al día en un mes:** junta activa cuyas cuotas de ese mes quedaron todas pagadas antes de la fecha de vencimiento que fijó el organizador.
+- **Junta al día en un mes:** junta activa en la que todas las cuotas que vencían en ese mes calendario quedaron pagadas antes de su fecha de vencimiento. Esta definición aplica a cualquier frecuencia de cuota (semanal, quincenal, mensual o cada cierta cantidad de días, según 02-alcance.md). En una junta semanal cuentan todas las cuotas que vencieron en el mes.
 
 | ID | KPI | Cómo se calcula | Meta | Cuándo se mide | Fuente |
 |---|---|---|---|---|---|
@@ -139,7 +141,7 @@ El **mes 1** es el primer mes calendario después del lanzamiento. La fecha de l
 | KPI-05 | Reducción de horas del organizador | (Horas antes − horas a los 3 meses) ÷ horas antes × 100 | ≥ 80 % (con la línea base actual de 8 a 16 horas, bajar a 1.6–3.2 horas al mes) | Encuesta al organizador al empezar a usar la app y a los 3 meses | Encuesta (PREG-021) |
 | KPI-06 | Juntas finalizadas en la app | (Juntas que completaron su última ronda ÷ juntas activas que debían terminar en el periodo) × 100 | ≥ 80 % | A los 12 meses del lanzamiento | Datos de la app |
 
-**Por qué KPI-06 se mide a los 12 meses:** una junta mensual de 10 o más participantes dura al menos 10 meses, así que no hay juntas terminadas antes de ese plazo. KPI-03 sirve como indicador temprano mientras tanto.
+**Por qué KPI-06 se mide a los 12 meses:** una junta mensual de 10 o más participantes dura al menos 10 meses, así que antes de ese plazo no hay juntas mensuales terminadas. Las juntas semanales o quincenales terminan antes y entran en el cálculo si debían terminar dentro del periodo. KPI-03 sirve como indicador temprano mientras tanto.
 
 ---
 
@@ -173,7 +175,7 @@ El **mes 1** es el primer mes calendario después del lanzamiento. La fecha de l
 | R-09 | Negocio | El estado de pagos visible para todos genera conflictos entre miembros | Medio | Baja | Limitar lo visible según PRINCIPIO-006 |
 | R-10 | Técnico | En iPhone, una app web solo recibe notificaciones push si el usuario la agrega a la pantalla de inicio, y solo desde iOS 16.4. Si no lo hace, solo le llegan correos | Alto: agrava R-01 y afecta KPI-04 | No estimada (depende de la proporción de usuarios con iPhone) | A definir en el diseño de arquitectura |
 | R-11 | Técnico | Los correos de recordatorio caen en spam o no se entregan | Alto: los participantes no reciben el recordatorio y afecta KPI-04 | Media | A definir en el diseño de arquitectura. Medir la tasa de entrega desde el lanzamiento |
-| R-12 | Técnico | Dos personas registran o cambian el mismo pago sin conexión y, al sincronizar, los datos chocan (PRINCIPIO-009) | Alto: estados de pago incorrectos que afectan KPI-03 y KPI-04 y la confianza del grupo | Media | Regla de resolución de conflictos pendiente (PREG-005) |
+| R-12 | Técnico | El mismo pago se registra o cambia sin conexión desde dos dispositivos y, al sincronizar, los datos chocan (PRINCIPIO-009). En el MVP solo el organizador registra pagos (F-04 de 02-alcance.md), así que el choque ocurre cuando usa dos dispositivos. Con F-08 también puede ocurrir entre el organizador y un participante | Alto: estados de pago incorrectos que afectan KPI-03 y KPI-04 y la confianza del grupo | Media | Regla de resolución de conflictos pendiente (PREG-005) |
 
 ---
 
@@ -181,6 +183,7 @@ El **mes 1** es el primer mes calendario después del lanzamiento. La fecha de l
 
 **Del negocio:**
 - La app es gratis y sin publicidad en el lanzamiento.
+- En el lanzamiento, un organizador puede gestionar varias juntas a la vez, sin límite (PREG-013, resuelta).
 - El plan VIP, la integración con WhatsApp y la línea de préstamos quedan después del lanzamiento o fuera del proyecto.
 - El lanzamiento es real, al mercado y para todos los segmentos.
 - No hay fecha límite de lanzamiento.
