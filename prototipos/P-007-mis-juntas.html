@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mis juntas · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-007 · Mis juntas (/juntas). Prototipo, NO es código de producción.
+    Fuente: spec-pack/09-ui-spec.md §3 P-007 y RN-025, RN-153 y RN-175 de
+    spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?usuario=user_789  ver la pantalla como otra persona (por defecto, Jorge)
+      ?verificado=1      vuelve de P-002 con el correo ya verificado
+  -->
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión (RN-094, RN-095) -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <!-- C-03 · Indicador de cambios sin enviar -->
+  <div class="status-bar" id="indicador-cambios" hidden>
+    <span class="icon icon--sync" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-cambios"></span>
+    <a class="status-bar__action" data-nav="P-016-cambios-sin-enviar.html" href="P-016-cambios-sin-enviar.html">Ver</a>
+  </div>
+
+  <main id="contenido" class="container container--wide">
+
+    <!-- Aviso de correo sin verificar (HU-001, RN-153) -->
+    <div class="alert alert--warning alert--mail section" id="aviso-correo" hidden>
+      <div class="alert__body">
+        <p id="texto-aviso-correo"></p>
+        <p id="enlace-nuevo-enviado" role="status" hidden>Le enviamos un enlace nuevo a su correo.</p>
+        <button class="btn btn--text" type="button" id="btn-otro-enlace" style="padding-left: 0">Pedir otro enlace</button>
+      </div>
+    </div>
+
+    <div class="page-header section">
+      <h1>Mis juntas</h1>
+    </div>
+
+    <div>
+      <div class="btn-row btn-row--wrap" style="max-width: 720px">
+        <a class="btn btn--primary" id="btn-crear" data-nav="P-008-crear-junta.html" href="P-008-crear-junta.html">Crear junta</a>
+        <a class="btn btn--secondary" id="btn-unirse" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse con un código</a>
+      </div>
+      <!-- C-04 sin conexión: los dos botones siguen enfocables y explican el motivo -->
+      <span class="unavailable-reason" id="motivo-botones" tabindex="-1" data-estado="sin-conexion"></span>
+      <p class="inline-error" id="error-crear" tabindex="-1" hidden></p>
+    </div>
+
+    <!-- Cargando: 3 tarjetas C-10 -->
+    <ul class="card-grid section" data-estado="loading" aria-hidden="true">
+      <li><span class="skeleton skeleton--card"></span></li>
+      <li><span class="skeleton skeleton--card"></span></li>
+      <li><span class="skeleton skeleton--card"></span></li>
+    </ul>
+
+    <!-- Error de red sin snapshot -->
+    <div class="alert alert--danger section" role="alert" data-estado="error">
+      <div class="alert__body">
+        <p>No pudimos cargar sus juntas. Revise su conexión e intente de nuevo.</p>
+        <button class="btn btn--secondary" type="button" id="btn-reintentar">Intentar de nuevo</button>
+      </div>
+    </div>
+
+    <!-- Vacío -->
+    <div class="empty-state section" data-estado="vacio">
+      <p>Todavía no tiene juntas. Cree una o únase con el código que le compartió el organizador.</p>
+    </div>
+
+    <!-- Con datos: tarjetas-enlace (también sin conexión, desde el snapshot, RN-175) -->
+    <section class="section" data-estado="con-datos sin-conexion correo-sin-verificar" aria-label="Sus juntas">
+      <ul class="card-grid" id="lista-juntas"></ul>
+      <div class="empty-state" id="lista-vacia" hidden>
+        <p>Todavía no tiene juntas. Cree una o únase con el código que le compartió el organizador.</p>
+      </div>
+    </section>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p id="nota-usuario"></p>
+      <p id="nota-otros"></p>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+
+      const user = M.getCurrentUser();
+      const userParam = 'usuario=' + user.id;
+      const verifiedNow = params.get('verificado') === '1';
+      const emailUnverified = !user.emailVerifiedAt && !verifiedNow;
+      const juntas = M.getJuntasForUser(user.id);
+
+      // Todos los enlaces conservan el usuario con sesión
+      document.querySelectorAll('[data-nav]').forEach(function (a) {
+        a.href = a.getAttribute('data-nav') + '?' + userParam;
+      });
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('texto-aviso-correo').textContent = M.message('RN-153');
+      $('motivo-botones').textContent = M.message('RN-170');
+
+      /* Tarjeta de cada junta según el caso (09 §3 P-007) */
+      function card(item) {
+        const j = item.junta;
+        const lines = [];
+        const inProgress = j.status === 'in_progress';
+        const beforeOrder = j.status === 'open' || j.status === 'full';
+
+        if (j.status !== 'finished') {
+          if (item.role === 'organizer') {
+            lines.push(item.participates ? 'Usted organiza esta junta' : 'Usted organiza esta junta y no participa' +
+              (inProgress ? ' · Ronda actual: ' + item.currentRound.number : ''));
+          }
+          if (item.participates) {
+            if (beforeOrder) {
+              lines.push(item.occupiedSlots + ' de ' + j.participantCount + ' cupos');
+            } else if (inProgress) {
+              // RN-025: su número de turno
+              lines.push('Su turno: ' + item.turn + ' · Ronda actual: ' + item.currentRound.number);
+              lines.push('Su cuota: ' + M.badgeHtml(item.ownStatus) + (item.ownUnsent ? ' ' + M.unsentBadgeHtml() : ''));
+            }
+          }
+        } else if (item.role === 'organizer') {
+          lines.push('Usted organiza esta junta');
+        }
+
+        const page = item.role === 'organizer' ? 'P-011-junta-organizador.html' : 'P-010-junta-participante.html';
+        return '<li><a class="card card--link" href="' + page + '?junta=' + j.id + '&amp;' + userParam + '">' +
+          '<span class="split"><span class="card__title">' + esc(j.name) + '</span>' + M.badgeHtml(j.status) + '</span>' +
+          lines.map(function (l) { return '<span class="cluster">' + l + '</span>'; }).join('') +
+          '</a></li>';
+      }
+
+      $('lista-juntas').innerHTML = juntas.map(card).join('');
+      $('lista-vacia').hidden = juntas.length > 0;
+      $('lista-juntas').hidden = juntas.length === 0;
+
+      /* Indicador de cambios sin enviar (C-03) */
+      const sync = M.getSyncIndicator(user.id);
+      if (sync) {
+        $('indicador-cambios').classList.add(sync.kind === 'rejected' ? 'status-bar--rejected' : 'status-bar--pending');
+        $('texto-cambios').textContent = sync.text;
+      }
+
+      /* Acciones */
+      let offline = false;
+      let showVerifyNotice = false;
+
+      function blockedByOffline(event, target) {
+        if (!offline) return false;
+        event.preventDefault();                // C-04: no navega; el foco va al motivo
+        $('motivo-botones').focus();
+        return true;
+      }
+
+      $('btn-crear').addEventListener('click', function (event) {
+        if (blockedByOffline(event)) return;
+        if (showVerifyNotice) {                // RN-153: no abre P-008
+          event.preventDefault();
+          $('error-crear').textContent = M.message('RN-153');
+          $('error-crear').hidden = false;
+          $('error-crear').focus();
+        }
+      });
+
+      $('btn-unirse').addEventListener('click', function (event) { blockedByOffline(event); });
+
+      $('btn-otro-enlace').addEventListener('click', function () {
+        const btn = this;
+        btn.disabled = true;
+        btn.setAttribute('aria-busy', 'true');
+        setTimeout(function () {               // API-003
+          btn.hidden = true;
+          $('enlace-nuevo-enviado').hidden = false;
+        }, 700);
+      });
+
+      $('btn-reintentar').addEventListener('click', function () {
+        states.set('loading');
+        setTimeout(function () { states.set('con-datos'); }, 1000);
+      });
+
+      function setUnavailable(el, unavailable) {
+        if (unavailable) {
+          el.setAttribute('aria-disabled', 'true');
+          el.setAttribute('aria-describedby', 'motivo-botones');
+        } else {
+          el.removeAttribute('aria-disabled');
+          el.removeAttribute('aria-describedby');
+        }
+      }
+
+      /* Nota del prototipo */
+      $('nota-usuario').textContent = 'Está viendo la pantalla como ' + user.name + (emailUnverified ? ', con el correo sin verificar.' : '.') +
+        ' Hoy es ' + M.formatDate(data.meta.today) + '.';
+      $('nota-otros').innerHTML = 'Ver como: ' + [
+        ['user_456', 'organiza dos juntas'],
+        ['user_789', 'participante'],
+        ['user_610', 'con una junta terminada'],
+        ['user_123', 'organiza una junta abierta'],
+        ['user_301', 'sin juntas y con el correo sin verificar'],
+      ].filter(function (u) { return u[0] !== user.id; }).map(function (u) {
+        return '<a href="P-007-mis-juntas.html?usuario=' + u[0] + '">' + esc(M.getUser(u[0]).name) + '</a> (' + u[1] + ')';
+      }).join(', ') + '.';
+
+      const states = M.initStates({
+        extraStates: [
+          { id: 'sin-conexion', label: 'Sin conexión' },
+          { id: 'correo-sin-verificar', label: 'Correo sin verificar' },
+        ],
+        initial: 'con-datos',
+        onChange: function (state) {
+          offline = state === 'sin-conexion';
+          setUnavailable($('btn-crear'), offline);
+          setUnavailable($('btn-unirse'), offline);
+          $('error-crear').hidden = true;
+
+          showVerifyNotice = state === 'correo-sin-verificar' ||
+            (emailUnverified && ['con-datos', 'vacio', 'sin-conexion'].indexOf(state) !== -1);
+          $('aviso-correo').hidden = !showVerifyNotice;
+          $('btn-otro-enlace').hidden = false;
+          $('btn-otro-enlace').disabled = false;
+          $('btn-otro-enlace').removeAttribute('aria-busy');
+          $('enlace-nuevo-enviado').hidden = true;
+
+          // C-03 solo cuando se ven las juntas
+          $('indicador-cambios').hidden = !sync || ['con-datos', 'sin-conexion', 'correo-sin-verificar'].indexOf(state) === -1;
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

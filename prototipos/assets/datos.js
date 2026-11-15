@@ -143,6 +143,14 @@
     newAccount: { name: 'Ana Salinas', email: 'ana.salinas@example.com', dni: '72345618', phone: '976543210' },
     // Códigos para probar P-009 (RN-116, RN-019, RN-020)
     inviteCodes: { valid: 'T9QW3HZ5', regenerated: 'K7MP4XR2', revokedByDraw: 'M3QX7KPA', unknown: 'H2RZ8QWN' },
+    // Contraseña que aceptan todas las cuentas en P-003. Solo existe en el
+    // prototipo: la app nunca guarda contraseñas en claro (PRINCIPIO-005).
+    demoPassword: 'Junta2026',
+    // Cuenta que, al iniciar sesión, tiene que aceptar la versión
+    // privacyPolicy.exampleNewVersion antes de ver sus juntas (RN-168).
+    // Jorge además tiene segundo factor, así que recorre UF-02 completo:
+    // P-003 → P-022 → P-006 (aceptación) → P-007.
+    policyAcceptancePendingUserId: 'user_456',
   };
 
   const juntas = [
@@ -440,6 +448,7 @@
     {
       clientChangeId: 'chg_0001', userId: J, type: 'payment_recorded', juntaId: 'junta_ventas', roundNumber: 2, participantId: 'user_615', paidOn: '2026-12-16',
       performedAt: '2026-12-28T10:20:00-05:00', rejectedAt: '2026-12-28T11:05:00-05:00', reasonId: 'RN-172-reason-already-recorded',
+      reviewedAt: null,   // se llena al pulsar "Entendido" en P-016
     },
   ];
 
@@ -1085,6 +1094,44 @@
       });
   }
 
+  // Rechazos que P-016 marcó como revisados en este navegador ("Entendido")
+  const REVIEWED_KEY = 'mijunta.rechazosRevisados';
+
+  function reviewedRejections() {
+    try {
+      return JSON.parse(global.sessionStorage.getItem(REVIEWED_KEY) || '[]');
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function markRejectionReviewed(clientChangeId) {
+    try {
+      const list = reviewedRejections();
+      if (list.indexOf(clientChangeId) === -1) list.push(clientChangeId);
+      global.sessionStorage.setItem(REVIEWED_KEY, JSON.stringify(list));
+    } catch (e) {
+      /* sin almacenamiento: el rechazo vuelve a aparecer al recargar */
+    }
+  }
+
+  /*
+   * Indicador de cambios sin enviar (C-03) para un usuario:
+   *   - con un rechazo sin revisar: { kind: 'rejected', text: 'Un cambio no se pudo guardar.' }
+   *   - con cambios por enviar:     { kind: 'pending', text: '1 cambio sin enviar.' } (RN-174)
+   *   - sin nada:                   null
+   */
+  function getSyncIndicator(userId) {
+    const reviewed = reviewedRejections();
+    const unreviewed = rejectedChanges.filter(function (c) {
+      return c.userId === userId && !c.reviewedAt && reviewed.indexOf(c.clientChangeId) === -1;
+    });
+    if (unreviewed.length) return { kind: 'rejected', text: uiTexts.rejectedChange };
+    const pending = getPendingChanges(userId).length;
+    if (pending) return { kind: 'pending', count: pending, text: pendingChangesText(pending) };
+    return null;
+  }
+
   // Encuesta pendiente de KPI-05 (RN-204, RN-205, RN-211). Para el prototipo
   // solo se revisa la primera encuesta.
   function hasPendingSurvey(userId) {
@@ -1242,6 +1289,8 @@
     getTurnAssignment: getTurnAssignment,
     getPendingChanges: getPendingChanges,
     getRejectedChanges: getRejectedChanges,
+    getSyncIndicator: getSyncIndicator,
+    markRejectionReviewed: markRejectionReviewed,
     hasPendingSurvey: hasPendingSurvey,
     // Validaciones
     validate: validate,

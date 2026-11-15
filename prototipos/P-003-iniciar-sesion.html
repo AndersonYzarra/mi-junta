@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-003 · Iniciar sesión (/login). Prototipo, NO es código de producción.
+    Fuente: spec-pack/09-ui-spec.md §3 P-003 y RN-017, RN-075, RN-160, RN-161,
+    RN-170, RN-176 y RN-191 de spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL que simulan de dónde viene el usuario:
+      ?codigo=T9QW3HZ5   viene de P-009 sin sesión (aviso de RN-017)
+      ?aviso=contrasena  viene de P-005 (aviso de contraseña cambiada)
+  -->
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" href="P-003-iniciar-sesion.html">Mi Junta</a>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <div class="auth-card stack">
+
+      <!-- Aviso de cambios sin enviar de una sesión vencida (RN-176) -->
+      <div class="alert alert--info" id="aviso-outbox" data-estado="con-datos con-avisos">
+        <div class="alert__body"><p id="texto-outbox"></p></div>
+      </div>
+
+      <!-- Aviso de código guardado al venir de P-009 sin sesión (RN-017) -->
+      <div class="alert alert--info" id="aviso-codigo" role="alert" hidden>
+        <div class="alert__body"><p id="texto-codigo"></p></div>
+      </div>
+
+      <!-- Aviso al venir de P-005 -->
+      <div class="alert alert--success" id="aviso-contrasena" role="status" hidden>
+        <div class="alert__body"><p>Su contraseña se cambió. Inicie sesión con la nueva.</p></div>
+      </div>
+
+      <h1>Iniciar sesión</h1>
+
+      <!-- Resumen de error: sin decir cuál de los dos datos falló (RN-075) -->
+      <div class="error-summary" id="resumen" role="alert" tabindex="-1" hidden>
+        <p class="error-summary__title" id="resumen-texto"></p>
+      </div>
+
+      <form id="form-login" novalidate>
+        <div class="field">
+          <label class="field__label" for="correo">Correo</label>
+          <input class="input field__control" id="correo" name="correo" type="email" autocomplete="email" spellcheck="false">
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="contrasena">Contraseña</label>
+          <div class="field__control input-with-button">
+            <input class="input" id="contrasena" name="contrasena" type="password" autocomplete="current-password">
+            <button class="btn btn--icon" type="button" id="ver-contrasena" aria-label="Mostrar contraseña" aria-pressed="false" aria-controls="contrasena">
+              <span class="icon icon--eye" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+
+        <p><a href="P-004-recuperar-contrasena.html" class="btn btn--text" style="padding-left: 0">¿Olvidó su contraseña?</a></p>
+
+        <div class="section">
+          <button class="btn btn--primary btn--block" type="submit" id="btn-iniciar">Iniciar sesión</button>
+          <span class="unavailable-reason" id="motivo-iniciar" tabindex="-1" data-estado="sin-conexion"></span>
+        </div>
+      </form>
+
+      <p class="divider">o</p>
+      <a class="btn btn--secondary btn--block" id="btn-crear" href="P-001-crear-cuenta.html">Crear cuenta</a>
+
+      <aside class="proto-note" aria-label="Nota del prototipo">
+        <p class="proto-note__title">Solo en el prototipo</p>
+        <p>Cuentas de prueba, todas con la contraseña <strong class="mono" id="demo-password"></strong>:</p>
+        <ul id="cuentas-prueba"></ul>
+        <p id="contador-intentos" aria-live="polite"></p>
+        <p><button class="btn btn--text" type="button" id="fin-bloqueo" style="padding-left: 0">Simular que pasaron los 15 minutos del bloqueo</button></p>
+      </aside>
+    </div>
+  </main>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const savedCode = params.get('codigo');
+      const passwordChanged = params.get('aviso') === 'contrasena';
+
+      const $ = function (id) { return document.getElementById(id); };
+      const form = $('form-login');
+      const email = $('correo');
+      const password = $('contrasena');
+      const submitBtn = $('btn-iniciar');
+      const reason = $('motivo-iniciar');
+      const summary = $('resumen');
+      const summaryText = $('resumen-texto');
+
+      // Cambios sin enviar de la sesión vencida de Jorge (datos.js)
+      const outboxOwner = M.getUser('user_456');
+      const outboxCount = M.getPendingChanges(outboxOwner.id).length;
+
+      // Textos
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('texto-outbox').textContent = outboxCount === 1
+        ? 'Tiene 1 cambio sin enviar. Inicie sesión para enviarlos.'
+        : 'Tiene ' + outboxCount + ' cambios sin enviar. Inicie sesión para enviarlos.';
+      $('texto-codigo').textContent = M.message('RN-017');
+      reason.textContent = M.message('RN-170');
+      $('demo-password').textContent = data.examples.demoPassword;
+
+      // Enlaces que conservan el código guardado (UF-05, paso 3)
+      if (savedCode) {
+        $('btn-crear').href = 'P-001-crear-cuenta.html?codigo=' + encodeURIComponent(savedCode);
+      }
+
+      // Cuentas de prueba y a dónde lleva cada una
+      const demoAccounts = [
+        { id: 'user_789', note: 'abre Mis juntas como participante' },
+        { id: 'user_456', note: 'tiene segundo factor: pide el código y después la política nueva' },
+        { id: 'user_301', note: 'abre Mis juntas con el correo sin verificar' },
+      ];
+      $('cuentas-prueba').innerHTML = demoAccounts.map(function (a) {
+        const u = M.getUser(a.id);
+        return '<li><span class="mono">' + M.escapeHtml(u.email) + '</span> (' + M.escapeHtml(u.name) + '): ' + a.note + '.</li>';
+      }).join('');
+
+      // Mostrar u ocultar la contraseña (aria-pressed refleja el estado)
+      $('ver-contrasena').addEventListener('click', function () {
+        const show = password.type === 'password';
+        password.type = show ? 'text' : 'password';
+        this.setAttribute('aria-pressed', String(show));
+        this.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+        this.querySelector('.icon').className = 'icon ' + (show ? 'icon--eye-off' : 'icon--eye');
+      });
+
+      /* Intentos fallidos por cuenta (RN-075, RN-160, RN-161). El correo se
+         compara sin distinguir mayúsculas (RN-191). */
+      const failures = {};
+      const locked = {};
+      let offline = false;
+
+      function key(text) { return String(text || '').trim().toLowerCase(); }
+
+      function updateCounter() {
+        const k = key(email.value);
+        const n = failures[k] || 0;
+        $('contador-intentos').textContent = locked[k]
+          ? 'La cuenta ' + (k || '(sin correo)') + ' está bloqueada. Los intentos durante el bloqueo no se cuentan (RN-161).'
+          : 'Intentos fallidos seguidos de ' + (k || 'esta cuenta') + ': ' + n + ' de 5. Con 5, la cuenta se bloquea 15 minutos (RN-075).';
+      }
+
+      function showSummary(text) {
+        summaryText.textContent = text;
+        summary.hidden = false;
+        summary.focus();
+      }
+
+      function hideSummary() { summary.hidden = true; }
+
+      function setBusy(busy) {
+        submitBtn.disabled = busy;
+        if (busy) submitBtn.setAttribute('aria-busy', 'true');
+        else submitBtn.removeAttribute('aria-busy');
+      }
+
+      function setOffline(isOffline) {
+        offline = isOffline;
+        if (isOffline) {
+          submitBtn.setAttribute('aria-disabled', 'true');
+          submitBtn.setAttribute('aria-describedby', 'motivo-iniciar');
+        } else {
+          submitBtn.removeAttribute('aria-disabled');
+          submitBtn.removeAttribute('aria-describedby');
+        }
+      }
+
+      function destination(user) {
+        const q = '?usuario=' + user.id + (savedCode ? '&codigo=' + encodeURIComponent(savedCode) : '');
+        if (user.twoFactorEnabled) return 'P-022-codigo-verificacion.html' + q;                  // 202 (S)
+        if (user.id === data.examples.policyAcceptancePendingUserId) return 'P-006-politica-privacidad.html' + q + '&modo=aceptacion';
+        if (savedCode) return 'P-009-unirse-junta.html' + q;                                    // vuelve a enviar el código
+        return 'P-007-mis-juntas.html' + q;
+      }
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (offline) {                       // C-04: no llama a la API
+          reason.focus();
+          return;
+        }
+        const k = key(email.value);
+        if (locked[k]) {                     // RN-161: se rechaza sin contarse
+          showSummary(M.message('RN-161'));
+          updateCounter();
+          return;
+        }
+        const user = data.users.find(function (u) { return u.email && u.email.toLowerCase() === k; });
+        if (!user || password.value !== data.examples.demoPassword) {
+          failures[k] = (failures[k] || 0) + 1;
+          if (failures[k] >= 5) {
+            locked[k] = true;
+            showSummary(M.message('RN-161'));
+          } else {
+            showSummary(M.message('RN-075'));
+          }
+          updateCounter();
+          return;
+        }
+        failures[k] = 0;                     // RN-076
+        hideSummary();
+        setBusy(true);
+        setTimeout(function () { location.href = destination(user); }, 700);
+      });
+
+      email.addEventListener('input', updateCounter);
+
+      // Fin del bloqueo: el contador vuelve a 0 (RN-160)
+      $('fin-bloqueo').addEventListener('click', function () {
+        const k = key(email.value);
+        locked[k] = false;
+        failures[k] = 0;
+        hideSummary();
+        updateCounter();
+      });
+
+      /* Estados del prototipo */
+      M.initStates({
+        extraStates: [
+          { id: 'bloqueada', label: 'Bloqueada' },
+          { id: 'sin-conexion', label: 'Sin conexión' },
+          { id: 'con-avisos', label: 'Con avisos' },
+        ],
+        initial: 'vacio',
+        onChange: function (state) {
+          hideSummary();
+          setBusy(false);
+          setOffline(state === 'sin-conexion');
+          password.value = '';
+          email.value = '';
+
+          if (state === 'con-datos') {
+            // Jorge vuelve después de que venció su sesión, con 1 cambio sin enviar
+            email.value = outboxOwner.email;
+          } else if (state === 'error') {
+            email.value = 'Lucia@Example.com';
+            failures[key(email.value)] = 1;
+            showSummary(M.message('RN-075'));
+          } else if (state === 'bloqueada') {
+            email.value = 'lucia@example.com';
+            failures[key(email.value)] = 5;
+            locked[key(email.value)] = true;
+            showSummary(M.message('RN-161'));
+          } else if (state === 'loading') {
+            email.value = M.getUser('user_789').email;
+            password.value = data.examples.demoPassword;
+            setBusy(true);
+          }
+
+          $('aviso-codigo').hidden = !(savedCode || state === 'con-avisos');
+          $('aviso-contrasena').hidden = !(passwordChanged || state === 'con-avisos');
+          updateCounter();
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

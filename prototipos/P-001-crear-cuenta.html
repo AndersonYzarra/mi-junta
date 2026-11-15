@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crear cuenta · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-001 · Crear cuenta (/signup). Prototipo, NO es código de producción.
+    Fuente: spec-pack/09-ui-spec.md §3 P-001 y RN-074, RN-085, RN-086, RN-088,
+    RN-089, RN-146 a RN-151, RN-170, RN-180 y RN-181 de
+    spec-pack/03-reglas-de-negocio.md.
+    Parámetro de la URL: ?codigo=T9QW3HZ5 simula que viene de P-009 sin sesión.
+  -->
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" href="P-003-iniciar-sesion.html">Mi Junta</a>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <div class="auth-card">
+      <div class="page-header">
+        <h1>Crear cuenta</h1>
+        <p>Con su cuenta podrá crear juntas o unirse a una con su código.</p>
+      </div>
+
+      <!-- Viene de P-009 con un código guardado (RN-017) -->
+      <div class="alert alert--info section" id="aviso-codigo" hidden>
+        <div class="alert__body"><p id="texto-codigo"></p></div>
+      </div>
+
+      <!-- Resumen de errores al enviar (C-05) -->
+      <div class="error-summary" id="resumen" role="alert" tabindex="-1" hidden>
+        <ul id="resumen-lista"></ul>
+      </div>
+
+      <form id="form-cuenta" novalidate>
+        <div class="field">
+          <label class="field__label" for="nombre">Nombre</label>
+          <input class="input field__control" id="nombre" name="nombre" autocomplete="name" maxlength="80" aria-describedby="error-nombre">
+          <p class="field__error" id="error-nombre" hidden></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="correo">Correo</label>
+          <input class="input field__control" id="correo" name="correo" type="email" autocomplete="email" spellcheck="false" aria-describedby="error-correo">
+          <p class="field__error" id="error-correo" hidden></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="contrasena">Contraseña</label>
+          <span class="field__help" id="ayuda-contrasena">Al menos 8 caracteres.</span>
+          <div class="field__control input-with-button">
+            <input class="input" id="contrasena" name="contrasena" type="password" autocomplete="new-password" aria-describedby="ayuda-contrasena error-contrasena">
+            <button class="btn btn--icon" type="button" id="ver-contrasena" aria-label="Mostrar contraseña" aria-pressed="false" aria-controls="contrasena">
+              <span class="icon icon--eye" aria-hidden="true"></span>
+            </button>
+          </div>
+          <p class="field__error" id="error-contrasena" hidden></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="dni">DNI (opcional)</label>
+          <input class="input field__control" id="dni" name="dni" inputmode="numeric" maxlength="8" autocomplete="off" aria-describedby="error-dni">
+          <p class="field__error" id="error-dni" hidden></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="celular">Celular (opcional)</label>
+          <input class="input field__control" id="celular" name="celular" inputmode="numeric" maxlength="9" autocomplete="tel-national" aria-describedby="error-celular">
+          <p class="field__error" id="error-celular" hidden></p>
+        </div>
+
+        <!-- Una sola casilla para la política y las notificaciones, desmarcada (RN-088, PREG-001) -->
+        <label class="choice">
+          <input type="checkbox" id="consentimiento" name="consentimiento">
+          <span class="choice__text">Acepto la <a href="P-006-politica-privacidad.html?sesion=no&amp;desde=P-001" id="enlace-politica">política de privacidad</a> y recibir notificaciones por correo y push.</span>
+        </label>
+
+        <label class="choice">
+          <input type="checkbox" id="mayor-edad" name="mayor-edad" aria-describedby="error-mayor-edad">
+          <span class="choice__text">Soy mayor de 18 años</span>
+        </label>
+        <p class="field__error" id="error-mayor-edad" hidden></p>
+
+        <div class="section">
+          <!-- disabled real mientras la casilla de consentimiento esté desmarcada (RN-089, excepción de C-04) -->
+          <button class="btn btn--primary btn--block" type="submit" id="btn-crear" disabled>Crear cuenta</button>
+          <p class="inline-error" id="error-envio" tabindex="-1" hidden></p>
+        </div>
+      </form>
+
+      <p class="section"><a href="P-003-iniciar-sesion.html" id="enlace-login" class="btn btn--text" style="padding-left: 0">Ya tengo una cuenta</a></p>
+
+      <aside class="proto-note" aria-label="Nota del prototipo">
+        <p class="proto-note__title">Solo en el prototipo</p>
+        <p id="nota-duplicados"></p>
+        <p>No existen los campos "Fecha de nacimiento" ni "Foto" (RN-149).</p>
+      </aside>
+    </div>
+  </main>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const STORAGE_KEY = 'mijunta.p001.formulario';
+
+      const $ = function (id) { return document.getElementById(id); };
+      const form = $('form-cuenta');
+      const fields = {
+        nombre: $('nombre'), correo: $('correo'), contrasena: $('contrasena'),
+        dni: $('dni'), celular: $('celular'),
+      };
+      const consent = $('consentimiento');
+      const adult = $('mayor-edad');
+      const submitBtn = $('btn-crear');
+      const sendError = $('error-envio');
+      let offline = false;
+      let savedCode = params.get('codigo');
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('texto-codigo').textContent = M.message('RN-017');
+
+      // Datos ya registrados en datos.js con los que se prueban los duplicados
+      const lucia = M.getUser('user_789');
+      $('nota-duplicados').innerHTML = 'Para ver los rechazos por duplicado (RN-150, RN-151, RN-180), use los datos de ' +
+        M.escapeHtml(lucia.name) + ': correo <span class="mono">' + M.escapeHtml(lucia.email) +
+        '</span> (también en mayúsculas), DNI <span class="mono">' + lucia.dni + '</span> o celular <span class="mono">' + lucia.phone + '</span>.';
+
+      /* Errores de campo (C-05) */
+      function setError(input, errorEl, text) {
+        if (text) {
+          errorEl.textContent = text;
+          errorEl.hidden = false;
+          input.setAttribute('aria-invalid', 'true');
+        } else {
+          errorEl.hidden = true;
+          errorEl.textContent = '';
+          input.removeAttribute('aria-invalid');
+        }
+      }
+
+      function fieldError(name, text) { setError(fields[name], $('error-' + name), text); }
+
+      // Validación al salir de cada campo (UF-01, paso 2). Los opcionales solo
+      // se validan si tienen texto (RN-148).
+      const blurRules = {
+        nombre: function (v) { return v.trim() ? M.validate.userName(v) : null; },          // RN-147
+        contrasena: function (v) { return v ? M.validate.password(v) : null; },             // RN-074
+        dni: function (v) { return v ? M.validate.dni(v) : null; },                          // RN-085
+        celular: function (v) { return v ? M.validate.phone(v) : null; },                    // RN-086
+      };
+
+      Object.keys(blurRules).forEach(function (name) {
+        fields[name].addEventListener('blur', function () { fieldError(name, blurRules[name](this.value)); });
+      });
+
+      // RN-089: "Crear cuenta" deshabilitado mientras el consentimiento esté desmarcado
+      function syncButton() { submitBtn.disabled = !consent.checked || submitBtn.getAttribute('aria-busy') === 'true'; }
+      consent.addEventListener('change', syncButton);
+
+      adult.addEventListener('change', function () { if (adult.checked) setError(adult, $('error-mayor-edad'), null); });
+
+      // Mostrar u ocultar la contraseña
+      $('ver-contrasena').addEventListener('click', function () {
+        const show = fields.contrasena.type === 'password';
+        fields.contrasena.type = show ? 'text' : 'password';
+        this.setAttribute('aria-pressed', String(show));
+        this.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+        this.querySelector('.icon').className = 'icon ' + (show ? 'icon--eye-off' : 'icon--eye');
+      });
+
+      /* Resumen de errores con enlaces a cada campo */
+      function showSummary(items) {
+        $('resumen-lista').innerHTML = items.map(function (it) {
+          return '<li><a href="#' + it.id + '">' + M.escapeHtml(it.text) + '</a></li>';
+        }).join('');
+        $('resumen').hidden = false;
+        $('resumen').focus();
+      }
+
+      function clearAll() {
+        Object.keys(fields).forEach(function (n) { fieldError(n, null); });
+        setError(adult, $('error-mayor-edad'), null);
+        $('resumen').hidden = true;
+        sendError.hidden = true;
+      }
+
+      // Validación completa en el navegador (lo que no necesita al servidor)
+      function validateClient() {
+        const items = [];
+        const missing = ['nombre', 'correo', 'contrasena'].filter(function (n) { return !fields[n].value.trim(); });
+        if (missing.length) {
+          missing.forEach(function (n) { fields[n].setAttribute('aria-invalid', 'true'); });
+          items.push({ id: missing[0], text: M.message('RN-146') });                      // RN-146
+        }
+        Object.keys(blurRules).forEach(function (n) {
+          const err = blurRules[n](fields[n].value);
+          fieldError(n, err);
+          if (err) items.push({ id: n, text: err });
+        });
+        if (!adult.checked) {                                                             // RN-181
+          setError(adult, $('error-mayor-edad'), M.message('RN-181'));
+          items.push({ id: 'mayor-edad', text: M.message('RN-181') });
+        }
+        return items;
+      }
+
+      // Duplicados que responde el servidor con 409 (RN-150, RN-151, RN-180)
+      function validateServer() {
+        const items = [];
+        const mail = fields.correo.value.trim().toLowerCase();
+        if (data.users.some(function (u) { return u.email && u.email.toLowerCase() === mail; })) {
+          fieldError('correo', M.message('RN-150'));
+          items.push({ id: 'correo', text: M.message('RN-150') });
+        }
+        if (fields.dni.value && data.users.some(function (u) { return u.dni === fields.dni.value; })) {
+          fieldError('dni', M.message('RN-151'));
+          items.push({ id: 'dni', text: M.message('RN-151') });
+        }
+        if (fields.celular.value && data.users.some(function (u) { return u.phone === fields.celular.value; })) {
+          fieldError('celular', M.message('RN-180'));
+          items.push({ id: 'celular', text: M.message('RN-180') });
+        }
+        return items;
+      }
+
+      function setBusy(busy) {
+        if (busy) submitBtn.setAttribute('aria-busy', 'true');
+        else submitBtn.removeAttribute('aria-busy');
+        syncButton();
+      }
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        clearAll();
+        if (offline) {                         // No envía nada ni guarda la cuenta (RN-170)
+          sendError.textContent = M.message('RN-170');
+          sendError.hidden = false;
+          sendError.focus();
+          return;
+        }
+        const clientErrors = validateClient();
+        if (clientErrors.length) { showSummary(clientErrors); return; }
+        setBusy(true);
+        setTimeout(function () {
+          setBusy(false);
+          const serverErrors = validateServer();
+          if (serverErrors.length) { showSummary(serverErrors); return; }
+          // 201: P-007 con el aviso de correo sin verificar, o P-009 con el código guardado.
+          // La cuenta nueva se representa con la de Rosa (sin juntas y sin verificar).
+          try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) { /* sin almacenamiento */ }
+          location.href = savedCode
+            ? 'P-009-unirse-junta.html?usuario=user_301&codigo=' + encodeURIComponent(savedCode)
+            : 'P-007-mis-juntas.html?usuario=user_301';
+        }, 800);
+      });
+
+      /* Leer la política y volver sin perder los datos */
+      function saveForm() {
+        const values = { codigo: savedCode, consentimiento: consent.checked, mayor: adult.checked };
+        Object.keys(fields).forEach(function (n) { values[n] = fields[n].value; });
+        try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(values)); } catch (e) { /* sin almacenamiento */ }
+      }
+
+      function readSavedForm() {
+        let values = null;
+        try { values = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) { values = null; }
+        return values;
+      }
+
+      function restoreForm(values) {
+        Object.keys(fields).forEach(function (n) { fields[n].value = values[n] || ''; });
+        consent.checked = !!values.consentimiento;
+        adult.checked = !!values.mayor;
+        if (!savedCode && values.codigo) savedCode = values.codigo;
+        try { sessionStorage.removeItem(STORAGE_KEY); } catch (e) { /* sin almacenamiento */ }
+        syncButton();
+      }
+
+      $('enlace-politica').addEventListener('click', saveForm);
+
+      function applyCodeLinks() {
+        $('aviso-codigo').hidden = !savedCode;
+        $('enlace-login').href = 'P-003-iniciar-sesion.html' + (savedCode ? '?codigo=' + encodeURIComponent(savedCode) : '');
+      }
+
+      function fill(values) {
+        Object.keys(fields).forEach(function (n) { fields[n].value = values[n] || ''; });
+      }
+
+      /* Estados del prototipo */
+      const ana = data.examples.newAccount;
+      const states = M.initStates({
+        extraStates: [{ id: 'sin-conexion', label: 'Sin conexión' }],
+        initial: 'vacio',
+        onChange: function (state) {
+          clearAll();
+          offline = state === 'sin-conexion';
+          consent.checked = false;                 // desmarcadas al abrir (RN-088)
+          adult.checked = false;
+          submitBtn.removeAttribute('aria-busy');
+
+          if (state === 'vacio') {
+            fill({});
+          } else if (state === 'con-datos' || state === 'sin-conexion') {
+            fill({ nombre: ana.name, correo: ana.email, contrasena: data.examples.demoPassword, dni: ana.dni, celular: ana.phone });
+          } else if (state === 'error') {
+            fill({ nombre: 'A', correo: 'LUCIA@example.com', contrasena: 'clave', dni: '4587921', celular: '812345678' });
+            consent.checked = true;
+            const items = validateClient().concat(validateServer());
+            showSummary(items);
+          } else if (state === 'loading') {
+            fill({ nombre: ana.name, correo: ana.email, contrasena: data.examples.demoPassword, dni: ana.dni, celular: ana.phone });
+            consent.checked = true;
+            adult.checked = true;
+            submitBtn.setAttribute('aria-busy', 'true');
+          }
+          syncButton();
+          if (state === 'loading') submitBtn.disabled = true;
+        },
+      });
+
+      // Al volver de la política, los datos siguen en el formulario
+      const saved = readSavedForm();
+      if (saved) {
+        states.set('con-datos');
+        restoreForm(saved);
+      }
+      applyCodeLinks();
+    })();
+  </script>
+</body>
+</html>

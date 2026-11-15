@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verificar correo · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-002 · Verificar correo (/verify-email?token=…). Prototipo, NO es código
+    de producción. Fuente: spec-pack/09-ui-spec.md §3 P-002 y RN-152, RN-154 y
+    RN-170 de spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?token=…      el enlace del correo (por defecto, uno de ejemplo)
+      ?token=usado  simula un enlace ya usado o vencido (410)
+      ?sesion=no    sin sesión: "Pedir un enlace nuevo" lleva a P-003
+  -->
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" href="P-003-iniciar-sesion.html" id="enlace-marca">Mi Junta</a>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <div class="auth-card stack">
+
+      <!-- Inicial: la verificación se hace al pulsar, no al abrir (09 §7.2) -->
+      <section class="stack" id="bloque-inicial" data-estado="con-datos loading sin-conexion" aria-labelledby="titulo">
+        <h1 id="titulo">Verifique su correo</h1>
+        <p>Pulse el botón para terminar de crear su cuenta.</p>
+        <div>
+          <button class="btn btn--primary btn--block" type="button" id="btn-verificar">Verificar mi correo</button>
+          <span class="unavailable-reason" id="motivo-verificar" tabindex="-1" data-estado="sin-conexion"></span>
+        </div>
+      </section>
+
+      <!-- Éxito -->
+      <section class="stack" data-estado="exito" aria-labelledby="titulo-exito">
+        <h1 id="titulo-exito">Verifique su correo</h1>
+        <div class="alert alert--success" role="status">
+          <div class="alert__body"><p>Su correo quedó verificado.</p></div>
+        </div>
+        <a class="btn btn--primary btn--block" id="btn-mis-juntas" href="P-007-mis-juntas.html">Ir a Mis juntas</a>
+      </section>
+
+      <!-- Error 410 o enlace sin token: enlace usado, vencido o anulado (RN-154) -->
+      <section class="stack" data-estado="error vacio" aria-labelledby="titulo-error">
+        <h1 id="titulo-error">Verifique su correo</h1>
+        <div class="alert alert--danger" role="alert">
+          <div class="alert__body"><p id="texto-error"></p></div>
+        </div>
+        <div class="alert alert--success" role="status" id="aviso-enlace-nuevo" hidden>
+          <div class="alert__body"><p>Le enviamos un enlace nuevo a su correo.</p></div>
+        </div>
+        <!-- Con sesión llama a API-003; sin sesión lleva a P-003 -->
+        <button class="btn btn--secondary btn--block" type="button" id="btn-pedir">Pedir un enlace nuevo</button>
+        <a class="btn btn--secondary btn--block" id="enlace-pedir" href="P-003-iniciar-sesion.html" hidden>Pedir un enlace nuevo</a>
+      </section>
+
+      <aside class="proto-note" aria-label="Nota del prototipo">
+        <p class="proto-note__title">Solo en el prototipo: el correo que abrió esta pantalla (RN-152)</p>
+        <p><strong id="correo-asunto"></strong></p>
+        <p id="correo-cuerpo"></p>
+        <p id="nota-anulado" hidden>Al pedir un enlace nuevo, este enlace queda anulado y solo sirve el nuevo (RN-154).</p>
+      </aside>
+    </div>
+  </main>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const token = params.get('token') || 'tok_rosa_verificacion';
+      const hasSession = params.get('sesion') !== 'no';
+      const $ = function (id) { return document.getElementById(id); };
+
+      // El enlace es el de Rosa Delgado, que acaba de crear su cuenta (datos.js)
+      const user = M.getUser('user_301');
+      const created = new Date(user.createdAt).getTime();
+      const expires = new Date(created + 86400 * 1000).toISOString();   // 86,400 s (RN-152)
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('motivo-verificar').textContent = M.message('RN-170');
+      $('texto-error').textContent = M.message('RN-154');
+      $('correo-asunto').textContent = M.message('RN-152-subject');
+      $('correo-cuerpo').textContent = M.message('RN-152-body', {
+        nombre: user.name,
+        enlace: '/verify-email?token=' + token,          // el dominio todavía no está definido
+        fecha: M.formatDate(expires),
+        hora: M.formatTime(expires),
+      });
+      $('btn-mis-juntas').href = 'P-007-mis-juntas.html?usuario=' + user.id + '&verificado=1';
+      if (hasSession) $('enlace-marca').href = 'P-007-mis-juntas.html?usuario=' + user.id;
+
+      let offline = false;
+      const verifyBtn = $('btn-verificar');
+
+      verifyBtn.addEventListener('click', function () {
+        if (offline) { $('motivo-verificar').focus(); return; }       // C-04
+        verifyBtn.disabled = true;
+        verifyBtn.setAttribute('aria-busy', 'true');
+        setTimeout(function () {
+          states.set(token === 'usado' ? 'error' : 'exito');           // API-002: 200 o 410
+        }, 800);
+      });
+
+      $('btn-pedir').addEventListener('click', function () {
+        const btn = this;
+        btn.disabled = true;
+        btn.setAttribute('aria-busy', 'true');
+        setTimeout(function () {
+          btn.hidden = true;
+          $('aviso-enlace-nuevo').hidden = false;                     // API-003
+          $('nota-anulado').hidden = false;
+        }, 700);
+      });
+
+      const states = M.initStates({
+        extraStates: [
+          { id: 'exito', label: 'Éxito' },
+          { id: 'sin-conexion', label: 'Sin conexión' },
+        ],
+        initial: 'con-datos',
+        onChange: function (state) {
+          offline = state === 'sin-conexion';
+          verifyBtn.disabled = state === 'loading';
+          if (state === 'loading') verifyBtn.setAttribute('aria-busy', 'true');
+          else verifyBtn.removeAttribute('aria-busy');
+          if (offline) {
+            verifyBtn.setAttribute('aria-disabled', 'true');
+            verifyBtn.setAttribute('aria-describedby', 'motivo-verificar');
+          } else {
+            verifyBtn.removeAttribute('aria-disabled');
+            verifyBtn.removeAttribute('aria-describedby');
+          }
+          // Botón "Pedir un enlace nuevo": con sesión llama a la API, sin sesión va a P-003
+          const pedir = $('btn-pedir');
+          pedir.hidden = !hasSession;
+          pedir.disabled = false;
+          pedir.removeAttribute('aria-busy');
+          $('enlace-pedir').hidden = hasSession;
+          $('aviso-enlace-nuevo').hidden = true;
+          $('nota-anulado').hidden = true;
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

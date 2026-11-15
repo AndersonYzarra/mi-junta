@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Política de privacidad · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-006 · Política de privacidad (/privacy y /privacy/accept). Prototipo, NO es
+    código de producción. Fuente: spec-pack/09-ui-spec.md §3 P-006 y RN-084,
+    RN-168, RN-169, RN-170, RN-189, RN-197 y RN-198 de
+    spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?modo=aceptacion  modo aceptación de una versión nueva (viene de P-003 o P-022)
+      ?sesion=no        lectura sin sesión (viene de P-001)
+      ?desde=P-001      el enlace "Volver" lleva a P-001 en lugar de P-017
+      ?usuario=user_…   usuario con sesión
+  -->
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" id="enlace-marca" href="P-003-iniciar-sesion.html">Mi Junta</a>
+      <nav class="app-header__nav" id="nav-encabezado" aria-label="Principal" hidden>
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html" aria-current="page">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <a class="back-link" id="enlace-volver" href="P-017-mi-cuenta.html">Mi cuenta</a>
+
+    <div class="page-header">
+      <h1>Política de privacidad</h1>
+      <p class="strong" id="version"></p>
+      <p id="intro-aceptacion" hidden>Actualizamos la política. Léala y acéptela para ver sus juntas.</p>
+    </div>
+
+    <!-- Cargando (C-10) -->
+    <div class="stack" data-estado="loading" aria-hidden="true">
+      <span class="skeleton skeleton--title"></span>
+      <span class="skeleton skeleton--text"></span>
+      <span class="skeleton skeleton--text"></span>
+      <span class="skeleton skeleton--text" style="width: 80%"></span>
+      <span class="skeleton skeleton--title"></span>
+      <span class="skeleton skeleton--text"></span>
+      <span class="skeleton skeleton--text" style="width: 70%"></span>
+    </div>
+
+    <!-- Error de red en modo lectura: la página no está en la caché -->
+    <div class="alert alert--danger" id="error-lectura" role="alert" data-estado="error">
+      <div class="alert__body">
+        <p id="texto-error-lectura"></p>
+        <button class="btn btn--text" type="button" id="btn-reintentar" style="padding-left: 0">Intentar de nuevo</button>
+      </div>
+    </div>
+
+    <!-- Texto de la política: con desplazamiento normal de la página, 65 caracteres por línea -->
+    <article class="long-text" id="texto-politica" aria-labelledby="titulo-borrador">
+      <div class="alert alert--warning">
+        <div class="alert__body">
+          <p class="alert__title" id="titulo-borrador">Borrador</p>
+          <p>Texto de relleno. El texto definitivo lo escribe el asesor legal, y la app no sale al mercado sin él.</p>
+        </div>
+      </div>
+
+      <h2>1. Qué datos guardamos</h2>
+      <p>Para crear su cuenta guardamos su nombre, su correo y su contraseña. Su DNI y su celular solo se guardan si usted los ingresa. No pedimos su fecha de nacimiento ni su foto.</p>
+
+      <h2>2. Cómo protegemos sus datos</h2>
+      <p>Su DNI y su celular se guardan cifrados. Su contraseña nunca se guarda en texto plano. Toda la información viaja cifrada entre su dispositivo y nuestros servidores.</p>
+
+      <h2>3. Quién ve sus datos</h2>
+      <p>Los demás miembros de sus juntas solo ven su nombre, su turno y el estado de sus cuotas. Nadie, ni siquiera la persona organizadora, ve su correo, su celular ni su DNI.</p>
+
+      <h2>4. Notificaciones</h2>
+      <p>Le enviamos recordatorios de sus cuotas por correo y, si usted las activa, por notificación push. No usamos SMS ni WhatsApp. Puede desactivar los recordatorios cuando quiera desde Mi cuenta. Los correos de su cuenta, como el enlace para verificar su correo o recuperar su contraseña, le llegan siempre.</p>
+
+      <h2>5. Mi Junta no mueve dinero</h2>
+      <p>Mi Junta solo registra los pagos que usted hace fuera de la app, por ejemplo por Yape, Plin o en efectivo. No cobra, no transfiere ni guarda dinero, y no guarda números de tarjeta ni de cuentas bancarias.</p>
+    </article>
+
+    <!-- Pie en modo lectura con sesión (RN-084) -->
+    <p class="section muted" id="pie-aceptada" data-estado="con-datos sin-conexion"></p>
+
+    <!-- Modo aceptación (RN-168, RN-169) -->
+    <form class="section-end form" id="form-aceptar" novalidate hidden>
+      <label class="choice">
+        <input type="checkbox" id="acepto" name="acepto">
+        <span class="choice__text" id="rotulo-acepto"></span>
+      </label>
+      <div class="btn-row section">
+        <div>
+          <button class="btn btn--primary btn--block" type="submit" id="btn-aceptar" disabled>Aceptar y continuar</button>
+          <span class="unavailable-reason" id="motivo-aceptar" tabindex="-1" data-estado="sin-conexion"></span>
+        </div>
+        <button class="btn btn--secondary" type="button" id="btn-cerrar-sesion">Cerrar sesión</button>
+      </div>
+      <p class="inline-error" id="error-aceptar" role="alert" data-estado="error"></p>
+    </form>
+
+    <aside class="proto-note" id="nota-aceptacion" aria-label="Nota del prototipo" hidden>
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p id="nota-aceptacion-texto"></p>
+      <p>Mientras no acepte la versión nueva, la app sigue enviando sus cambios sin enviar y le siguen llegando sus recordatorios (RN-189).</p>
+    </aside>
+    <aside class="proto-note" id="nota-lectura" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p><a href="P-006-politica-privacidad.html?modo=aceptacion">Ver esta pantalla en modo aceptación de una versión nueva</a></p>
+    </aside>
+  </main>
+
+  <!-- Barra de navegación inferior: solo con sesión y en modo lectura (09 §5.3) -->
+  <nav class="bottom-nav" id="nav-inferior" aria-label="Principal" hidden>
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html" aria-current="page"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <!-- C-07 · Cerrar sesión con cambios sin enviar (RN-198) -->
+  <dialog class="dialog" id="dialogo-cerrar" aria-labelledby="dialogo-cerrar-titulo">
+    <h2 class="dialog__title" id="dialogo-cerrar-titulo" tabindex="-1">Cerrar sesión</h2>
+    <p id="dialogo-cerrar-texto"></p>
+    <div class="dialog__actions">
+      <button class="btn btn--danger" type="button" id="dialogo-confirmar">Cerrar sesión</button>
+      <button class="btn btn--secondary" type="button" id="dialogo-cancelar">Cancelar</button>
+    </div>
+  </dialog>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+
+      const urlMode = params.get('modo') === 'aceptacion' ? 'aceptacion' : 'lectura';
+      const urlSession = params.get('sesion') !== 'no';
+      const fromSignup = params.get('desde') === 'P-001';
+      // En modo aceptación, la cuenta que tiene la versión nueva por aceptar
+      const user = urlMode === 'aceptacion' && !params.get('usuario')
+        ? M.getUser(data.examples.policyAcceptancePendingUserId)
+        : M.getCurrentUser();
+      const userParam = '?usuario=' + user.id;
+      const newVersion = data.privacyPolicy.exampleNewVersion;
+      const currentVersion = data.privacyPolicy.currentVersion;
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('texto-error-lectura').textContent = M.message('RN-170');
+      $('motivo-aceptar').textContent = M.message('RN-170');
+      $('error-aceptar').textContent = M.message('RN-170');
+      $('rotulo-acepto').textContent = 'Acepto la política de privacidad, versión ' + newVersion + '.';
+      // RN-084: versión, fecha y hora en que el usuario aceptó
+      $('pie-aceptada').textContent = 'Usted aceptó la versión ' + user.consent.policyVersion + ' el ' +
+        M.formatDate(user.consent.acceptedAt) + ' a las ' + M.formatTime(user.consent.acceptedAt) + '.';
+      $('nota-aceptacion-texto').textContent = 'La versión ' + newVersion + ' es de ejemplo. ' + user.name +
+        ' aceptó la versión ' + user.consent.policyVersion + ' y, hasta que acepte la ' + newVersion +
+        ', no ve sus juntas (RN-168). Si cierra sesión sin aceptarla, su versión aceptada sigue siendo la ' +
+        user.consent.policyVersion + ' (RN-169).';
+
+      // Enlaces de navegación con el usuario de la sesión
+      document.querySelectorAll('[data-nav]').forEach(function (a) { a.href = a.getAttribute('data-nav') + userParam; });
+
+      const checkbox = $('acepto');
+      const acceptBtn = $('btn-aceptar');
+      let offline = false;
+
+      function syncAccept() {
+        const busy = acceptBtn.getAttribute('aria-busy') === 'true';
+        acceptBtn.disabled = !checkbox.checked || busy;               // disabled sin la casilla
+        if (offline && checkbox.checked) {                             // C-04
+          acceptBtn.setAttribute('aria-disabled', 'true');
+          acceptBtn.setAttribute('aria-describedby', 'motivo-aceptar');
+        } else {
+          acceptBtn.removeAttribute('aria-disabled');
+          acceptBtn.removeAttribute('aria-describedby');
+        }
+      }
+
+      checkbox.addEventListener('change', syncAccept);
+
+      $('form-aceptar').addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (!checkbox.checked) return;
+        if (offline) { $('motivo-aceptar').focus(); return; }
+        $('error-aceptar').hidden = true;
+        acceptBtn.setAttribute('aria-busy', 'true');
+        syncAccept();
+        // API-008 POST /consents: guarda la versión y la fecha y hora (RN-169)
+        setTimeout(function () { location.href = 'P-007-mis-juntas.html' + userParam; }, 800);
+      });
+
+      /* Cerrar sesión con las reglas de P-017 (RN-197, RN-198) */
+      const dialog = $('dialogo-cerrar');
+      let opener = null;
+
+      function logout() {
+        // RN-197: la app borra del dispositivo los datos y los cambios sin enviar
+        try { sessionStorage.clear(); } catch (e) { /* sin almacenamiento */ }
+        location.href = 'P-003-iniciar-sesion.html';
+      }
+
+      $('btn-cerrar-sesion').addEventListener('click', function () {
+        const pending = M.getPendingChanges(user.id).length;
+        if (!pending) { logout(); return; }
+        opener = this;
+        $('dialogo-cerrar-texto').textContent = M.message('RN-198', { n: pending });
+        dialog.showModal();
+        $('dialogo-cerrar-titulo').focus();
+      });
+
+      $('dialogo-cancelar').addEventListener('click', function () { dialog.close(); });
+      $('dialogo-confirmar').addEventListener('click', function () {
+        this.disabled = true;
+        this.setAttribute('aria-busy', 'true');
+        setTimeout(logout, 600);
+      });
+      dialog.addEventListener('close', function () { if (opener) opener.focus(); });
+
+      $('btn-reintentar').addEventListener('click', function () {
+        states.set('loading');
+        setTimeout(function () { states.set('con-datos'); }, 900);
+      });
+
+      const states = M.initStates({
+        extraStates: [{ id: 'sin-conexion', label: 'Sin conexión' }],
+        initial: 'con-datos',
+        onChange: function (state) {
+          offline = state === 'sin-conexion';
+          // "Vacío": la lectura sin sesión, sin el pie de la versión aceptada
+          const mode = state === 'vacio' ? 'lectura' : urlMode;
+          const session = state === 'vacio' ? false : (mode === 'aceptacion' || urlSession);
+          const accepting = mode === 'aceptacion';
+
+          $('version').textContent = 'Versión ' + (accepting ? newVersion : currentVersion);
+          $('intro-aceptacion').hidden = !accepting || state === 'loading';
+          $('texto-politica').hidden = state === 'loading' || (state === 'error' && !accepting);
+          $('form-aceptar').hidden = !accepting || state === 'loading';
+          $('nota-aceptacion').hidden = !accepting;
+          $('nota-lectura').hidden = accepting;
+
+          // El error de red se ve distinto en cada modo
+          $('error-lectura').hidden = !(state === 'error' && !accepting);
+          $('error-aceptar').hidden = !(state === 'error' && accepting);
+          if (state === 'error' && accepting) checkbox.checked = true;
+          else checkbox.checked = false;                               // desmarcada (RN-168)
+          acceptBtn.removeAttribute('aria-busy');
+          syncAccept();
+
+          // Pie con la versión aceptada: solo en lectura con sesión
+          $('pie-aceptada').hidden = accepting || !session || $('pie-aceptada').hidden;
+
+          // Navegación: no hay barra en modo aceptación (RN-168) ni sin sesión
+          const showNav = session && !accepting;
+          $('nav-encabezado').hidden = !showNav;
+          $('nav-inferior').hidden = !showNav;
+          document.body.classList.toggle('has-bottom-nav', showNav);
+          $('enlace-marca').href = session && !accepting ? 'P-007-mis-juntas.html' + userParam : 'P-003-iniciar-sesion.html';
+
+          // Enlace "Volver" en lectura: a P-001 si vino de crear la cuenta, si no a P-017
+          const back = $('enlace-volver');
+          back.hidden = accepting;
+          if (fromSignup || !session) {
+            back.href = 'P-001-crear-cuenta.html';
+            back.textContent = 'Crear cuenta';
+          } else {
+            back.href = 'P-017-mi-cuenta.html' + userParam;
+            back.textContent = 'Mi cuenta';
+          }
+        },
+      });
+    })();
+  </script>
+</body>
+</html>
