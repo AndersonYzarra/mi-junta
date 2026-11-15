@@ -1,6 +1,6 @@
 # Constitución de Mi Junta
 
-Versión: 0.5
+Versión: 0.4
 Fecha: 14/11/2026
 Estado: Revisado
 
@@ -12,7 +12,7 @@ La v0.3 cambió PRINCIPIO-001 para aceptar también la línea de versión con el
 
 La v0.4 cambió PRINCIPIO-005, 006, 007 y 009 para incorporar las decisiones del Product Owner del 14/11/2026 sobre las preguntas abiertas (PREG-003, PREG-005, PREG-007, PREG-008, PREG-009 y PREG-048; 03-reglas-de-negocio.md §1.3), con su aprobación explícita.
 
-La v0.5 cambió PRINCIPIO-005 para indicar cómo llega la clave de cifrado a la app (PREG-050), con aprobación del Product Owner del 14/11/2026.
+La v0.4 también cambió PRINCIPIO-005 para indicar cómo llega la clave de cifrado a la app (PREG-050), con aprobación del Product Owner del 14/11/2026.
 
 ---
 

@@ -1,8 +1,8 @@
 # Preguntas abiertas
 
-Versión: 0.5
+Versión: 0.4
 Fecha: 14/11/2026
-Estado: Alineado con las decisiones del Product Owner
+Estado: Revisado
 
 Decisiones pendientes detectadas al redactar la constitución, el Project Brief y el alcance. Mientras una pregunta siga abierta, todo lo que dependa de ella se marca [REQUIERE DECISIÓN]. Una pregunta resuelta conserva su ID y lleva la línea "Estado: Resuelta" con la fecha y la decisión. Una pregunta con "Estado: Propuesta" tiene una respuesta redactada por un agente que no rige hasta que el Product Owner la apruebe (PRINCIPIO-012). Al aprobarla, "Propuesta" se cambia por "Resuelta".
 
@@ -381,7 +381,7 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - A quién preguntar: líder técnico, con aprobación del Product Owner (cambia el cifrado, PRINCIPIO-012).
 - Bloquea: PRINCIPIO-005, ADR-005 de 07-architecture.md y la dependencia "Gestor de secretos" de 02-alcance.md §6.
 - Plan de resolución: decidir al preparar el servidor. Las opciones son un gestor de secretos instalado en el servidor, el servicio de claves del proveedor de nube o un archivo fuera del repositorio legible solo por el proceso de la app.
-- Estado: Resuelta el 14/11/2026 por el Product Owner (segunda ronda de la alineación). Las claves se entregan como variables de entorno a los contenedores Docker en los que corre todo, desde un archivo `.env` que solo existe en el servidor y nunca en el repositorio (PRINCIPIO-005 v0.5, ADR-005 de 07-architecture.md).
+- Estado: Resuelta el 14/11/2026 por el Product Owner (segunda ronda de la alineación). Las claves se entregan como variables de entorno a los contenedores Docker en los que corre todo, desde un archivo `.env` que solo existe en el servidor y nunca en el repositorio (PRINCIPIO-005 v0.4, ADR-005 de 07-architecture.md).
 
 ### PREG-051: ¿Qué proveedor y qué región tendrá el servidor dedicado?
 - Contexto: el p95 de ≤ 500 ms de PRINCIPIO-010 se mide desde Perú. Un servidor lejos de Lima suma latencia en cada petición, sobre todo con redes móviles lentas.

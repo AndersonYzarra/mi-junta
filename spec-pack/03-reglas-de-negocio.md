@@ -1,10 +1,10 @@
 # Reglas de negocio de Mi Junta
 
-Versión: 0.5
+Versión: 0.4
 Fecha: 2026-11-14
-Estado: Alineado con las decisiones del Product Owner
+Estado: Revisado
 
-Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y las decisiones del Product Owner del 2026-11-14 (sección 1.1, sección 1.2 sobre auditorias/qa-clase1.md, sección 1.3 sobre la alineación de pendientes y sección 1.4 sobre auditorias/qa-clase2.md). Este catálogo cubre las funcionalidades Must (F-01 a F-06) y Should (F-07 a F-11) de 02-alcance.md. Las funcionalidades Could (F-12 a F-15) quedan para una versión posterior.
+Fuente: 00-constitucion.md v0.4, 01-project-brief.md v0.4, 02-alcance.md v0.4 y las decisiones del Product Owner del 2026-11-14 (sección 1.1, sección 1.2 sobre auditorias/qa-clase1.md, sección 1.3 sobre la alineación de pendientes y sección 1.4 sobre auditorias/qa-clase2.md). Este catálogo cubre las funcionalidades Must (F-01 a F-06) y Should (F-07 a F-11) de 02-alcance.md. Las funcionalidades Could (F-12 a F-15) quedan para una versión posterior.
 
 **Cómo leer este catálogo:**
 - Cada regla tiene un solo DEBE / NO DEBE / PUEDE (PRINCIPIO-001) y necesita al menos un escenario Gherkin que cite su ID (PRINCIPIO-011).

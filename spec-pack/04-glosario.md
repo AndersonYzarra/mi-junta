@@ -8,7 +8,7 @@ Lenguaje ubicuo del proyecto. Todo el spec-pack, las HU, las pantallas y el cód
 
 **Convención de nombres:** las tablas van en plural y en `snake_case` (`juntas`, `contributions`, `payments`, `payment_corrections`, `draws`, `turn_assignments`). Las columnas y los campos de la API van en singular y en `snake_case`.
 
-Fuente: 00-constitucion.md v0.4, 01-project-brief.md v0.3, 02-alcance.md v0.3 y 03-reglas-de-negocio.md v0.3.
+Fuente: 00-constitucion.md v0.4, 01-project-brief.md v0.4, 02-alcance.md v0.4 y 03-reglas-de-negocio.md v0.4.
 
 ---
 

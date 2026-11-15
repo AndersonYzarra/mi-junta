@@ -1,10 +1,10 @@
 # Historias de usuario de Mi Junta
 
-Versión: 0.5.0
+Versión: 0.4
 Fecha: 14/11/2026
-Estado: Alineado con las decisiones del Product Owner
+Estado: Revisado
 
-Fuente: 01-project-brief.md v0.2 (PRD), 02-alcance.md v0.2, 03-reglas-de-negocio.md v0.2, 04-glosario.md v0.2 y 00-constitucion.md v0.3. Las redactó el Agente PO (prompts/clase2/01-product-owner.xml) y las enriqueció el Agente QA Funcional (prompts/clase2/02-qa-funcional.xml). La v0.4.0 incorpora las decisiones del Product Owner del 14/11/2026 sobre los pendientes (03-reglas-de-negocio.md v0.3 §1.3).
+Fuente: 01-project-brief.md v0.4 (PRD), 02-alcance.md v0.4, 03-reglas-de-negocio.md v0.4, 04-glosario.md v0.4 y 00-constitucion.md v0.4. Las redactó el Agente PO (prompts/clase2/01-product-owner.xml) y las enriqueció el Agente QA Funcional (prompts/clase2/02-qa-funcional.xml). La v0.4 incorpora las decisiones del Product Owner del 14/11/2026 sobre los pendientes (03-reglas-de-negocio.md v0.4 §1.3).
 
 **Cómo leer este documento:**
 - Cada HU traza a una funcionalidad `F-NN` de 02-alcance.md y a las reglas `RN-NNN` de 03-reglas-de-negocio.md. Cada criterio de aceptación cita entre paréntesis las RN que verifica.
@@ -19,14 +19,14 @@ Fuente: 01-project-brief.md v0.2 (PRD), 02-alcance.md v0.2, 03-reglas-de-negocio
 - Ninguna HU se eliminó, ningún ID cambió y ningún criterio nuevo usa un valor que no esté en el spec-pack (PRINCIPIO-012 a y c).
 - El Product Owner aprobó el 14/11/2026 todos los criterios [NUEVO] y [CORREGIDO], la HU-013 y las dos divisiones sugeridas por QA.
 
-**Marca de la alineación (v0.4.0):**
+**Marca de la alineación (v0.4):**
 - **[ALINEACIÓN]**: criterio agregado o completado a partir de las decisiones del Product Owner del 14/11/2026. Lleva su tipo (Positivo, Negativo o Borde) y cita las RN nuevas o modificadas de 03-reglas-de-negocio.md v0.3.
 - HU-004 se dividió en HU-004 y HU-014, y HU-008 en HU-008 y HU-015: los criterios se movieron sin cambiar su texto. HU-016, HU-017 y HU-018 son HU nuevas para F-16, F-17 y F-18.
-- La v0.4.1 incorpora la segunda ronda de respuestas del 14/11/2026 (PREG-049 a PREG-054).
+- La v0.4 también incorpora la segunda ronda de respuestas del 14/11/2026 (PREG-049 a PREG-054).
 - Cada HU termina con una **Revisión QA**: resultado INVEST, valores concretos, conformidad con la constitución y cobertura positivo / negativo / borde.
 
-**Marca de la auditoría QA del backlog (v0.5.0):**
-- **[QA2]**: criterio agregado para resolver un hallazgo de auditorias/qa-clase2.md, con su tipo (Positivo, Negativo o Borde). Usa las decisiones de 03-reglas-de-negocio.md v0.5 §1.4, aprobadas con autorización del Product Owner del 14/11/2026. Ningún criterio anterior cambió su texto.
+**Marca de la auditoría QA del backlog (v0.4):**
+- **[QA2]**: criterio agregado para resolver un hallazgo de auditorias/qa-clase2.md, con su tipo (Positivo, Negativo o Borde). Usa las decisiones de 03-reglas-de-negocio.md v0.4 §1.4, aprobadas con autorización del Product Owner del 14/11/2026. Ningún criterio anterior cambió su texto.
 - HU-004 ya no lista RN-204 entre sus reglas relacionadas, porque esa regla Should solo se verifica en HU-018 (M-11).
 - HU-019 es una HU Must nueva para RN-200 a RN-203, las únicas reglas Must que no tenían HU. Sus criterios son escenarios técnicos, porque esas reglas no tienen pantalla.
 
@@ -376,7 +376,7 @@ Funcionalidades: F-02 (Must) y F-09 (Should).
 - La app no aplica las reglas: no calcula multas ni cambia montos (04-glosario.md, "Reglas de la junta"). Cualquier regla que mueva dinero queda fuera del alcance (PRINCIPIO-004, PRINCIPIO-012 g).
 
 **Revisión QA:**
-- **INVEST:** cumple I (solo depende de HU-004), N, V, E, S y T. El criterio del límite usa RN-179 desde la v0.4.0.
+- **INVEST:** cumple I (solo depende de HU-004), N, V, E, S y T. El criterio del límite usa RN-179 desde la v0.4.
 - **Constitución:** sin contradicciones. Cumple PRINCIPIO-004 y PRINCIPIO-006 (escribir las reglas es una acción de gestión).
 - **Cobertura:** positivo (escribir y leer, editar antes del orden), negativo (editar después del orden, sin permisos, sin conexión, la app no aplica multas) y borde (reglas vacías, 2,000 y 2,001 caracteres).
 
@@ -614,7 +614,7 @@ Funcionalidades: F-05 (Must), F-06 (Must), F-07 (Should) y F-16 (Should).
 **Revisión QA:**
 - **INVEST:** cumple N, V, E, S y T. **I ⚠️:** necesita cuotas generadas (HU-006). Se prueba con los datos de ejemplo de 03-reglas-de-negocio.md.
 - **Valores concretos:** el criterio de "usted" (RN-090) da un ejemplo en lugar de una lista de textos; se verifica junto con cada pantalla. Los demás tienen valores concretos.
-- **Constitución:** **incompleto frente a PRINCIPIO-006.** El criterio del organizador solo excluía el campo `dni`, pero PRINCIPIO-006 dice que el organizador nunca recibe datos personales (celular, correo, DNI). El criterio [NUEVO] **Negativo** lo cubre, y desde la v0.4.0 cita RN-178, la regla que lo dice para el organizador.
+- **Constitución:** **incompleto frente a PRINCIPIO-006.** El criterio del organizador solo excluía el campo `dni`, pero PRINCIPIO-006 dice que el organizador nunca recibe datos personales (celular, correo, DNI). El criterio [NUEVO] **Negativo** lo cubre, y desde la v0.4 cita RN-178, la regla que lo dice para el organizador.
 - **Cobertura:** positivo (turno, cuotas, miembros, pagos del organizador, consulta sin conexión), negativo (no miembro, datos personales del organizador) y borde (cambio de ronda actual en el día del vencimiento, ronda 10 sin próxima cuota, junta sin cuotas, hora que cambia de día entre UTC y Lima).
 
 ---

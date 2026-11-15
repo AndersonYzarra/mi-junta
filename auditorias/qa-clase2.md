@@ -14,7 +14,9 @@ Agente: QA Architect Senior (Agente QA de Backlog, BMAD), prompt `prompts/clase2
 | spec-pack/07-architecture.md | 0.5 |
 | spec-pack/08-backlog.md | 0.3 |
 
-También se leyeron `00-constitucion.md` v0.5 (obligatoria, CLAUDE.md) y, para resolver referencias, las definiciones de `04-glosario.md` que citan RN-077, RN-022, RN-114 y RN-071.
+Son las versiones que tenían los archivos al auditarlos. Después de las decisiones del equipo, el 14/11/2026, las cabeceras de los 9 archivos de spec-pack/ se unificaron en la versión 0.4.
+
+También se leyeron `00-constitucion.md` v0.5 (versión al auditarla, hoy v0.4; obligatoria, CLAUDE.md) y, para resolver referencias, las definiciones de `04-glosario.md` que citan RN-077, RN-022, RN-114 y RN-071.
 
 **Método:**
 - **Contraste literal:** para cada una de las 18 HU se comparó cada ID del campo "Reglas de negocio relacionadas" con el texto EARS de esa RN en 03 y con los criterios que la citan. Son 284 pares HU–RN (184 en las 10 HU Must). Un par se da por bueno solo si el texto de la RN trata lo que el criterio afirma.
@@ -234,7 +236,7 @@ También se leyeron `00-constitucion.md` v0.5 (obligatoria, CLAUDE.md) y, para r
 
 ## 3. Matriz de trazabilidad
 
-Estado **vigente**, después de las decisiones del equipo (sección "Decisiones del equipo", al final): 03-reglas-de-negocio.md v0.5, 06-user-stories.md v0.5.0, 07-architecture.md v0.6 y 08-backlog.md v0.4. Las tablas se generaron con scripts sobre esos archivos; cada celda sale de una cita literal del ID. El estado al momento de la auditoría está en las secciones 1 y 2.
+Estado **vigente**, después de las decisiones del equipo (sección "Decisiones del equipo", al final): 03-reglas-de-negocio.md v0.4, 06-user-stories.md v0.4, 07-architecture.md v0.4 y 08-backlog.md v0.4. Las tablas se generaron con scripts sobre esos archivos; cada celda sale de una cita literal del ID. El estado al momento de la auditoría está en las secciones 1 y 2.
 
 ### 3.1 HU Must → RN → componentes → contratos → tareas
 
@@ -256,7 +258,7 @@ Las 8 HU Should (HU-003, HU-007, HU-009, HU-012, HU-013, HU-016, HU-017 y HU-018
 
 ### 3.2 RN Must → HU → componente o contrato de 07 → tabla de 07 → tarea de 08
 
-Las 162 RN Must de 03 v0.5: sale RN-142, que pasó a SHOULD, y entra RN-212. "(S)" marca una HU Should, que aparece además de la HU Must. Ninguna fila tiene huecos.
+Las 162 RN Must de 03 v0.4: sale RN-142, que pasó a SHOULD, y entra RN-212. "(S)" marca una HU Should, que aparece además de la HU Must. Ninguna fila tiene huecos.
 
 | RN | HU | Componente o contrato (07) | Tabla (07 §3.2) | Tarea (08) | Estado |
 |---|---|---|---|---|---|
@@ -496,7 +498,7 @@ Se revisaron y no tienen defectos:
 
 Tomadas el 14/11/2026 para resolver los 2 hallazgos críticos y los 12 mayores, con la autorización explícita del Product Owner para modificar el spec-pack (PRINCIPIO-012). Las redactó el Agente QA de backlog y quedaron marcadas como derivadas en 03-reglas-de-negocio.md §1.4, para que el Product Owner pueda revertirlas. `00-constitucion.md` no cambió. Las 12 sugerencias quedan abiertas.
 
-Versiones resultantes: 02-alcance.md v0.5, 03-reglas-de-negocio.md v0.5, 05-preguntas-abiertas.md v0.5, 06-user-stories.md v0.5.0, 07-architecture.md v0.6 y 08-backlog.md v0.4.
+Versiones resultantes: los 9 archivos de spec-pack/ quedaron en la versión 0.4, con estado "Revisado" (cabeceras unificadas el 14/11/2026).
 
 | Hallazgo | Decisión | Archivo |
 |---|---|---|
@@ -519,7 +521,7 @@ Versiones resultantes: 02-alcance.md v0.5, 03-reglas-de-negocio.md v0.5, 05-preg
 | Cierre · RN Must sin componente en 07 | 07 §2.2 cita ahora RN-025, RN-026, RN-041 y RN-203 (`junta-views`), RN-088 (`pwa`), RN-040 (`juntas`) y RN-202 (`crypto`), y tiene las subsecciones nuevas `proxy` y "PostgreSQL y operación" (RN-035, RN-200, RN-201). §2.1 corrige "gestor de secretos" por variables de entorno (PREG-050, PRINCIPIO-005) | 07-architecture.md §2.1 y §2.2 |
 
 **Comprobación después de los cambios** (con los mismos scripts de la auditoría):
-- Las 162 RN Must de 03 v0.5 (sale RN-142 y entra RN-212) tienen al menos una HU Must, un componente o contrato en 07 y una tarea en 08 (sección 3.2, sin huecos).
+- Las 162 RN Must de 03 v0.4 (sale RN-142 y entra RN-212) tienen al menos una HU Must, un componente o contrato en 07 y una tarea en 08 (sección 3.2, sin huecos).
 - Ninguna HU Must lista una RN sin criterio. Solo queda RN-188 en HU-003, que es Should y corresponde a la sugerencia S-01.
 - La ruta crítica recalculada coincide con la declarada en 08 (15 tareas, 29 h en el máximo), y ninguna dependencia apunta a una tarea con número mayor.
 

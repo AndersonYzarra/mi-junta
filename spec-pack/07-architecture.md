@@ -1,10 +1,10 @@
 # Arquitectura de Mi Junta
 
-Versión: 0.6
+Versión: 0.4
 Fecha: 14/11/2026
-Estado: Aprobado por el Product Owner
+Estado: Revisado
 
-Fuente: 00-constitucion.md v0.5, 01-project-brief.md v0.3, 02-alcance.md v0.5, 03-reglas-de-negocio.md v0.5, 04-glosario.md v0.3, 05-preguntas-abiertas.md v0.5 y 06-user-stories.md v0.5.0. Lo redactó el Agente Architect (prompts/clase2/03-architect.xml). La v0.4 incorpora las decisiones del Product Owner del 14/11/2026: servidor dedicado en la nube bajo control de la empresa, correo por SMTP, ADR aceptadas y dependencias aprobadas. La v0.5 incorpora la segunda ronda (PREG-049 a PREG-054): servidor en Perú, contenedores Docker, claves en variables de entorno y correo con `nodemailer` por `smtp.office365.com`. La v0.6 resuelve los hallazgos críticos y mayores de auditorias/qa-clase2.md, con autorización del Product Owner del 14/11/2026: componente `proxy` para TLS, herramientas del pipeline, convención Gherkin (PREG-055), RN-212, RN-117 aclarada, reparto del pozo en el sorteo, HU-019 en la trazabilidad y correcciones de trazabilidad.
+Fuente: 00-constitucion.md v0.4, 01-project-brief.md v0.4, 02-alcance.md v0.4, 03-reglas-de-negocio.md v0.4, 04-glosario.md v0.4, 05-preguntas-abiertas.md v0.4 y 06-user-stories.md v0.4. Lo redactó el Agente Architect (prompts/clase2/03-architect.xml). La v0.4 incorpora las decisiones del Product Owner del 14/11/2026: servidor dedicado en la nube bajo control de la empresa, correo por SMTP, ADR aceptadas y dependencias aprobadas. También incorpora la segunda ronda (PREG-049 a PREG-054): servidor en Perú, contenedores Docker, claves en variables de entorno y correo con `nodemailer` por `smtp.office365.com`. Además resuelve los hallazgos críticos y mayores de auditorias/qa-clase2.md, con autorización del Product Owner del 14/11/2026: componente `proxy` para TLS, herramientas del pipeline, convención Gherkin (PREG-055), RN-212, RN-117 aclarada, reparto del pozo en el sorteo, HU-019 en la trazabilidad y correcciones de trazabilidad.
 
 **Cómo leer este documento:**
 - Las versiones exactas se fijan el día en que empieza el desarrollo (PRINCIPIO-009). Las dependencias de la sección 6.3 quedaron aprobadas el 14/11/2026, salvo las que esa tabla marca como pendientes; cualquier otra necesita aprobación humana (PRINCIPIO-012 e y h).
@@ -175,7 +175,7 @@ flowchart LR
 #### `notifications` y `scheduler`
 - Job diario `daily-reminders`: arranca a las 09:00:00 en America/Lima, decide qué cuotas reciben recordatorio hoy (sección 3.4) y debe terminar de enviarlos antes de las 09:15:00 (RN-066).
 - Cada recordatorio se guarda en `reminders` con una restricción única por cuota y día, para que volver a ejecutar el job no duplique envíos.
-- Un correo y su push se guardan como un solo recordatorio (RN-142, Should desde 03-reglas-de-negocio.md v0.5), y cuenta como enviado cuando el servicio de correo o el servicio push lo acepta (RN-143).
+- Un correo y su push se guardan como un solo recordatorio (RN-142, Should desde 03-reglas-de-negocio.md v0.4), y cuenta como enviado cuando el servicio de correo o el servicio push lo acepta (RN-143).
 - Correos de la cuenta: el de verificación y el de recuperación usan el asunto y el cuerpo de §2.9 de 03-reglas-de-negocio.md (RN-152, RN-155) y se envían aunque el usuario haya desactivado los recordatorios (RN-188).
 - El contenido trae la junta, la ronda, el monto y el vencimiento (RN-144), trata de "usted" (RN-090) y no menciona a otros miembros (RN-145).
 - Aviso al organizador (RN-139) y aviso de pago rechazado al participante (RN-194): el worker procesa `notification_outbox` en cuanto se confirma la transacción.
@@ -720,7 +720,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 | `422` | `LEAD_DAYS_OUT_OF_RANGE` | Aviso fuera de 1 a 7 | RN-010 | "Ingrese entre 1 y 7 días de aviso previo." |
 | `422` | `LEAD_DAYS_NOT_LESS_THAN_PERIOD` | Aviso ≥ periodo (mensual = 28) | RN-012 | "Los días de aviso previo deben ser menos que los días entre una cuota y la siguiente." |
 
-- `frequency` acepta `weekly`, `every_15_days`, `monthly` y `every_n_days` (RN-007, 04-glosario.md v0.3).
+- `frequency` acepta `weekly`, `every_15_days`, `monthly` y `every_n_days` (RN-007, 04-glosario.md v0.4).
 - El ajuste automático del aviso a periodo − 1 (RN-098) lo hace la app al elegir la frecuencia; el servidor solo valida RN-012.
 - La conversión `"20.80"` → `2080` se hace con aritmética de enteros sobre el texto, nunca con `parseFloat` (PRINCIPIO-003).
 - `junta_rules` pertenece a F-09 (Should, HU-013) y acepta hasta 2,000 caracteres (RN-179).

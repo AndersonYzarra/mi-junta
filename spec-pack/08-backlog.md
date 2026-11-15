@@ -2,9 +2,9 @@
 
 Versión: 0.4
 Fecha: 14/11/2026
-Estado: Borrador
+Estado: Revisado
 
-Fuente: 07-architecture.md v0.6, 06-user-stories.md v0.5.0, 03-reglas-de-negocio.md v0.5, 02-alcance.md v0.5 y 00-constitucion.md v0.5. Lo redactó el Agente Backlog Builder (prompts/clase2/04-backlog-builder.xml). La v0.4 resuelve los hallazgos críticos y mayores de auditorias/qa-clase2.md, con autorización del Product Owner del 14/11/2026: herramientas aprobadas para T-001, textos de los correos de cuenta, reparto del pozo en T-014, criterios que faltaban, dependencias corregidas y las tareas nuevas T-026 y T-027.
+Fuente: 07-architecture.md v0.4, 06-user-stories.md v0.4, 03-reglas-de-negocio.md v0.4, 02-alcance.md v0.4 y 00-constitucion.md v0.4. Lo redactó el Agente Backlog Builder (prompts/clase2/04-backlog-builder.xml). La v0.4 resuelve los hallazgos críticos y mayores de auditorias/qa-clase2.md, con autorización del Product Owner del 14/11/2026: herramientas aprobadas para T-001, textos de los correos de cuenta, reparto del pozo en T-014, criterios que faltaban, dependencias corregidas y las tareas nuevas T-026 y T-027.
 
 **Cómo leer este documento:**
 - Cada tarea `T-NNN` la completa un agente de desarrollo de IA en menos de 2 horas. Tamaños: **S** (< 30 min), **M** (30 min - 1 h), **L** (1-2 h).
@@ -421,7 +421,7 @@ Estas HU Should están dentro del alcance (02-alcance.md §1) y se descomponen d
 | 1 | HU-018 | F-18 Encuesta de KPI-05 | `surveys`, `pwa` | El MVP no sale al mercado sin ella, para medir la línea base de KPI-05 con las primeras 10 juntas (02-alcance.md §3). Agrega `survey_pending` a API-009 |
 | 2 | HU-009 | F-08 Pago informado | `payments`, `sync`, `notifications` | Conecta los 3 tipos pendientes de API-021 |
 | 3 | HU-016 | F-16 Aviso de cuotas vencidas | `scheduler`, `notifications` | Agrega `overdue_notices_enabled` a API-032 |
-| 4 | HU-012 | F-07 Notificaciones push | `notifications`, `pwa` | Usa `web-push`, aprobada. Implementa RN-142, Should desde 03-reglas-de-negocio.md v0.5 |
+| 4 | HU-012 | F-07 Notificaciones push | `notifications`, `pwa` | Usa `web-push`, aprobada. Implementa RN-142, Should desde 03-reglas-de-negocio.md v0.4 |
 | 5 | HU-007 | F-10 Orden sin sorteo | `turn-order`, `junta-views` | Agrega el trigger que impide tener `draws` y `turn_assignments` a la vez |
 | 6 | HU-013 | F-09 Reglas escritas | `juntas`, `junta-views` | Agrega `junta_rules` a API-009 y API-010 |
 | 7 | HU-017 | F-17 Borrar la cuenta | `identity`, `juntas` | Agrega "Participante eliminado" a las vistas |
