@@ -209,7 +209,7 @@
           }
           if (rejectionId) { showRejection(rejectionId); return; }     // 409: la cuenta sigue igual
           // 204: borra los datos del dispositivo y abre P-003 con el aviso
-          try { sessionStorage.clear(); } catch (e) { /* sin almacenamiento */ }
+          M.store.clearDevice(user.id);
           location.href = 'P-003-iniciar-sesion.html?aviso=cuenta-borrada';
         }, 800);
       });

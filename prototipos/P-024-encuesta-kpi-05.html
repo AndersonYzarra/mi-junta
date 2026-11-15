@@ -178,6 +178,9 @@
             ? ' En datos.js la cerró sin responder a las ' + M.formatTime(survey.closedAt) + ' (RN-210), así que esa encuesta no se le vuelve a mostrar (RN-211).'
             : '')
         : 'Simula que ' + user.name + ' abre la app con una encuesta pendiente.';
+      if (M.store.isSurveyClosed(user.id)) {
+        $('nota-momento').textContent += ' En esta pestaña ' + user.name + ' ya la cerró sin responder: por eso la pantalla abre en "Cerrada" y no vuelve a mostrar la encuesta (RN-211).';
+      }
       $('nota-fondo').innerHTML = from === 'P-011'
         ? '<a href="P-024-encuesta-kpi-05.html?desde=P-007&amp;' + userParam + '">Ver la encuesta sobre Mis juntas (P-007)</a>'
         : '<a href="P-024-encuesta-kpi-05.html?desde=P-011&amp;' + userParam + '">Ver la encuesta sobre la junta (P-011)</a>';
@@ -258,7 +261,9 @@
       });
 
       function closeWithoutAnswer() {
-        // POST /organizer-surveys/{wave}/dismissal (RN-210); no vuelve a mostrarse (RN-211)
+        // POST /organizer-surveys/{wave}/dismissal (RN-210): queda registrado en esta
+        // pestaña y la encuesta no vuelve a mostrarse (RN-211, obs. #20)
+        M.store.closeSurvey(user.id);
         close();
         location.href = backHref;
       }
@@ -293,7 +298,8 @@
           { id: 'cerrada', label: 'Cerrada' },
           { id: 'sin-conexion', label: 'Sin conexión' },
         ],
-        initial: 'vacio',
+        // Si ya la cerró sin responder en esta pestaña, no se abre (RN-211)
+        initial: M.store.isSurveyClosed(user.id) ? 'cerrada' : 'vacio',
         onChange: function (state) {
           setBusy(false);
           setFieldError('horas', null);

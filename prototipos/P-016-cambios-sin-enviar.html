@@ -78,7 +78,7 @@
     </div>
 
     <!-- Por enviar, en el orden en que se hicieron (RN-087) -->
-    <section id="por-enviar" data-estado="con-datos loading sin-conexion" aria-labelledby="titulo-por-enviar">
+    <section id="por-enviar" data-estado="con-datos loading sin-conexion reconectando" aria-labelledby="titulo-por-enviar">
       <h2 id="titulo-por-enviar">Por enviar</h2>
       <ol class="list change-list section" id="lista-por-enviar"></ol>
       <div class="section">
@@ -88,7 +88,7 @@
     </section>
 
     <!-- No se pudieron guardar (RN-172) -->
-    <section class="section-end" id="rechazos" data-estado="con-datos error sin-conexion" aria-labelledby="titulo-rechazos">
+    <section class="section-end" id="rechazos" data-estado="con-datos error sin-conexion reconectando" aria-labelledby="titulo-rechazos">
       <h2 id="titulo-rechazos">No se pudieron guardar</h2>
       <ul class="change-list stack section" id="lista-rechazos"></ul>
     </section>
@@ -98,6 +98,7 @@
       <p id="nota-usuario"></p>
       <p>Un cambio pendiente no se puede editar ni borrar: solo se envía, o se pierde si cierra sesión y confirma el aviso de cambios sin enviar (RN-198).</p>
       <p>Si la sesión vence, los cambios quedan aquí hasta que la misma persona vuelva a iniciar sesión (RN-176). Un rechazo no detiene el envío de los cambios siguientes.</p>
+      <p>"Vuelve la conexión" simula 3 cambios hechos sin red. La app los envía sola, en el orden en que se hicieron (RN-087): el del medio se rechaza porque el pago ya no estaba registrado (RN-171, RN-172) y los otros dos se guardan igual.</p>
     </aside>
   </main>
 
@@ -191,8 +192,8 @@
 
       function updateVisibility() {
         const state = currentState;
-        const showPending = ['con-datos', 'loading', 'sin-conexion'].indexOf(state) !== -1 && pending.length > 0;
-        const showRejected = ['con-datos', 'error', 'sin-conexion'].indexOf(state) !== -1 && rejected.length > 0;
+        const showPending = ['con-datos', 'loading', 'sin-conexion', 'reconectando'].indexOf(state) !== -1 && pending.length > 0;
+        const showRejected = ['con-datos', 'error', 'sin-conexion', 'reconectando'].indexOf(state) !== -1 && rejected.length > 0;
         $('por-enviar').hidden = !showPending;
         $('rechazos').hidden = !showRejected;
         // Sin nada por enviar ni rechazos: estado vacío
@@ -237,12 +238,45 @@
       $('nota-usuario').textContent = 'Está viendo los cambios de ' + user.name + '. Última sincronización: ' +
         M.formatDate(data.meta.lastSyncAt) + ' ' + M.formatTime(data.meta.lastSyncAt) + '.';
 
+      /* "Vuelve la conexión" (obs. #15): 3 cambios hechos sin red. Al volver la
+         conexión la app los envía sola y en orden (RN-087). El servidor rechaza
+         el del medio porque ya no cumple las reglas (RN-171) y aplica los otros
+         dos: un rechazo no detiene los cambios siguientes (API-021). */
+      let reconnectTimer = null;
+
+      function simulatedOutbox() {
+        const own = M.getPendingChanges(user.id);
+        return [
+          { clientChangeId: 'sim_0001', userId: user.id, type: 'payment_recorded', juntaId: 'junta_oficina', roundNumber: 2, participantId: 'user_507', paidOn: '2026-12-28', performedAt: '2026-12-29T18:35:00-05:00', accepted: true },
+          { clientChangeId: 'sim_0002', userId: user.id, type: 'payment_unmarked', juntaId: 'junta_ventas', roundNumber: 2, participantId: 'user_616', performedAt: '2026-12-29T18:38:00-05:00', accepted: false, reasonId: 'RN-172-reason-no-longer-recorded' },
+        ].concat(own.map(function (c) { return Object.assign({ accepted: true }, c); }));
+      }
+
+      function reconnect() {
+        pending = simulatedOutbox();
+        render();
+        setSending(true);
+        reconnectTimer = setTimeout(function () {
+          setSending(false);
+          pending.filter(function (ch) { return !ch.accepted; }).forEach(function (ch) {
+            const reason = M.message(ch.reasonId, { nombre: M.displayName(ch.participantId), n: ch.roundNumber });
+            rejected.unshift(Object.assign({}, ch, { text: M.message('RN-172', { motivo: reason }) }));   // RN-172
+          });
+          pending = [];
+          render();
+        }, 1500);
+      }
+
       let currentState = 'con-datos';
       M.initStates({
-        extraStates: [{ id: 'sin-conexion', label: 'Sin conexión' }],
+        extraStates: [
+          { id: 'sin-conexion', label: 'Sin conexión' },
+          { id: 'reconectando', label: 'Vuelve la conexión' },
+        ],
         initial: 'con-datos',
         onChange: function (state) {
           currentState = state;
+          clearTimeout(reconnectTimer);
           offline = state === 'sin-conexion';
           const btn = $('btn-enviar');
           if (offline) {
@@ -255,6 +289,7 @@
           loadData();
           setSending(state === 'loading');                             // "Loading": enviando
           render();
+          if (state === 'reconectando') reconnect();
         },
       });
       updateVisibility();

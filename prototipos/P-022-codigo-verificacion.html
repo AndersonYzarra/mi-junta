@@ -195,7 +195,7 @@
       // Con 201 sigue el mismo camino que P-003 (P-006 o P-007, o P-009 con el código guardado)
       function destination() {
         const q = '?usuario=' + user.id + (savedCode ? '&codigo=' + encodeURIComponent(savedCode) : '');
-        if (user.id === data.examples.policyAcceptancePendingUserId) return 'P-006-politica-privacidad.html' + q + '&modo=aceptacion';
+        if (user.id === data.examples.policyAcceptancePendingUserId && user.consent.policyVersion !== data.privacyPolicy.exampleNewVersion) return 'P-006-politica-privacidad.html' + q + '&modo=aceptacion';
         if (savedCode) return 'P-009-unirse-junta.html' + q;
         return 'P-007-mis-juntas.html' + q;
       }

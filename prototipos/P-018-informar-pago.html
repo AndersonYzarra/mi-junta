@@ -232,7 +232,7 @@
           $('texto-cambios').textContent = M.pendingChangesText(M.getPendingChanges(user.id).length + 1);
           $('indicador-cambios').hidden = false;
           setBusy(true);
-          setTimeout(function () { location.href = juntaHref('&aviso=informado-sin-enviar'); }, 1200);
+          setTimeout(function () { location.href = juntaHref('&aviso=informado-sin-enviar&cuota=' + cuota.id); }, 1200);
           return;
         }
 
@@ -250,7 +250,18 @@
             return;
           }
           setBadges('awaiting_confirmation', false);                                // RN-060
-          location.href = juntaHref('&aviso=informado');
+          // Queda guardado en esta pestaña: P-010 la muestra "Por confirmar" y
+          // P-014 y P-015 la muestran al organizador para revisarla (obs. #12)
+          const paidOn = M.parseDateInput(fecha.value);
+          M.store.patchContribution(cuota.id, {
+            status: 'awaiting_confirmation',
+            reportedPayment: {
+              id: 'rep_sesion_' + cuota.id, juntaId: cuota.juntaId, roundNumber: cuota.roundNumber,
+              participantId: cuota.participantId, reportedPaidOn: paidOn, reportedAt: data.meta.now,
+              resolution: null, resolvedBy: null, resolvedAt: null,
+            },
+          }, { type: 'payment_reported', at: data.meta.now, paidOn: paidOn, by: user.id });
+          location.href = juntaHref('&aviso=informado&cuota=' + cuota.id);
         }, 800);
       });
 

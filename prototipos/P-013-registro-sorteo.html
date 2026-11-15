@@ -261,6 +261,13 @@
               el.hidden = el.getAttribute('data-estado') !== 'error';
             });
           }
+          // Junta sin sorteo: "Con datos" y "Sin conexión" muestran el caso vacío,
+          // no el registro de otra junta (obs. #22)
+          if (!denied && !draw && (state === 'con-datos' || state === 'sin-conexion')) {
+            document.querySelectorAll('main [data-estado]').forEach(function (el) {
+              el.hidden = el.getAttribute('data-estado') !== 'vacio';
+            });
+          }
           $('indicador-cambios').hidden = denied || !sync || ['con-datos', 'sin-conexion'].indexOf(state) === -1;
           back.hidden = state === 'error' || denied;
         },

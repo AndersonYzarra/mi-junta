@@ -171,6 +171,13 @@
         extraStates: [{ id: 'sin-conexion', label: 'Sin conexión' }],
         initial: !member ? 'error' : (record ? 'con-datos' : 'vacio'),
         onChange: function (state) {
+          // Quien no es miembro nunca ve el registro, en ningún estado (RN-024, obs. #21)
+          if (!member && state !== 'loading') {
+            document.querySelectorAll('main [data-estado]').forEach(function (el) {
+              el.hidden = el.getAttribute('data-estado') !== 'error';
+            });
+            return;
+          }
           // Sin registro, "Con datos" y "Sin conexión" muestran el caso vacío
           if (!record && (state === 'con-datos' || state === 'sin-conexion')) {
             document.querySelector('[data-estado="vacio"]').hidden = false;

@@ -163,12 +163,15 @@
         return;
       }
 
-      // Viene de P-009: simula en memoria que la persona ocupó un cupo (RN-100 si se llena)
+      // Viene de P-009: la persona ocupó un cupo y queda guardado en esta pestaña
+      // (MiJunta.store). Si era el último cupo, la junta pasa a "Completa" (RN-100).
       if (joined && !M.isMember(urlJuntaId, urlUser.id)) {
         const j = M.getJunta(urlJuntaId);
-        data.memberships.push({ juntaId: j.id, userId: urlUser.id, isOrganizer: false, occupiesSlot: true, slotTakenAt: data.meta.now, leftAt: null });
-        if (j.status === 'open' && M.getOccupiedSlots(j.id) >= j.participantCount) j.status = 'full';
+        M.store.addMembership({ juntaId: j.id, userId: urlUser.id, isOrganizer: false, occupiesSlot: true, slotTakenAt: data.meta.now, leftAt: null });
+        if (j.status === 'open' && M.getOccupiedSlots(j.id) >= j.participantCount) M.store.patchJunta(j.id, { status: 'full' });
       }
+      // Viene de P-018: la cuota que se informó (con conexión ya está guardada como "Por confirmar")
+      const reportedCuotaId = params.get('cuota');
 
       $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
         fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
@@ -236,13 +239,15 @@
       }
 
       // Cuotas propias (RN-026). En el estado "Sin enviar" se simula que la
-      // persona informó sin conexión el pago de la ronda siguiente a la actual.
+      // persona informó sin conexión el pago de la cuota que viene de P-018 o,
+      // si no viene de ahí, el de la ronda siguiente a la actual.
       function ownContributions() {
         const list = M.getOwnContributions(ctx.junta.id, ctx.user.id);
         const current = M.getCurrentRound(ctx.junta.id);
         if (!unsentSim || !current) return list;
+        const target = list.some(function (c) { return c.id === reportedCuotaId; }) ? reportedCuotaId : null;
         return list.map(function (c) {
-          if (c.roundNumber === current.number + 1 && c.status === 'pending') {
+          if ((target ? c.id === target : c.roundNumber === current.number + 1) && c.status === 'pending') {
             return Object.assign({}, c, { status: 'awaiting_confirmation', unsent: true });
           }
           return c;
@@ -407,7 +412,10 @@
         const b = this;
         b.disabled = true;
         b.setAttribute('aria-busy', 'true');
-        // API-014 204: abre P-007; P-007 muestra "Salió de la {junta}."
+        // API-014 204: libera el cupo (RN-113) y, si la junta estaba "Completa",
+        // vuelve a "Abierta" (RN-101). Abre P-007, que muestra "Salió de la {junta}."
+        M.store.patchMembership(ctx.junta.id, ctx.user.id, { leftAt: data.meta.now });
+        if (ctx.junta.status === 'full') M.store.patchJunta(ctx.junta.id, { status: 'open' });
         setTimeout(function () {
           location.href = 'P-007-mis-juntas.html?usuario=' + ctx.user.id + '&aviso=salio&junta=' + ctx.junta.id;
         }, 700);

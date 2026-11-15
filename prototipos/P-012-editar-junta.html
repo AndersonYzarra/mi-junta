@@ -156,6 +156,10 @@
               <input class="date-native" type="date" id="vencimiento-nativo" tabindex="-1" aria-hidden="true">
             </div>
             <p class="field__error" id="error-vencimiento" hidden></p>
+            <!-- Aviso no bloqueante: la ronda 1 se puede guardar (RN-009), pero no deja fijar el orden (RN-122). Obs. #9 -->
+            <div class="alert alert--warning" id="aviso-ronda1" role="status" hidden>
+              <div class="alert__body"><p id="texto-aviso-ronda1"></p></div>
+            </div>
           </div>
 
           <div class="field">
@@ -411,6 +415,8 @@
         const iso = M.parseDateInput(f.vencimiento.value);
         const show = beforeOrder && iso && iso < data.meta.today && iso >= junta.createdOn;
         $('nota-ronda1').hidden = !show;
+        $('aviso-ronda1').hidden = !show;
+        $('texto-aviso-ronda1').textContent = M.message('RN-122');
         if (show) {
           $('nota-ronda1').textContent = 'La ronda 1 (' + f.vencimiento.value + ') es anterior a hoy, ' + M.formatDate(data.meta.today) +
             '. Se puede guardar, porque RN-009 la compara con la creación de la junta (' + M.formatDate(junta.createdOn) +
@@ -475,8 +481,39 @@
         const items = validateAll();
         if (items.length) { showSummary(items); return; }
         setBusy(true);
+        if (currentState !== 'sin-cupo') saveChanges();                  // el supuesto de RN-109 no se guarda
         setTimeout(function () { location.href = juntaUrl + '&aviso=guardado'; }, 900);   // 200: vuelve a P-011
       });
+
+      // Guarda la edición en esta pestaña (MiJunta.store): P-011, P-007 y P-010
+      // muestran los datos nuevos y el estado "Abierta" o "Completa" (RN-100, RN-101). Obs. #7
+      function saveChanges() {
+        const patch = { name: f.nombre.value.trim() };
+        if (beforeOrder) {
+          const count = Number(f.participantes.value);
+          const participates = checked('participa') === 'si';
+          const freq = checked('frecuencia');
+          const after = occupiedAfter();
+          Object.assign(patch, {
+            contributionAmountCents: M.parseMoneyInput(f.cuota.value),
+            participantCount: count,
+            frequency: freq,
+            frequencyDays: freq === 'every_n_days' ? Number(f.cadaDias.value) : null,
+            round1DueDate: M.parseDateInput(f.vencimiento.value),
+            reminderLeadDays: Number(f.aviso.value),
+            juntaRules: f.reglas.value.trim() || null,
+            organizerParticipates: participates,
+            status: after >= count ? 'full' : 'open',
+          });
+          // Cambiar la participación libera u ocupa el cupo del organizador (RN-212)
+          if (participates !== junta.organizerParticipates) {
+            M.store.patchMembership(junta.id, junta.organizerId, participates
+              ? { occupiesSlot: true, slotTakenAt: data.meta.now }
+              : { occupiesSlot: false });
+          }
+        }
+        M.store.patchJunta(junta.id, patch);
+      }
 
       /* Modo: antes o después de fijar el orden */
       $('campos-editables').hidden = !beforeOrder;
@@ -522,10 +559,12 @@
       const extraStates = [{ id: 'sin-conexion', label: 'Sin conexión' }, { id: 'sin-permiso', label: 'Sin permiso' }];
       if (beforeOrder) extraStates.unshift({ id: 'sin-cupo', label: 'Sin cupo para participar' });
 
+      let currentState = 'con-datos';
       M.initStates({
         extraStates: extraStates,
         initial: isOrganizer ? 'con-datos' : 'sin-permiso',
         onChange: function (state) {
+          currentState = state;
           clearErrors();
           setBusy(false);
           offline = state === 'sin-conexion';

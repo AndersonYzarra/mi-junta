@@ -32,6 +32,9 @@
       <div class="alert__body">
         <p class="alert__title">Datos de ejemplo</p>
         <p id="resumen-datos">Todas las pantallas usan los mismos datos ficticios.</p>
+        <p>Lo que se guarda en una pantalla (unirse, editar la junta, fijar el orden, registrar o informar un pago, cerrar sesión) se ve en las demás mientras esta pestaña siga abierta.</p>
+        <p id="estado-sesion" class="muted"></p>
+        <p><button class="btn btn--text" type="button" id="btn-restablecer" style="padding-left: 0">Restablecer los datos de ejemplo</button></p>
       </div>
     </div>
 
@@ -96,6 +99,15 @@
   <script>
     (function () {
       'use strict';
+
+      // Cambios guardados en esta pestaña (MiJunta.store, datos.js)
+      document.getElementById('estado-sesion').textContent = MiJunta.store.hasChanges()
+        ? 'Hay cambios guardados en esta pestaña.'
+        : 'Todavía no hay cambios guardados: se ven los datos de ejemplo.';
+      document.getElementById('btn-restablecer').addEventListener('click', function () {
+        MiJunta.store.reset();
+        location.reload();
+      });
 
       // Flujos de 09 §2, con su prioridad
       const flows = [

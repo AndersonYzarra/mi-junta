@@ -93,6 +93,7 @@
         <ul id="cuentas-prueba"></ul>
         <p id="contador-intentos" aria-live="polite"></p>
         <p><button class="btn btn--text" type="button" id="fin-bloqueo" style="padding-left: 0">Simular que pasaron los 15 minutos del bloqueo</button></p>
+        <p id="nota-dispositivo" hidden>Jorge cerró sesión en esta pestaña: la app borró del dispositivo sus cambios sin enviar, por eso no aparece el aviso de "Tiene 1 cambio sin enviar." (RN-197). Para volver a verlo, use "Restablecer los datos de ejemplo" en el índice.</p>
       </aside>
     </div>
   </main>
@@ -133,6 +134,7 @@
       $('texto-codigo').textContent = M.message('RN-017');
       reason.textContent = M.message('RN-170');
       $('demo-password').textContent = data.examples.demoPassword;
+      $('nota-dispositivo').hidden = !M.store.isDeviceCleared(outboxOwner.id);
 
       // Enlaces que conservan el código guardado (UF-05, paso 3)
       if (savedCode) {
@@ -203,7 +205,7 @@
       function destination(user) {
         const q = '?usuario=' + user.id + (savedCode ? '&codigo=' + encodeURIComponent(savedCode) : '');
         if (user.twoFactorEnabled) return 'P-022-codigo-verificacion.html' + q;                  // 202 (S)
-        if (user.id === data.examples.policyAcceptancePendingUserId) return 'P-006-politica-privacidad.html' + q + '&modo=aceptacion';
+        if (user.id === data.examples.policyAcceptancePendingUserId && user.consent.policyVersion !== data.privacyPolicy.exampleNewVersion) return 'P-006-politica-privacidad.html' + q + '&modo=aceptacion';
         if (savedCode) return 'P-009-unirse-junta.html' + q;                                    // vuelve a enviar el código
         return 'P-007-mis-juntas.html' + q;
       }
@@ -285,6 +287,8 @@
           $('aviso-codigo').hidden = !(savedCode || state === 'con-avisos');
           $('aviso-contrasena').hidden = !(passwordChanged || state === 'con-avisos');
           $('aviso-cuenta-borrada').hidden = !accountDeleted;
+          // Después de cerrar sesión, el dispositivo ya no guarda cambios sin enviar (RN-197)
+          if (outboxCount === 0) $('aviso-outbox').hidden = true;
           updateCounter();
         },
       });

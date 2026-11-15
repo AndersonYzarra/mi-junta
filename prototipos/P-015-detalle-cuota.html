@@ -72,7 +72,7 @@
       <a class="btn btn--secondary" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Ir a Mis juntas</a>
     </div>
 
-    <div id="detalle" data-estado="con-datos vacio error pendiente pagada por-confirmar sin-conexion ya-no-pendiente">
+    <div id="detalle" data-estado="con-datos vacio error pendiente pagada por-confirmar sin-conexion ya-no-pendiente ya-no-pagada">
       <div class="page-header">
         <h1 id="titulo"></h1>
         <p id="vence"></p>
@@ -127,7 +127,7 @@
     <aside class="proto-note" aria-label="Nota del prototipo">
       <p class="proto-note__title">Solo en el prototipo</p>
       <p id="nota-junta"></p>
-      <p>Si registra el último pago pendiente de la junta, la junta pasa a "Terminada" (RN-103); si desmarca un pago de una junta "Terminada", vuelve a "En curso" (RN-104). El cambio se ve al volver a la junta.</p>
+      <p>Lo que registra, desmarca, confirma o rechaza con conexión queda guardado en esta pestaña y se ve en P-014, P-010 y P-011. Para ver RN-104 y RN-103: en la <a href="P-015-detalle-cuota.html?cuota=ctb_amigas_r3_user_621&amp;usuario=user_620">cuota de la Junta Amigas</a> ("Terminada"), desmarque el pago y la junta vuelve a "En curso"; regístrelo otra vez y vuelve a "Terminada". El cambio se ve en <a href="P-011-junta-organizador.html?junta=junta_amigas&amp;usuario=user_620">la junta</a> y en Mis juntas.</p>
       <p id="nota-otras"></p>
     </aside>
   </main>
@@ -286,6 +286,14 @@
           event.unsent = true;
           c.unsent = true;
           localChanges += 1;
+        } else {
+          // Con conexión queda guardado en esta pestaña (MiJunta.store): P-014,
+          // P-010 y P-011 lo muestran, y la junta pasa a "Terminada" o vuelve a
+          // "En curso" según sus cuotas (RN-103, RN-104)
+          M.store.patchContribution(c.id, {
+            status: c.status, currentPayment: c.currentPayment, reportedPayment: c.reportedPayment || null,
+          }, Object.assign({}, event));
+          M.store.refreshJuntaStatus(junta.id);
         }
         history.push(event);
         render();
@@ -323,7 +331,9 @@
           c.status = 'paid';
           c.currentPayment = { paidOn: paidOn, isOnTime: paidOn <= c.dueDate, recordedBy: user.id, recordedAt: nowIso() };
           applyChange({ type: 'payment_recorded', at: nowIso(), paidOn: paidOn, by: user.id });
-          toast('Pago registrado.');
+          if (offline) { toast('Pago registrado.'); return; }
+          // Con conexión vuelve a P-014 con C-08 "Pago registrado." (09, P-015)
+          location.href = 'P-014-pagos-junta.html?junta=' + c.juntaId + '&ronda=' + c.roundNumber + '&' + userParam + '&aviso=pago-registrado';
         }, offline ? 0 : 700);
       });
 
@@ -373,7 +383,7 @@
         openDialog('¿Desmarcar este pago?',
           'La cuota volverá a Pendiente. El historial guardará el pago y la corrección. Para cambiar la fecha, desmarque y vuelva a registrar.',
           'Desmarcar pago', true, function () {
-            if (currentState === 'ya-no-pendiente') {
+            if (currentState === 'ya-no-pagada') {         // otro dispositivo la desmarcó antes (RN-131)
               $('texto-conflicto').textContent = M.message('RN-131');
               $('alerta-conflicto').hidden = false;
               return;
@@ -426,6 +436,7 @@
         'por-confirmar': 'ctb_oficina_r2_user_789',
         'sin-conexion': urlId,
         'ya-no-pendiente': 'ctb_oficina_r2_user_507',
+        'ya-no-pagada': 'ctb_oficina_r2_user_506',  // "Pagada" aquí, desmarcada en otro dispositivo
       };
       let currentState = 'con-datos';
 
@@ -450,7 +461,8 @@
           { id: 'pagada', label: 'Pagada' },
           { id: 'por-confirmar', label: 'Por confirmar' },
           { id: 'sin-conexion', label: 'Sin conexión' },
-          { id: 'ya-no-pendiente', label: 'Cambiada en otro dispositivo' },
+          { id: 'ya-no-pendiente', label: 'Registrada en otro dispositivo' },
+          { id: 'ya-no-pagada', label: 'Desmarcada en otro dispositivo' },
           { id: 'sin-permiso', label: 'Sin permiso' },
         ],
         initial: isOrganizer ? 'con-datos' : 'sin-permiso',

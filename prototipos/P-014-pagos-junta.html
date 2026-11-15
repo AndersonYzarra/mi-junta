@@ -134,6 +134,12 @@
     </aside>
   </main>
 
+  <!-- C-08 · Aviso de resultado: vuelve de P-015 después de registrar un pago -->
+  <div class="toast" id="toast" role="status" hidden>
+    <span class="toast__text" id="toast-texto"></span>
+    <button class="btn btn--icon" type="button" id="toast-cerrar" aria-label="Cerrar"><span class="icon icon--close" aria-hidden="true"></span></button>
+  </div>
+
   <nav class="bottom-nav" aria-label="Principal">
     <ul>
       <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
@@ -312,6 +318,14 @@
           $('indicador-cambios').hidden = !sync || !(state === 'con-datos' || state === 'sin-conexion') || blocked;
         },
       });
+
+      // C-08 al volver de P-015: se cierra solo a los 6 segundos o con "Cerrar"
+      if (params.get('aviso') === 'pago-registrado' && isOrganizer) {
+        $('toast-texto').textContent = 'Pago registrado.';
+        $('toast').hidden = false;
+        const timer = setTimeout(function () { $('toast').hidden = true; }, 6000);
+        $('toast-cerrar').addEventListener('click', function () { clearTimeout(timer); $('toast').hidden = true; });
+      }
     })();
   </script>
 </body>

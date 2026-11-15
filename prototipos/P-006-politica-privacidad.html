@@ -206,7 +206,9 @@
         $('error-aceptar').hidden = true;
         acceptBtn.setAttribute('aria-busy', 'true');
         syncAccept();
-        // API-008 POST /consents: guarda la versión y la fecha y hora (RN-169)
+        // API-008 POST /consents: guarda la versión y la fecha y hora (RN-169).
+        // P-017 y P-006 en modo lectura muestran la versión nueva.
+        M.store.patchUser(user.id, { consent: { policyVersion: newVersion, acceptedAt: data.meta.now } });
         setTimeout(function () { location.href = 'P-007-mis-juntas.html' + userParam; }, 800);
       });
 
@@ -216,7 +218,7 @@
 
       function logout() {
         // RN-197: la app borra del dispositivo los datos y los cambios sin enviar
-        try { sessionStorage.clear(); } catch (e) { /* sin almacenamiento */ }
+        M.store.clearDevice(user.id);
         location.href = 'P-003-iniciar-sesion.html';
       }
 
@@ -252,7 +254,7 @@
           const session = state === 'vacio' ? false : (mode === 'aceptacion' || urlSession);
           const accepting = mode === 'aceptacion';
 
-          $('version').textContent = 'Versión ' + (accepting ? newVersion : currentVersion);
+          $('version').textContent = 'Versión ' + (accepting || user.consent.policyVersion === newVersion ? newVersion : currentVersion);
           $('intro-aceptacion').hidden = !accepting || state === 'loading';
           $('texto-politica').hidden = state === 'loading' || (state === 'error' && !accepting);
           $('form-aceptar').hidden = !accepting || state === 'loading';

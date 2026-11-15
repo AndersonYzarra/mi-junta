@@ -46,7 +46,7 @@
   </header>
 
   <!-- C-02 · Aviso sin conexión -->
-  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion completa-sin-conexion">
     <span class="icon icon--cloud-off" aria-hidden="true"></span>
     <span class="status-bar__text" id="texto-sin-conexion"></span>
   </div>
@@ -82,7 +82,7 @@
     </div>
 
     <!-- Contenido de la junta (todos los estados con datos) -->
-    <div id="vista" data-estado="con-datos vacio completa error sin-conexion">
+    <div id="vista" data-estado="con-datos vacio completa completa-sin-conexion error sin-conexion">
       <div class="page-header">
         <h1 id="titulo"></h1>
         <div class="header-meta" id="cabecera-meta"></div>
@@ -109,7 +109,7 @@
       <p id="nota-otras"></p>
       <p id="nota-sorteo"></p>
       <div class="cluster">
-        <label class="choice" style="min-height: 0; padding: 0"><input type="checkbox" id="simular-fecha"><span class="choice__text">Simular que la ronda 1 todavía no vence</span></label>
+        <label class="choice" style="min-height: 0; padding: 0"><input type="checkbox" id="simular-fecha"><span class="choice__text">Simular que la ronda 1 ya se cambió al 30/01/2027 en "Editar junta"</span></label>
       </div>
       <div class="cluster">
         <label class="choice" style="min-height: 0; padding: 0"><input type="checkbox" id="simular-orden"><span class="choice__text">Simular que otro dispositivo ya fijó el orden (RN-125)</span></label>
@@ -168,6 +168,8 @@
       const qa = 'junta=' + junta.id + '&amp;usuario=' + user.id;
       const order = M.getTurnOrder(junta.id);
       const today = data.meta.today;
+      // Cupo simulado del estado "Completa" (datos.js no tiene la junta llena)
+      const ANA = { id: 'user_ana_salinas', name: data.examples.newAccount.name };
 
       document.title = junta.name + ' · Mi Junta';
       document.querySelectorAll('[data-nav]').forEach(function (a) { a.href = a.getAttribute('data-nav') + '?usuario=' + user.id; });
@@ -220,15 +222,16 @@
           v.before = true;
           v.status = 'open';
           v.members = slotMembers().filter(function (m) { return m.isOrganizer; });
-          v.code = inviteCodesOf()[0].code;
-        } else if (state === 'completa' || state === 'error') {
+          v.code = (M.getInviteCode(junta.id) || inviteCodesOf()[0]).code;
+        } else if (state === 'completa' || state === 'completa-sin-conexion' || state === 'error') {
           // Todos los cupos ocupados, antes de fijar el orden
           v.before = true;
           v.status = 'full';
           v.members = slotMembers();
-          if (!fixed) {
+          const occupiedNow = v.members.filter(function (m) { return m.participates; }).length;
+          if (!fixed && occupiedNow < junta.participantCount) {
             // Falta un cupo en datos.js: se simula que Ana se unió con el código (UF-05)
-            v.members.push({ userId: 'ana', name: data.examples.newAccount.name, isOrganizer: false, participates: true });
+            v.members.push({ userId: ANA.id, name: ANA.name, isOrganizer: false, participates: true, simulated: true });
           }
           v.code = (M.getInviteCode(junta.id) || inviteCodesOf()[0]).code;
         } else if (!fixed) {
@@ -237,7 +240,6 @@
         }
         if (v.before) {
           v.members = v.members.filter(function (m) { return removed.indexOf(m.userId) === -1; });
-          if (regeneratedCode) v.code = regeneratedCode;
           v.occupied = v.members.filter(function (m) { return m.participates; }).length;
           if (state !== 'vacio' && v.status === 'full' && v.occupied < junta.participantCount) v.status = 'open';   // RN-101
           if (v.status === 'open' && v.occupied >= junta.participantCount) v.status = 'full';                       // RN-100
@@ -536,9 +538,41 @@
               dialogError(M.message('RN-122'), true);
               return;
             }
-            // 201: abre P-013 con C-08 "Sorteo guardado." (el único sorteo de datos.js es el de la Junta Oficina)
-            location.href = 'P-013-registro-sorteo.html?junta=junta_oficina&usuario=user_456&aviso=sorteo';
+            runDraw();
           },
+        });
+      }
+
+      /* Sorteo de esta junta (obs. #3 y #4): semilla de 256 bits (RN-031), lista
+         de entrada ordenada por el momento en que cada uno ocupó su cupo, sin el
+         organizador que no participa (RN-123, RN-030), y fisher-yates-v1 del
+         anexo A (RN-032, RN-124). El registro queda guardado en esta pestaña
+         (RN-034), la junta pasa a "En curso" (RN-102) y el código se anula (RN-019). */
+      function runDraw() {
+        if (view.members.some(function (m) { return m.simulated; })) {
+          // El cupo simulado del estado "Completa" pasa a ser real para que el sorteo lo incluya
+          M.store.addUser({ id: ANA.id, name: ANA.name, email: data.examples.newAccount.email, deletedAt: null });
+          M.store.addMembership({ juntaId: junta.id, userId: ANA.id, isOrganizer: false, occupiesSlot: true, slotTakenAt: data.meta.now, leftAt: null });
+        }
+        if ($('simular-fecha').checked && junta.round1DueDate < today) {
+          M.store.patchJunta(junta.id, { round1DueDate: '2027-01-30' });
+        }
+        const input = data.memberships
+          .filter(function (m) { return m.juntaId === junta.id && m.leftAt === null && m.occupiesSlot && removed.indexOf(m.userId) === -1; })
+          .sort(function (a, b) { return a.slotTakenAt < b.slotTakenAt ? -1 : 1; })
+          .map(function (m) { return m.userId; });
+        const seedHex = M.newSeedHex();
+        M.fisherYatesV1(seedHex, input).then(function (result) {
+          M.store.addDraw({
+            juntaId: junta.id, seedHex: seedHex, algorithmVersion: 'fisher-yates-v1', input: input, result: result,
+            executedBy: user.id, executedAt: data.meta.now,
+          });
+          M.store.patchJunta(junta.id, { status: 'in_progress', turnOrderFixedAt: data.meta.now });
+          // 201: abre P-013 con C-08 "Sorteo guardado."
+          location.href = 'P-013-registro-sorteo.html?junta=' + junta.id + '&usuario=' + user.id + '&aviso=sorteo';
+        }).catch(function () {
+          // Sin Web Crypto (navegador antiguo): se muestra el sorteo de ejemplo de la Junta Oficina
+          location.href = 'P-013-registro-sorteo.html?junta=junta_oficina&usuario=user_456&aviso=sorteo';
         });
       }
 
@@ -602,7 +636,8 @@
             confirm: 'Regenerar código',
             onConfirm: function () {
               lastRevokedCode = view.code;
-              regeneratedCode = newInviteCode();
+              // Queda guardado en esta pestaña: P-009 rechaza el código anterior (RN-020)
+              M.store.addInviteCode({ code: newInviteCode(), juntaId: junta.id, createdAt: data.meta.now, revokedAt: null, revokeReason: null });
               dialog.close();
               render(currentState);
               $('nota-sorteo').textContent = 'El código ' + lastRevokedCode + ' quedó anulado (RN-020). Si alguien lo ingresa en P-009, ve "' + M.message('RN-020') + '"';
@@ -620,7 +655,14 @@
             confirm: 'Quitar',
             danger: true,
             onConfirm: function () {
-              removed.push(id);                                     // API-012: el cupo queda libre
+              // API-012: el cupo queda libre (RN-112, RN-113) y la junta "Completa"
+              // vuelve a "Abierta" (RN-101). Se guarda en esta pestaña, salvo el cupo simulado.
+              if (id === ANA.id) {
+                removed.push(id);
+              } else {
+                M.store.patchMembership(junta.id, id, { leftAt: data.meta.now });
+                if (junta.status === 'full') M.store.patchJunta(junta.id, { status: 'open' });
+              }
               dialog.close();
               render(currentState);
               $('titulo-miembros').setAttribute('tabindex', '-1');
@@ -646,13 +688,18 @@
         return '<a href="P-011-junta-organizador.html?junta=' + j.id + '">' + esc(j.name) + '</a> (' + esc(M.statusLabel(j.status)) + ')';
       }).join(', ') + '. Sin permiso: <a href="P-011-junta-organizador.html?junta=' + junta.id + '&amp;usuario=user_301">como Rosa Delgado</a>.';
       $('nota-sorteo').textContent = 'El estado "Completa" simula todos los cupos ocupados antes del orden' +
-        (junta.turnOrderFixedAt ? '' : ' (el cupo 12 lo ocupa ' + data.examples.newAccount.name + ')') +
-        '. Como la ronda 1 venció el ' + M.formatDate(junta.round1DueDate) + ', el sorteo se rechaza (RN-122), salvo que marque la primera casilla.';
+        (junta.turnOrderFixedAt || M.getOccupiedSlots(junta.id) >= junta.participantCount ? '' : ' (el cupo ' + junta.participantCount + ' lo ocupa ' + ANA.name + ')') +
+        '. Lo que se guarda aquí (código nuevo, participante quitado, sorteo) queda en esta pestaña y se ve en las demás pantallas.' +
+        (junta.round1DueDate < today
+          ? ' Como la ronda 1 venció el ' + M.formatDate(junta.round1DueDate) + ', el sorteo se rechaza (RN-122): cámbiela en "Editar junta" o marque la primera casilla.'
+          : ' La ronda 1 vence el ' + M.formatDate(junta.round1DueDate) + ': el sorteo se puede ejecutar.') +
+        ' Sin cambios guardados, el camino completo es: Lucía se une con T9QW3HZ5 en P-009 (12 de 12), Carmen cambia la ronda 1 en P-012 y ejecuta el sorteo aquí.';
 
       /* ---------------- Estados ---------------- */
       const states = M.initStates({
         extraStates: [
           { id: 'completa', label: 'Completa' },
+          { id: 'completa-sin-conexion', label: 'Completa sin conexión' },
           { id: 'sin-conexion', label: 'Sin conexión' },
           { id: 'sin-permiso', label: 'Sin permiso' },
         ],
@@ -660,9 +707,9 @@
         onChange: function (state) {
           if (dialog.open) { reloadOnClose = false; dialog.close(); }
           currentState = state;
-          offline = state === 'sin-conexion';
+          // "Completa sin conexión": todos los cupos ocupados y sin red, para ver RN-029 (obs. #2)
+          offline = state === 'sin-conexion' || state === 'completa-sin-conexion';
           removed = [];
-          regeneratedCode = null;
           const showView = hasAccess && ['loading', 'sin-permiso'].indexOf(state) === -1;
           if (!hasAccess && state !== 'loading') {
             // Sin permiso: nunca se pinta la junta

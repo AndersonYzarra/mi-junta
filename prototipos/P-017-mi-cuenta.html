@@ -274,7 +274,7 @@
       let opener = null;
 
       function logout() {
-        try { sessionStorage.clear(); } catch (e) { /* sin almacenamiento */ }   // RN-197
+        M.store.clearDevice(user.id);   // RN-197: P-003 y P-016 ya no muestran sus cambios sin enviar
         location.href = 'P-003-iniciar-sesion.html';
       }
 

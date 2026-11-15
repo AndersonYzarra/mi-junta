@@ -465,6 +465,89 @@
   const session = { defaultUserId: 'user_456' };
 
   /* ------------------------------------------------------------------------
+     Cambios de esta sesión del prototipo (iteración 1, auditorias/prototype-review.md)
+
+     Lo que una pantalla guarda (unirse, quitar, editar la junta, regenerar el
+     código, fijar el orden, registrar o informar un pago, cerrar sesión)
+     queda en sessionStorage y se aplica aquí, antes de calcular las rondas y
+     las cuotas, para que las demás pantallas lo muestren. Representa lo que
+     guardaría el servidor y dura lo que dura la pestaña. MiJunta.store.reset()
+     vuelve a los datos de ejemplo.
+     ------------------------------------------------------------------------ */
+
+  const STORE_KEY = 'mijunta.sesionPrototipo';
+
+  function emptyStore() {
+    return {
+      users: [], userPatches: {}, memberships: [], membershipPatches: [], juntas: {}, inviteCodes: [],
+      draws: [], turnAssignments: [], contributions: {}, history: {},
+      clearedDevices: [], closedSurveys: [],
+    };
+  }
+
+  function readStore() {
+    try {
+      const raw = JSON.parse(global.sessionStorage.getItem(STORE_KEY) || 'null');
+      return Object.assign(emptyStore(), raw || {});
+    } catch (e) {
+      return emptyStore();
+    }
+  }
+
+  function writeStore(s) {
+    try {
+      global.sessionStorage.setItem(STORE_KEY, JSON.stringify(s));
+    } catch (e) {
+      /* sin almacenamiento: el cambio solo dura en esta página */
+    }
+  }
+
+  const stored = readStore();
+
+  function sameMember(a, b) { return a.juntaId === b.juntaId && a.userId === b.userId; }
+
+  stored.users.forEach(function (u) {
+    if (!users.some(function (x) { return x.id === u.id; })) users.push(u);
+  });
+  Object.keys(stored.userPatches).forEach(function (id) {
+    const u = users.find(function (x) { return x.id === id; });
+    if (u) Object.assign(u, stored.userPatches[id]);
+  });
+  stored.memberships.forEach(function (m) {
+    if (!memberships.some(function (x) { return sameMember(x, m); })) memberships.push(m);
+  });
+  stored.membershipPatches.forEach(function (p) {
+    const m = memberships.find(function (x) { return sameMember(x, p); });
+    if (m) Object.assign(m, p.patch);
+  });
+  Object.keys(stored.juntas).forEach(function (id) {
+    const j = juntas.find(function (x) { return x.id === id; });
+    if (j) Object.assign(j, stored.juntas[id]);
+  });
+  // Un código nuevo anula el anterior de la misma junta (RN-020)
+  stored.inviteCodes.forEach(function (n) {
+    inviteCodes.forEach(function (c) {
+      if (c.juntaId === n.juntaId && c.revokedAt === null) { c.revokedAt = n.createdAt; c.revokeReason = 'regenerated'; }
+    });
+    inviteCodes.push(Object.assign({}, n));
+  });
+  stored.draws.forEach(function (d) {
+    if (!draws.some(function (x) { return x.juntaId === d.juntaId; })) draws.push(d);
+  });
+  stored.turnAssignments.forEach(function (a) {
+    if (!turnAssignments.some(function (x) { return x.juntaId === a.juntaId; })) turnAssignments.push(a);
+  });
+  // Fijar el orden anula el código de invitación (RN-019, RN-129)
+  stored.draws.concat(stored.turnAssignments).forEach(function (rec) {
+    inviteCodes.forEach(function (c) {
+      if (c.juntaId === rec.juntaId && c.revokedAt === null) {
+        c.revokedAt = rec.executedAt || rec.assignedAt;
+        c.revokeReason = 'turn_order_fixed';
+      }
+    });
+  });
+
+  /* ------------------------------------------------------------------------
      Textos del catálogo §2.9 de 03-reglas-de-negocio.md, copiados tal cual.
      La clave es la RN. Cuando una RN tiene más de un texto, la clave lleva un
      sufijo. {n}, {nombre}, {enlace}, {fecha} y {hora} se reemplazan con
@@ -843,6 +926,13 @@
     });
   });
 
+  // Cuotas cambiadas en esta sesión del prototipo (registrar, desmarcar,
+  // informar, confirmar o rechazar con conexión)
+  Object.keys(stored.contributions).forEach(function (id) {
+    const c = contributions.find(function (x) { return x.id === id; });
+    if (c) Object.assign(c, stored.contributions[id]);
+  });
+
   /* ------------------------------------------------------------------------
      Consultas para las pantallas
      ------------------------------------------------------------------------ */
@@ -976,6 +1066,7 @@
         events.push({ type: 'payment_reported', at: r.reportedAt, paidOn: r.reportedPaidOn, by: r.participantId });
         if (r.resolution) events.push({ type: r.resolution === 'confirmed' ? 'report_confirmed' : 'report_rejected', at: r.resolvedAt, by: r.resolvedBy });
       });
+    (stored.history[contributionId] || []).forEach(function (e) { events.push(Object.assign({}, e)); });
     return events.sort(function (a, b) { return a.at < b.at ? -1 : a.at > b.at ? 1 : 0; });
   }
 
@@ -1080,7 +1171,13 @@
     return turnAssignments.find(function (a) { return a.juntaId === juntaId; }) || null;
   }
 
+  // Al cerrar sesión la app borra del dispositivo los cambios sin enviar (RN-197)
+  function deviceCleared(userId) {
+    return stored.clearedDevices.indexOf(userId) !== -1;
+  }
+
   function getPendingChanges(userId) {
+    if (deviceCleared(userId)) return [];
     return pendingChanges.filter(function (c) { return c.userId === userId; });
   }
 
@@ -1088,6 +1185,7 @@
   // con "Entendido" en P-016 ya no aparecen.
   function getRejectedChanges(userId) {
     const reviewed = reviewedRejections();
+    if (deviceCleared(userId)) return [];
     return rejectedChanges
       .filter(function (c) { return c.userId === userId && !c.reviewedAt && reviewed.indexOf(c.clientChangeId) === -1; })
       .map(function (c) {
@@ -1120,19 +1218,194 @@
   /*
    * Indicador de cambios sin enviar (C-03) para un usuario:
    *   - con un rechazo sin revisar: { kind: 'rejected', text: 'Un cambio no se pudo guardar.' }
+   *     y, si además hay cambios por enviar, también su cantidad (RN-174; obs. #1
+   *     de auditorias/prototype-review.md): 'Un cambio no se pudo guardar. 1 cambio sin enviar.'
    *   - con cambios por enviar:     { kind: 'pending', text: '1 cambio sin enviar.' } (RN-174)
    *   - sin nada:                   null
    */
   function getSyncIndicator(userId) {
-    const reviewed = reviewedRejections();
-    const unreviewed = rejectedChanges.filter(function (c) {
-      return c.userId === userId && !c.reviewedAt && reviewed.indexOf(c.clientChangeId) === -1;
-    });
-    if (unreviewed.length) return { kind: 'rejected', text: uiTexts.rejectedChange };
+    const unreviewed = getRejectedChanges(userId);
     const pending = getPendingChanges(userId).length;
+    if (unreviewed.length) {
+      return { kind: 'rejected', count: pending, text: uiTexts.rejectedChange + (pending ? ' ' + pendingChangesText(pending) : '') };
+    }
     if (pending) return { kind: 'pending', count: pending, text: pendingChangesText(pending) };
     return null;
   }
+
+  /* ------------------------------------------------------------------------
+     Sorteo: algoritmo fisher-yates-v1 exactamente como el anexo A de 03
+     (RN-031, RN-032, RN-124). Usa HMAC-SHA256 de Web Crypto y devuelve una
+     promesa con la lista mezclada. Se verificó con el vector de prueba del
+     anexo A y con el sorteo de la Junta Oficina.
+     ------------------------------------------------------------------------ */
+
+  function hexToBytes(hex) {
+    return new Uint8Array(hex.match(/../g).map(function (h) { return parseInt(h, 16); }));
+  }
+
+  // Semilla de 256 bits con un generador criptográfico (RN-031)
+  function newSeedHex() {
+    const bytes = new Uint8Array(32);
+    global.crypto.getRandomValues(bytes);
+    return Array.prototype.map.call(bytes, function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+  }
+
+  function fisherYatesV1(seedHex, list) {
+    const subtle = global.crypto && global.crypto.subtle;
+    if (!subtle) return Promise.reject(new Error('Web Crypto no disponible'));
+    const L = list.slice();
+    const TWO_32 = 4294967296;
+    return subtle.importKey('raw', hexToBytes(seedHex), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']).then(function (key) {
+      let k = 0;
+      let stream = new Uint8Array(0);
+      let pos = 0;
+      // B_k = HMAC-SHA256(S, k en 4 bytes big-endian), concatenados
+      function nextBlock() {
+        const msg = new Uint8Array(4);
+        new DataView(msg.buffer).setUint32(0, k);
+        k += 1;
+        return subtle.sign('HMAC', key, msg).then(function (block) {
+          const b = new Uint8Array(block);
+          const merged = new Uint8Array(stream.length - pos + b.length);
+          merged.set(stream.subarray(pos));
+          merged.set(b, stream.length - pos);
+          stream = merged;
+          pos = 0;
+        });
+      }
+      // Siguiente entero r de 4 bytes big-endian, sin saltar bytes
+      function nextR() {
+        if (stream.length - pos >= 4) {
+          const r = new DataView(stream.buffer, pos, 4).getUint32(0);
+          pos += 4;
+          return Promise.resolve(r);
+        }
+        return nextBlock().then(nextR);
+      }
+      function step(i) {
+        if (i < 1) return Promise.resolve(L);
+        const m = i + 1;
+        const limit = TWO_32 - (TWO_32 % m);
+        function sample() { return nextR().then(function (r) { return r >= limit ? sample() : r; }); }   // muestreo por rechazo
+        return sample().then(function (r) {
+          const j = r % m;
+          const t = L[i];
+          L[i] = L[j];
+          L[j] = t;
+          return step(i - 1);
+        });
+      }
+      return step(L.length - 1);
+    });
+  }
+
+  /* ------------------------------------------------------------------------
+     Guardar cambios de la sesión del prototipo (ver STORE_KEY arriba).
+     Cada función guarda en sessionStorage y aplica el cambio en memoria.
+     ------------------------------------------------------------------------ */
+
+  function updateStore(fn) {
+    const s = readStore();
+    fn(s);
+    writeStore(s);
+    Object.keys(s).forEach(function (key) { stored[key] = s[key]; });
+  }
+
+  const store = {
+    addUser: function (u) {
+      updateStore(function (s) { if (!s.users.some(function (x) { return x.id === u.id; })) s.users.push(u); });
+      if (!byId[u.id]) { users.push(u); byId[u.id] = u; }
+    },
+    // Por ejemplo, la versión de la política aceptada (RN-169)
+    patchUser: function (userId, patch) {
+      updateStore(function (s) { s.userPatches[userId] = Object.assign(s.userPatches[userId] || {}, patch); });
+      if (byId[userId]) Object.assign(byId[userId], patch);
+    },
+    // Ocupar un cupo (unirse) o volver a ocuparlo
+    addMembership: function (m) {
+      updateStore(function (s) {
+        s.memberships = s.memberships.filter(function (x) { return !sameMember(x, m); });
+        s.memberships.push(m);
+        s.membershipPatches = s.membershipPatches.filter(function (x) { return !sameMember(x, m); });
+      });
+      const existing = memberships.find(function (x) { return sameMember(x, m); });
+      if (existing) Object.assign(existing, m);
+      else memberships.push(m);
+    },
+    // Salir, quitar o cambiar la participación del organizador (RN-113, RN-212)
+    patchMembership: function (juntaId, userId, patch) {
+      const ref = { juntaId: juntaId, userId: userId };
+      updateStore(function (s) {
+        const own = s.memberships.find(function (x) { return sameMember(x, ref); });
+        if (own) { Object.assign(own, patch); return; }
+        const prev = s.membershipPatches.find(function (x) { return sameMember(x, ref); });
+        if (prev) Object.assign(prev.patch, patch);
+        else s.membershipPatches.push({ juntaId: juntaId, userId: userId, patch: Object.assign({}, patch) });
+      });
+      const m = memberships.find(function (x) { return sameMember(x, ref); });
+      if (m) Object.assign(m, patch);
+    },
+    patchJunta: function (juntaId, patch) {
+      updateStore(function (s) { s.juntas[juntaId] = Object.assign(s.juntas[juntaId] || {}, patch); });
+      if (juntaById[juntaId]) Object.assign(juntaById[juntaId], patch);
+    },
+    addInviteCode: function (code) {
+      updateStore(function (s) { s.inviteCodes.push(code); });
+      inviteCodes.forEach(function (c) {
+        if (c.juntaId === code.juntaId && c.revokedAt === null) { c.revokedAt = code.createdAt; c.revokeReason = 'regenerated'; }
+      });
+      inviteCodes.push(Object.assign({}, code));
+    },
+    addDraw: function (record) {
+      updateStore(function (s) { s.draws.push(record); });
+    },
+    addTurnAssignment: function (record) {
+      updateStore(function (s) { s.turnAssignments.push(record); });
+    },
+    // Estado nuevo de una cuota y el evento para su historial
+    patchContribution: function (contributionId, patch, event) {
+      updateStore(function (s) {
+        s.contributions[contributionId] = Object.assign(s.contributions[contributionId] || {}, patch);
+        if (event) (s.history[contributionId] = s.history[contributionId] || []).push(event);
+      });
+      const c = contributions.find(function (x) { return x.id === contributionId; });
+      if (c) Object.assign(c, patch);
+    },
+    // "Terminada" si todas las cuotas quedaron pagadas; "En curso" si no (RN-103, RN-104)
+    refreshJuntaStatus: function (juntaId) {
+      const j = juntaById[juntaId];
+      if (!j || (j.status !== 'in_progress' && j.status !== 'finished')) return j ? j.status : null;
+      const all = contributions.filter(function (c) { return c.juntaId === juntaId; });
+      const status = all.length && all.every(function (c) { return c.status === 'paid'; }) ? 'finished' : 'in_progress';
+      if (status !== j.status) store.patchJunta(juntaId, { status: status });
+      return status;
+    },
+    // Cerrar sesión: borra del dispositivo las juntas y los cambios sin enviar (RN-197)
+    clearDevice: function (userId) {
+      updateStore(function (s) { if (s.clearedDevices.indexOf(userId) === -1) s.clearedDevices.push(userId); });
+      try { global.sessionStorage.removeItem(REVIEWED_KEY); } catch (e) { /* sin almacenamiento */ }
+    },
+    isDeviceCleared: deviceCleared,
+    // Encuesta cerrada sin responder: no se vuelve a mostrar (RN-210, RN-211)
+    closeSurvey: function (userId) {
+      updateStore(function (s) { if (s.closedSurveys.indexOf(userId) === -1) s.closedSurveys.push(userId); });
+    },
+    isSurveyClosed: function (userId) { return stored.closedSurveys.indexOf(userId) !== -1; },
+    hasChanges: function () {
+      const s = readStore();
+      return Object.keys(s).some(function (key) {
+        const v = s[key];
+        return Array.isArray(v) ? v.length > 0 : Object.keys(v).length > 0;
+      });
+    },
+    reset: function () {
+      try {
+        global.sessionStorage.removeItem(STORE_KEY);
+        global.sessionStorage.removeItem(REVIEWED_KEY);
+      } catch (e) { /* sin almacenamiento */ }
+    },
+  };
 
   // Encuesta pendiente de KPI-05 (RN-204, RN-205, RN-211). Para el prototipo
   // solo se revisa la primera encuesta.
@@ -1294,6 +1567,11 @@
     getSyncIndicator: getSyncIndicator,
     markRejectionReviewed: markRejectionReviewed,
     hasPendingSurvey: hasPendingSurvey,
+    // Sorteo (anexo A de 03)
+    newSeedHex: newSeedHex,
+    fisherYatesV1: fisherYatesV1,
+    // Cambios de la sesión del prototipo
+    store: store,
     // Validaciones
     validate: validate,
   });

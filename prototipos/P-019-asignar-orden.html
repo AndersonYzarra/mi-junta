@@ -97,7 +97,7 @@
       <p id="nota-ronda1"></p>
       <label class="choice">
         <input type="checkbox" id="simular-fecha">
-        <span class="choice__text">Simular que Carmen ya cambió la ronda 1 a una fecha posterior a hoy en "Editar junta", para ver el orden guardado</span>
+        <span class="choice__text">Simular que Carmen ya cambió la ronda 1 al 30/01/2027 en "Editar junta", para ver el orden guardado</span>
       </label>
       <p>El organizador que no participa no aparece en la lista (RN-030). En datos.js no hay una junta sin orden con un organizador que no participa: la Junta Ventas ya tiene su orden.</p>
       <p>Probar también: <a href="P-019-asignar-orden.html?junta=junta_ventas&amp;usuario=user_456">Junta Ventas, que ya tiene su orden (RN-125)</a>; <a href="P-019-asignar-orden.html?junta=junta_familia&amp;usuario=user_789">Lucía, que no es la organizadora (403)</a>.</p>
@@ -137,7 +137,6 @@
       const params = new URLSearchParams(location.search);
       const $ = function (id) { return document.getElementById(id); };
       const esc = M.escapeHtml;
-      const SIM_KEY = 'mijunta.p019.asignacion';
 
       const junta = M.getJunta(params.get('junta')) || M.getJunta('junta_familia');
       const user = M.getCurrentUser(junta.organizerId);
@@ -162,7 +161,7 @@
         fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
       });
       $('dialogo-codigo').textContent = code
-        ? 'El código ' + M.formatInviteCode(code.code) + ' dejará de servir (RN-129).'
+        ? 'El código ' + M.formatInviteCode(code.code) + ' dejará de servir.'     // RN-129 (sin el ID en el texto visible, obs. #18)
         : '';
 
       // Participantes que ocupan un cupo, en el orden en que se unieron.
@@ -172,7 +171,7 @@
         .sort(function (a, b) { return a.slotTakenAt < b.slotTakenAt ? -1 : 1; })
         .map(function (m) { return { id: m.userId, name: M.displayName(m.userId), isSelf: m.userId === user.id }; });
       const freeSlots = junta.participantCount - realMembers.length;
-      const simulatedMember = { id: 'user_simulado_ana', name: data.examples.newAccount.name, isSelf: false, simulated: true };
+      const simulatedMember = { id: 'user_ana_salinas', name: data.examples.newAccount.name, isSelf: false, simulated: true };
 
       $('nota-simulacion').textContent = junta.name + ' tiene ' + realMembers.length + ' de ' + junta.participantCount +
         ' cupos ocupados en datos.js. ' + (freeSlots === 1
@@ -288,14 +287,20 @@
             $('dialogo-error').hidden = false;
             return;
           }
-          // 201: se guarda el registro (quién y cuándo, RN-039) y abre P-020
+          // 201: se guarda el registro (quién y cuándo, RN-038, RN-039) en esta
+          // pestaña (MiJunta.store), la junta pasa a "En curso" (RN-102), el código
+          // se anula (RN-129) y abre P-020
+          if (members.some(function (m) { return m.simulated; })) {
+            M.store.addUser({ id: simulatedMember.id, name: simulatedMember.name, email: data.examples.newAccount.email, deletedAt: null });
+            M.store.addMembership({ juntaId: junta.id, userId: simulatedMember.id, isOrganizer: false, occupiesSlot: true, slotTakenAt: data.meta.now, leftAt: null });
+          }
+          if ($('simular-fecha').checked && junta.round1DueDate < data.meta.today) {
+            M.store.patchJunta(junta.id, { round1DueDate: '2027-01-30' });
+          }
           const order = [];
-          selects().forEach(function (s, i) { order[Number(s.value) - 1] = { id: members[i].id, name: members[i].name }; });
-          try {
-            sessionStorage.setItem(SIM_KEY, JSON.stringify({
-              juntaId: junta.id, result: order, assignedBy: user.id, assignedAt: data.meta.now,
-            }));
-          } catch (e) { /* sin almacenamiento */ }
+          selects().forEach(function (s, i) { order[Number(s.value) - 1] = members[i].id; });
+          M.store.addTurnAssignment({ juntaId: junta.id, result: order, assignedBy: user.id, assignedAt: data.meta.now });
+          M.store.patchJunta(junta.id, { status: 'in_progress', turnOrderFixedAt: data.meta.now });
           location.href = 'P-020-registro-orden-asignado.html?junta=' + junta.id + '&' + userParam;
         }, 900);
       });
