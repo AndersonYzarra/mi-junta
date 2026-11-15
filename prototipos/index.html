@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototipos · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    Índice de los prototipos de Mi Junta. NO es código de producción.
+    Fuente: auditorias/plan-prototipos.md (pantallas, prioridad, lote y flujos)
+    y spec-pack/09-ui-spec.md v1.0 §2 (nombres y prioridad de los flujos).
+    Cada pantalla aparece una vez, en el flujo que la agrupa en su lote; la
+    columna "También en" lista los demás flujos donde aparece.
+  -->
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" href="index.html">Mi Junta</a>
+    </div>
+  </header>
+
+  <main id="contenido" class="container container--wide">
+    <div class="page-header">
+      <h1>Prototipos de Mi Junta</h1>
+      <p class="long-text">Prototipos visuales para validar los flujos con stakeholders. No son código de producción. Cada pantalla tiene arriba un selector de estado: Con datos, Vacío, Error y Loading.</p>
+    </div>
+
+    <div class="alert alert--info">
+      <div class="alert__body">
+        <p class="alert__title">Datos de ejemplo</p>
+        <p id="resumen-datos">Todas las pantallas usan los mismos datos ficticios.</p>
+      </div>
+    </div>
+
+    <section class="section-end" aria-labelledby="titulo-pantallas">
+      <h2 id="titulo-pantallas">Pantallas por flujo</h2>
+      <p class="muted" id="resumen-pantallas"></p>
+      <p class="muted">Las pantallas se agregan por lotes. Si un enlace no abre, esa pantalla todavía no está hecha.</p>
+      <div id="flujos"></div>
+    </section>
+
+    <section class="section-end" aria-labelledby="titulo-juntas">
+      <h2 id="titulo-juntas">Juntas de los datos de ejemplo</h2>
+      <p class="muted" id="ayuda-usuario"></p>
+      <div class="section">
+        <table class="table table--stack">
+          <caption class="visually-hidden">Juntas de los datos de ejemplo</caption>
+          <thead>
+            <tr>
+              <th scope="col">Junta</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Organiza</th>
+              <th scope="col">Cuota</th>
+              <th scope="col">Pozo por ronda</th>
+              <th scope="col">Cupos</th>
+              <th scope="col">Frecuencia</th>
+              <th scope="col">Ronda actual</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-juntas"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section-end" aria-labelledby="titulo-base">
+      <h2 id="titulo-base">Base común</h2>
+      <div class="section">
+      <ul class="list">
+        <li class="list__row">
+          <div class="list__main">
+            <a href="assets/estilos.css" class="strong">assets/estilos.css</a>
+            <p class="muted">Design tokens de 09 §4 y estilos de los componentes comunes C-01 a C-10.</p>
+          </div>
+        </li>
+        <li class="list__row">
+          <div class="list__main">
+            <a href="assets/datos.js" class="strong">assets/datos.js</a>
+            <p class="muted">Datos ficticios, textos del catálogo de 03 §2.9, formatos de Perú y validaciones.</p>
+          </div>
+        </li>
+        <li class="list__row">
+          <div class="list__main">
+            <a href="assets/estados.js" class="strong">assets/estados.js</a>
+            <p class="muted">Selector de estado que muestra u oculta los bloques marcados con data-estado.</p>
+          </div>
+        </li>
+      </ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/datos.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // Flujos de 09 §2, con su prioridad
+      const flows = [
+        { id: 'UF-01', name: 'Crear la cuenta y verificar el correo', priority: 'Must' },
+        { id: 'UF-02', name: 'Iniciar sesión', priority: 'Must (paso 3 Should)' },
+        { id: 'UF-03', name: 'Recuperar la contraseña', priority: 'Must' },
+        { id: 'UF-04', name: 'Crear una junta y compartir el código', priority: 'Must (paso 4 Should)' },
+        { id: 'UF-05', name: 'Unirse a una junta con el código', priority: 'Must' },
+        { id: 'UF-06', name: 'Ajustar la junta antes de fijar el orden', priority: 'Must' },
+        { id: 'UF-07', name: 'Ejecutar el sorteo', priority: 'Must' },
+        { id: 'UF-08', name: 'Registrar y desmarcar un pago, con o sin conexión', priority: 'Must' },
+        { id: 'UF-09', name: 'Consultar el estado de la junta, con o sin conexión', priority: 'Must' },
+        { id: 'UF-10', name: 'Informar y confirmar un pago', priority: 'Should' },
+        { id: 'UF-11', name: 'Asignar el orden de turnos sin sorteo', priority: 'Should' },
+        { id: 'UF-12', name: 'Preferencias de notificación y cerrar sesión', priority: 'Must (push y aviso de cuotas vencidas Should)' },
+        { id: 'UF-13', name: 'Salir de una junta antes del orden de turnos', priority: 'Must' },
+        { id: 'UF-14', name: 'Activar el segundo factor', priority: 'Should' },
+        { id: 'UF-15', name: 'Borrar la cuenta', priority: 'Should' },
+      ];
+
+      // Pantallas del plan (auditorias/plan-prototipos.md), en el orden del plan.
+      // flow: el flujo que la agrupa en su lote; also: los demás flujos donde aparece.
+      const screens = [
+        { id: 'P-003', name: 'Iniciar sesión', priority: 'Must', lot: 1, flow: 'UF-02', also: ['UF-01', 'UF-03', 'UF-05', 'UF-12', 'UF-15'], file: 'P-003-iniciar-sesion.html' },
+        { id: 'P-001', name: 'Crear cuenta', priority: 'Must', lot: 1, flow: 'UF-01', also: ['UF-05'], file: 'P-001-crear-cuenta.html' },
+        { id: 'P-002', name: 'Verificar correo', priority: 'Must', lot: 1, flow: 'UF-01', also: [], file: 'P-002-verificar-correo.html' },
+        { id: 'P-006', name: 'Política de privacidad', priority: 'Must', lot: 1, flow: 'UF-01', also: ['UF-02'], file: 'P-006-politica-privacidad.html' },
+        { id: 'P-007', name: 'Mis juntas', priority: 'Must', lot: 1, flow: 'UF-01', also: ['UF-02', 'UF-04', 'UF-09', 'UF-12', 'UF-13'], file: 'P-007-mis-juntas.html' },
+        { id: 'P-004', name: 'Recuperar contraseña', priority: 'Must', lot: 2, flow: 'UF-03', also: [], file: 'P-004-recuperar-contrasena.html' },
+        { id: 'P-005', name: 'Nueva contraseña', priority: 'Must', lot: 2, flow: 'UF-03', also: [], file: 'P-005-nueva-contrasena.html' },
+        { id: 'P-017', name: 'Mi cuenta', priority: 'Must', lot: 2, flow: 'UF-12', also: ['UF-14', 'UF-15'], file: 'P-017-mi-cuenta.html' },
+        { id: 'P-008', name: 'Crear junta', priority: 'Must', lot: 3, flow: 'UF-04', also: [], file: 'P-008-crear-junta.html' },
+        { id: 'P-011', name: 'Junta: vista del organizador', priority: 'Must', lot: 3, flow: 'UF-04', also: ['UF-06', 'UF-07', 'UF-08', 'UF-11'], file: 'P-011-junta-organizador.html' },
+        { id: 'P-012', name: 'Editar junta', priority: 'Must', lot: 3, flow: 'UF-06', also: [], file: 'P-012-editar-junta.html' },
+        { id: 'P-013', name: 'Registro del sorteo', priority: 'Must', lot: 3, flow: 'UF-07', also: ['UF-09'], file: 'P-013-registro-sorteo.html' },
+        { id: 'P-009', name: 'Unirse a una junta', priority: 'Must', lot: 4, flow: 'UF-05', also: [], file: 'P-009-unirse-junta.html' },
+        { id: 'P-010', name: 'Junta: vista del participante', priority: 'Must', lot: 4, flow: 'UF-09', also: ['UF-05', 'UF-10', 'UF-13'], file: 'P-010-junta-participante.html' },
+        { id: 'P-014', name: 'Pagos de la junta', priority: 'Must', lot: 5, flow: 'UF-08', also: ['UF-10'], file: 'P-014-pagos-junta.html' },
+        { id: 'P-015', name: 'Detalle de la cuota', priority: 'Must', lot: 5, flow: 'UF-08', also: ['UF-10'], file: 'P-015-detalle-cuota.html' },
+        { id: 'P-016', name: 'Cambios sin enviar', priority: 'Must', lot: 5, flow: 'UF-08', also: [], file: 'P-016-cambios-sin-enviar.html' },
+        { id: 'P-018', name: 'Informar mi pago', priority: 'Should', lot: 6, flow: 'UF-10', also: [], file: 'P-018-informar-pago.html' },
+        { id: 'P-019', name: 'Asignar orden de turnos', priority: 'Should', lot: 6, flow: 'UF-11', also: [], file: 'P-019-asignar-orden.html' },
+        { id: 'P-020', name: 'Registro del orden asignado', priority: 'Should', lot: 6, flow: 'UF-11', also: [], file: 'P-020-registro-orden-asignado.html' },
+        { id: 'P-024', name: 'Encuesta de KPI-05', priority: 'Should', lot: 6, flow: 'UF-04', also: [], file: 'P-024-encuesta-kpi-05.html' },
+        { id: 'P-021', name: 'Segundo factor', priority: 'Should', lot: 7, flow: 'UF-14', also: [], file: 'P-021-segundo-factor.html' },
+        { id: 'P-022', name: 'Código de verificación al iniciar sesión', priority: 'Should', lot: 7, flow: 'UF-02', also: [], file: 'P-022-codigo-verificacion.html' },
+        { id: 'P-023', name: 'Borrar mi cuenta', priority: 'Should', lot: 7, flow: 'UF-15', also: [], file: 'P-023-borrar-cuenta.html' },
+      ];
+
+      const esc = MiJunta.escapeHtml;
+      const anchor = function (flowId) { return 'flujo-' + flowId.toLowerCase(); };
+      const byId = {};
+      screens.forEach(function (s) { byId[s.id] = s; });
+
+      function screenRow(s) {
+        const also = s.also.length
+          ? s.also.map(function (f) { return '<a href="#' + anchor(f) + '">' + f + '</a>'; }).join(', ')
+          : '<span aria-label="Ninguno">—</span>';
+        return '<tr>' +
+          '<td data-label="ID" class="strong tabular">' + s.id + '</td>' +
+          '<td data-label="Pantalla">' + esc(s.name) + '</td>' +
+          '<td data-label="Prioridad">' + s.priority + '</td>' +
+          '<td data-label="Lote" class="tabular">Lote ' + s.lot + '</td>' +
+          '<td data-label="También en"><span>' + also + '</span></td>' +
+          '<td data-label="Archivo"><a class="mono" href="' + s.file + '">' + s.file + '</a></td>' +
+          '</tr>';
+      }
+
+      const html = flows.map(function (flow) {
+        const own = screens.filter(function (s) { return s.flow === flow.id; });
+        let body;
+        if (own.length) {
+          body = '<table class="table table--stack table--fixed">' +
+            '<caption class="visually-hidden">Pantallas de ' + flow.id + '</caption>' +
+            '<colgroup><col style="width: 8%"><col style="width: 27%"><col style="width: 11%">' +
+            '<col style="width: 9%"><col style="width: 19%"><col style="width: 26%"></colgroup>' +
+            '<thead><tr>' +
+            '<th scope="col">ID</th><th scope="col">Pantalla</th><th scope="col">Prioridad</th>' +
+            '<th scope="col">Lote</th><th scope="col">También en</th><th scope="col">Archivo</th>' +
+            '</tr></thead><tbody>' + own.map(screenRow).join('') + '</tbody></table>';
+        } else {
+          // Flujo sin pantallas propias: lista las que usa
+          const used = screens.filter(function (s) { return s.also.indexOf(flow.id) !== -1; });
+          body = '<p>Este flujo no tiene pantallas propias. Usa ' +
+            used.map(function (s) { return '<a href="' + s.file + '">' + s.id + ' · ' + esc(s.name) + '</a>'; }).join(' y ') +
+            ', que están en otros flujos.</p>';
+        }
+        return '<section class="section-end" id="' + anchor(flow.id) + '" aria-labelledby="' + anchor(flow.id) + '-titulo">' +
+          '<h3 id="' + anchor(flow.id) + '-titulo">' + flow.id + ' · ' + esc(flow.name) + '</h3>' +
+          '<p class="muted">Prioridad: ' + esc(flow.priority) + '</p>' +
+          '<div class="section">' + body + '</div>' +
+          '</section>';
+      }).join('');
+
+      document.getElementById('flujos').innerHTML = html;
+
+      const must = screens.filter(function (s) { return s.priority === 'Must'; }).length;
+      document.getElementById('resumen-pantallas').textContent =
+        screens.length + ' pantallas en ' + flows.length + ' flujos: ' + must + ' Must y ' + (screens.length - must) + ' Should.';
+
+      // Resumen de los datos de ejemplo, leído de datos.js
+      const data = MiJunta.data;
+      const defaultUser = MiJunta.getUser(data.session.defaultUserId);
+      document.getElementById('resumen-datos').textContent =
+        'Todas las pantallas usan los mismos datos ficticios. Fecha simulada: hoy es ' +
+        MiJunta.formatDate(data.meta.today) + ' en America/Lima.';
+      document.getElementById('ayuda-usuario').textContent =
+        'Por defecto, las pantallas con sesión se ven como ' + defaultUser.name +
+        '. Para verlas como otra persona, agregue ?usuario=user_789 (' + MiJunta.displayName('user_789') +
+        ') a la dirección de la pantalla.';
+
+      document.getElementById('tabla-juntas').innerHTML = data.juntas.map(function (j) {
+        const round = MiJunta.getCurrentRound(j.id);
+        const organizer = MiJunta.displayName(j.organizerId) + (j.organizerParticipates ? '' : ' (no participa)');
+        return '<tr>' +
+          '<td data-label="Junta" class="strong">' + esc(j.name) + '</td>' +
+          '<td data-label="Estado">' + MiJunta.badgeHtml(j.status) + '</td>' +
+          '<td data-label="Organiza">' + esc(organizer) + '</td>' +
+          '<td data-label="Cuota" class="amount">' + MiJunta.formatMoney(j.contributionAmountCents) + '</td>' +
+          '<td data-label="Pozo por ronda" class="amount">' + MiJunta.formatMoney(MiJunta.getPotCents(j)) + '</td>' +
+          '<td data-label="Cupos" class="tabular">' + MiJunta.getOccupiedSlots(j.id) + ' de ' + j.participantCount + '</td>' +
+          '<td data-label="Frecuencia">' + esc(MiJunta.frequencyLabel(j)) + '</td>' +
+          '<td data-label="Ronda actual" class="tabular">' +
+          (round ? round.number + ' de ' + j.participantCount + ' · vence ' + MiJunta.formatDate(round.dueDate) : 'Sin orden de turnos') +
+          '</td>' +
+          '</tr>';
+      }).join('');
+    })();
+  </script>
+</body>
+</html>
