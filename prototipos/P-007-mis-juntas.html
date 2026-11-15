@@ -12,6 +12,8 @@
     Parámetros de la URL:
       ?usuario=user_789  ver la pantalla como otra persona (por defecto, Jorge)
       ?verificado=1      vuelve de P-002 con el correo ya verificado
+      ?aviso=salio&junta=…  vuelve de P-010 después de salir de esa junta
+      ?aviso=encuesta-respondida  vuelve de P-024 ("Gracias por responder.")
   -->
 </head>
 <body class="has-bottom-nav">
@@ -103,6 +105,12 @@
     </aside>
   </main>
 
+  <!-- C-08 · Aviso de resultado -->
+  <div class="toast" id="toast" role="status" hidden>
+    <span class="toast__text" id="toast-texto"></span>
+    <button class="btn btn--icon" type="button" id="toast-cerrar" aria-label="Cerrar"><span class="icon icon--close" aria-hidden="true"></span></button>
+  </div>
+
   <nav class="bottom-nav" aria-label="Principal">
     <ul>
       <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
@@ -127,7 +135,11 @@
       const userParam = 'usuario=' + user.id;
       const verifiedNow = params.get('verificado') === '1';
       const emailUnverified = !user.emailVerifiedAt && !verifiedNow;
-      const juntas = M.getJuntasForUser(user.id);
+      // Vuelve de P-010 después de salir de una junta: esa junta ya no aparece (API-014)
+      const leftJunta = params.get('aviso') === 'salio' ? M.getJunta(params.get('junta')) : null;
+      const juntas = M.getJuntasForUser(user.id).filter(function (item) {
+        return !leftJunta || item.junta.id !== leftJunta.id;
+      });
 
       // Todos los enlaces conservan el usuario con sesión
       document.querySelectorAll('[data-nav]').forEach(function (a) {
@@ -229,6 +241,17 @@
           el.removeAttribute('aria-disabled');
           el.removeAttribute('aria-describedby');
         }
+      }
+
+      /* C-08: "Salió de la {junta}." o "Gracias por responder." (vuelve de P-024).
+         Se cierra solo a los 6 segundos */
+      const toastText = leftJunta ? 'Salió de la ' + leftJunta.name + '.'
+        : params.get('aviso') === 'encuesta-respondida' ? 'Gracias por responder.' : null;
+      if (toastText) {
+        $('toast-texto').textContent = toastText;
+        $('toast').hidden = false;
+        const timer = setTimeout(function () { $('toast').hidden = true; }, 6000);
+        $('toast-cerrar').addEventListener('click', function () { clearTimeout(timer); $('toast').hidden = true; });
       }
 
       /* Nota del prototipo */

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detalle de la cuota · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-015 · Detalle de la cuota (/juntas/{id}/contributions/{contributionId}).
+    Prototipo, NO es código de producción. Fuente: spec-pack/09-ui-spec.md §3
+    P-015 y RN-052, RN-054 a RN-058, RN-062, RN-063, RN-103, RN-104, RN-130 a
+    RN-132, RN-134, RN-138, RN-170, RN-173, RN-174 y RN-194 de
+    spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?cuota=ctb_oficina_r1_user_789  cuota (id de datos.js). Por defecto, la de
+                                       Lucía de la ronda 1, "Pagada" con corrección
+      ?usuario=user_456                usuario con sesión (por defecto, Jorge)
+  -->
+  <style>
+    .timeline__item > * + * { margin-top: var(--space-1); }
+  </style>
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <!-- C-03 · Indicador de cambios sin enviar (RN-174) -->
+  <div class="status-bar" id="indicador-cambios" role="status" hidden>
+    <span class="icon icon--sync" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-cambios"></span>
+    <a class="status-bar__action" data-nav="P-016-cambios-sin-enviar.html" href="P-016-cambios-sin-enviar.html">Ver</a>
+  </div>
+
+  <!-- C-08 · Aviso de resultado -->
+  <div class="toast" id="toast" role="status" hidden>
+    <span class="toast__text" id="toast-texto"></span>
+    <button class="btn btn--icon" type="button" id="toast-cerrar" aria-label="Cerrar"><span class="icon icon--close" aria-hidden="true"></span></button>
+  </div>
+
+  <main id="contenido" class="container">
+    <a class="back-link" id="enlace-volver" href="P-014-pagos-junta.html">Pagos</a>
+
+    <!-- Cargando (C-10) -->
+    <div class="stack" data-estado="loading" aria-hidden="true">
+      <span class="skeleton skeleton--title"></span>
+      <span class="skeleton skeleton--text" style="width: 50%"></span>
+      <span class="skeleton skeleton--card"></span>
+      <span class="skeleton skeleton--button"></span>
+    </div>
+
+    <!-- Sin permiso: solo el organizador gestiona las cuotas (RN-120, 403) -->
+    <div class="empty-state" role="alert" id="sin-permiso" data-estado="sin-permiso">
+      <p>No tiene acceso a esta junta.</p>
+      <a class="btn btn--secondary" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Ir a Mis juntas</a>
+    </div>
+
+    <div id="detalle" data-estado="con-datos vacio error pendiente pagada por-confirmar sin-conexion ya-no-pendiente">
+      <div class="page-header">
+        <h1 id="titulo"></h1>
+        <p id="vence"></p>
+        <p class="cluster"><span>Cuota: <span class="amount" id="monto"></span></span><span class="cluster" id="etiquetas"></span></p>
+        <p class="cluster" id="linea-pago" hidden></p>
+        <p class="muted" id="texto-sin-enviar" hidden>Se enviará cuando vuelva la conexión.</p>
+      </div>
+
+      <!-- Mi Junta no mueve dinero (PRINCIPIO-004) -->
+      <div class="alert alert--info">
+        <div class="alert__body"><p>El dinero se paga fuera de Mi Junta, por ejemplo por Yape, Plin o en efectivo. Aquí solo se registra.</p></div>
+      </div>
+
+      <!-- La cuota cambió en otro dispositivo (RN-130, RN-131) -->
+      <div class="alert alert--danger section" id="alerta-conflicto" role="alert" hidden>
+        <div class="alert__body"><p id="texto-conflicto"></p></div>
+      </div>
+
+      <!-- "Pendiente": registrar pago -->
+      <form class="section" id="form-registrar" novalidate hidden>
+        <div class="field">
+          <label class="field__label" for="fecha-pago">Fecha de pago</label>
+          <span class="field__help" id="ayuda-fecha"></span>
+          <div class="field__control input-with-button">
+            <input class="input" id="fecha-pago" inputmode="numeric" autocomplete="off" aria-describedby="ayuda-fecha error-fecha">
+            <button class="btn btn--icon" type="button" id="btn-calendario" aria-label="Abrir calendario"><span class="icon icon--calendar" aria-hidden="true"></span></button>
+            <input type="date" id="selector-fecha" class="visually-hidden" tabindex="-1" aria-hidden="true">
+          </div>
+          <p class="field__error" id="error-fecha" hidden></p>
+        </div>
+        <button class="btn btn--primary btn--block" type="submit" id="btn-registrar">Registrar pago</button>
+      </form>
+
+      <!-- "Pagada": desmarcar. La fecha de pago no se edita (RN-134) -->
+      <div class="section" id="acciones-pagada" hidden>
+        <button class="btn btn--secondary btn--block" type="button" id="btn-desmarcar">Desmarcar pago</button>
+      </div>
+
+      <!-- "Por confirmar" (S): confirmar o rechazar -->
+      <div class="section btn-row" id="acciones-informado" hidden>
+        <button class="btn btn--primary" type="button" id="btn-confirmar">Confirmar pago</button>
+        <button class="btn btn--secondary" type="button" id="btn-rechazar">Rechazar pago</button>
+      </div>
+
+      <section class="section-end" aria-labelledby="titulo-historial">
+        <h2 id="titulo-historial">Historial</h2>
+        <p class="section muted" id="historial-vacio" hidden>Todavía no hay pagos registrados.</p>
+        <ol class="timeline section" id="historial"></ol>
+      </section>
+    </div>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p id="nota-junta"></p>
+      <p>Si registra el último pago pendiente de la junta, la junta pasa a "Terminada" (RN-103); si desmarca un pago de una junta "Terminada", vuelve a "En curso" (RN-104). El cambio se ve al volver a la junta.</p>
+      <p id="nota-otras"></p>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <!-- C-07 · Diálogo de confirmación (desmarcar o rechazar) -->
+  <dialog class="dialog" id="dialogo" aria-labelledby="dialogo-titulo">
+    <h2 class="dialog__title" id="dialogo-titulo" tabindex="-1"></h2>
+    <p id="dialogo-texto"></p>
+    <div class="dialog__actions">
+      <button class="btn btn--primary" type="button" id="dialogo-confirmar"></button>
+      <button class="btn btn--secondary" type="button" id="dialogo-cancelar">Cancelar</button>
+    </div>
+  </dialog>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+
+      const user = M.getCurrentUser();
+      const userParam = 'usuario=' + user.id;
+      const urlId = M.getContribution(params.get('cuota') || '', user.id) ? params.get('cuota') : 'ctb_oficina_r1_user_789';
+      const urlContribution = M.getContribution(urlId, user.id);
+
+      document.querySelectorAll('[data-nav]').forEach(function (a) { a.href = a.getAttribute('data-nav') + '?' + userParam; });
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('ayuda-fecha').textContent = M.uiTexts.dateHelp;
+
+      /* Estado de la pantalla: una copia de la cuota que cambia con las acciones */
+      let c = null;          // cuota que se muestra
+      let junta = null;
+      let history = [];      // eventos del historial
+      let offline = false;
+      let localChanges = 0;  // cambios hechos en esta pantalla sin conexión
+
+      function load(id) {
+        const base = M.getContribution(id, user.id);
+        c = JSON.parse(JSON.stringify(base));
+        junta = M.getJunta(c.juntaId);
+        history = M.getContributionHistory(id).map(function (e) { return Object.assign({}, e); });
+        if (base.unsent && base.pendingChange) {
+          // Cambio del outbox que todavía no llega al servidor
+          history.push({ type: base.pendingChange.type, at: base.pendingChange.performedAt, paidOn: base.pendingChange.paidOn, by: user.id, unsent: true });
+        }
+        localChanges = 0;
+      }
+
+      function eventHtml(e) {
+        const when = M.formatDate(e.at) + ' ' + M.formatTime(e.at);
+        const by = esc(M.displayName(e.by));
+        const unsent = e.unsent ? ' ' + M.unsentBadgeHtml() : '';
+        switch (e.type) {
+          case 'payment_recorded':
+            return 'Pago registrado · fecha de pago ' + M.formatDate(e.paidOn) + ' · registrado el ' + when + ' por ' + by + unsent;
+          case 'payment_unmarked':
+            return 'Pago desmarcado el ' + when + ' por ' + by + unsent;
+          case 'payment_reported':
+            return 'Pago informado por ' + by + ' · fecha de pago ' + M.formatDate(e.paidOn) + unsent;
+          case 'report_confirmed':
+            return 'Confirmado el ' + when + ' por ' + by + unsent;
+          case 'report_rejected':
+            return 'Rechazado el ' + when + ' por ' + by + unsent;
+          default:
+            return '';
+        }
+      }
+
+      function render() {
+        const name = M.displayName(c.participantId);
+        document.title = 'Cuota de ' + name + ', ronda ' + c.roundNumber + ' · Mi Junta';
+        $('titulo').textContent = name + ' · Ronda ' + c.roundNumber;
+        $('vence').textContent = 'Vence el ' + M.formatDate(c.dueDate);
+        $('monto').textContent = M.formatMoney(c.amountCents);
+        $('etiquetas').innerHTML = M.badgeHtml(c.status) + (c.unsent ? ' ' + M.unsentBadgeHtml() : '');
+        $('texto-sin-enviar').hidden = !c.unsent;
+        $('enlace-volver').href = 'P-014-pagos-junta.html?junta=' + c.juntaId + '&ronda=' + c.roundNumber + '&' + userParam;
+
+        // "a tiempo" o "atrasado" (RN-055, RN-056)
+        const paid = c.status === 'paid' && c.currentPayment;
+        $('linea-pago').hidden = !paid;
+        if (paid) $('linea-pago').innerHTML = 'Pagó el ' + M.formatDate(c.currentPayment.paidOn) + ' · ' + M.timingHtml(c.currentPayment.isOnTime);
+
+        // Cada estado muestra solo sus acciones (RN-130: no se registra una cuota que no está "Pendiente")
+        $('form-registrar').hidden = c.status !== 'pending';
+        $('acciones-pagada').hidden = c.status !== 'paid';
+        $('acciones-informado').hidden = c.status !== 'awaiting_confirmation';
+
+        $('historial').innerHTML = history.map(function (e) {
+          return '<li class="timeline__item"><p class="cluster">' + eventHtml(e) + '</p></li>';
+        }).join('');
+        const noPayments = !history.length;
+        $('historial-vacio').hidden = !noPayments;
+        $('historial').hidden = noPayments;
+
+        // Cuotas sin pagar de la junta (RN-103)
+        const unpaid = M.getContributions(junta.id, { viewerId: user.id }).filter(function (x) {
+          return x.id === c.id ? c.status !== 'paid' : x.status !== 'paid';
+        }).length;
+        $('nota-junta').textContent = junta.name + ' está "' + M.statusLabel(junta.status) + '". ' +
+          (unpaid === 0 ? 'Todas sus cuotas están pagadas.' : 'Le quedan ' + unpaid + (unpaid === 1 ? ' cuota sin pagar.' : ' cuotas sin pagar.')) +
+          ' Hoy es ' + M.formatDate(data.meta.today) + ' y la junta se creó el ' + M.formatDate(junta.createdOn) + '.';
+
+        syncIndicator();
+      }
+
+      /* C-03: cuenta los cambios del outbox de este usuario más los hechos aquí (RN-174) */
+      function syncIndicator() {
+        const bar = $('indicador-cambios');
+        bar.classList.remove('status-bar--pending', 'status-bar--rejected');
+        if (localChanges > 0) {
+          const n = M.getPendingChanges(user.id).length + localChanges;
+          bar.classList.add('status-bar--pending');
+          $('texto-cambios').textContent = M.pendingChangesText(n);
+          bar.hidden = false;
+          return;
+        }
+        const sync = M.getSyncIndicator(user.id);
+        bar.hidden = !sync || !(currentState === 'con-datos' || currentState === 'sin-conexion' || currentState === 'pagada' || currentState === 'pendiente' || currentState === 'por-confirmar');
+        if (sync) {
+          bar.classList.add(sync.kind === 'rejected' ? 'status-bar--rejected' : 'status-bar--pending');
+          $('texto-cambios').textContent = sync.text;
+        }
+      }
+
+      function toast(text) {
+        $('toast-texto').textContent = text;
+        $('toast').hidden = false;
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(function () { $('toast').hidden = true; }, 6000);
+      }
+      $('toast-cerrar').addEventListener('click', function () { $('toast').hidden = true; });
+
+      function nowIso() { return data.meta.now; }
+
+      // Aplica un cambio: con conexión llega al servidor; sin conexión queda en el
+      // outbox con la hora en que se hizo en el dispositivo (RN-173)
+      function applyChange(event) {
+        if (offline) {
+          event.unsent = true;
+          c.unsent = true;
+          localChanges += 1;
+        }
+        history.push(event);
+        render();
+      }
+
+      function fieldError(text) {
+        const input = $('fecha-pago');
+        $('error-fecha').textContent = text || '';
+        $('error-fecha').hidden = !text;
+        if (text) input.setAttribute('aria-invalid', 'true');
+        else input.removeAttribute('aria-invalid');
+      }
+
+      /* Registrar pago (RN-052, RN-054, RN-055, RN-056, RN-132) */
+      $('form-registrar').addEventListener('submit', function (event) {
+        event.preventDefault();
+        $('alerta-conflicto').hidden = true;
+        const text = $('fecha-pago').value;
+        if (!text.trim()) { fieldError(M.uiTexts.dateInvalid); $('fecha-pago').focus(); return; }
+        const err = M.validate.paymentDate(text, junta);
+        if (err) { fieldError(err); $('fecha-pago').focus(); return; }
+        fieldError(null);
+        if (currentState === 'ya-no-pendiente') {        // otro dispositivo la cambió antes (RN-130)
+          $('texto-conflicto').textContent = M.message('RN-130');
+          $('alerta-conflicto').hidden = false;
+          return;
+        }
+        const paidOn = M.parseDateInput(text);
+        const btn = $('btn-registrar');
+        btn.disabled = true;
+        btn.setAttribute('aria-busy', 'true');
+        setTimeout(function () {
+          btn.disabled = false;
+          btn.removeAttribute('aria-busy');
+          c.status = 'paid';
+          c.currentPayment = { paidOn: paidOn, isOnTime: paidOn <= c.dueDate, recordedBy: user.id, recordedAt: nowIso() };
+          applyChange({ type: 'payment_recorded', at: nowIso(), paidOn: paidOn, by: user.id });
+          toast('Pago registrado.');
+        }, offline ? 0 : 700);
+      });
+
+      // Calendario nativo: el valor siempre se muestra en DD/MM/AAAA (C-05)
+      $('btn-calendario').addEventListener('click', function () {
+        const picker = $('selector-fecha');
+        picker.value = M.parseDateInput($('fecha-pago').value) || data.meta.today;
+        try { picker.showPicker(); } catch (e) { $('fecha-pago').focus(); }
+      });
+      $('selector-fecha').addEventListener('change', function () {
+        if (this.value) $('fecha-pago').value = M.formatDate(this.value);
+      });
+
+      /* Diálogos de confirmación (C-07) */
+      const dialog = $('dialogo');
+      let dialogAction = null;
+      let opener = null;
+
+      function openDialog(title, text, confirmLabel, danger, action, from) {
+        $('dialogo-titulo').textContent = title;
+        $('dialogo-texto').textContent = text;
+        const ok = $('dialogo-confirmar');
+        ok.textContent = confirmLabel;
+        ok.className = 'btn ' + (danger ? 'btn--danger' : 'btn--primary');
+        ok.disabled = false;
+        ok.removeAttribute('aria-busy');
+        dialogAction = action;
+        opener = from;
+        dialog.showModal();
+        $('dialogo-titulo').focus();
+      }
+
+      $('dialogo-cancelar').addEventListener('click', function () { dialog.close(); });
+      dialog.addEventListener('close', function () { if (opener && !opener.closest('[hidden]')) opener.focus(); });
+      $('dialogo-confirmar').addEventListener('click', function () {
+        const ok = this;
+        ok.disabled = true;                              // evita una segunda pulsación
+        ok.setAttribute('aria-busy', 'true');
+        setTimeout(function () {
+          dialog.close();
+          if (dialogAction) dialogAction();
+        }, offline ? 0 : 600);
+      });
+
+      // Desmarcar: la cuota vuelve a "Pendiente" y el historial conserva el pago (RN-057, RN-058, RN-059)
+      $('btn-desmarcar').addEventListener('click', function () {
+        openDialog('¿Desmarcar este pago?',
+          'La cuota volverá a Pendiente. El historial guardará el pago y la corrección. Para cambiar la fecha, desmarque y vuelva a registrar.',
+          'Desmarcar pago', true, function () {
+            if (currentState === 'ya-no-pendiente') {
+              $('texto-conflicto').textContent = M.message('RN-131');
+              $('alerta-conflicto').hidden = false;
+              return;
+            }
+            c.status = 'pending';
+            c.currentPayment = null;
+            applyChange({ type: 'payment_unmarked', at: nowIso(), by: user.id });
+            $('fecha-pago').value = M.formatDate(data.meta.today);
+          }, this);
+      });
+
+      // Confirmar: "Pagada" con la fecha que indicó el participante (RN-062, RN-138)
+      $('btn-confirmar').addEventListener('click', function () {
+        const btn = this;
+        const reported = c.reportedPayment;
+        btn.disabled = true;
+        btn.setAttribute('aria-busy', 'true');
+        setTimeout(function () {
+          btn.disabled = false;
+          btn.removeAttribute('aria-busy');
+          c.status = 'paid';
+          c.currentPayment = { paidOn: reported.reportedPaidOn, isOnTime: reported.reportedPaidOn <= c.dueDate, recordedBy: user.id, recordedAt: nowIso() };
+          applyChange({ type: 'report_confirmed', at: nowIso(), by: user.id });
+          applyChange({ type: 'payment_recorded', at: nowIso(), paidOn: reported.reportedPaidOn, by: user.id, unsent: offline });
+          if (offline) localChanges -= 1;               // confirmar es un solo cambio
+          render();
+          toast('Pago registrado.');
+        }, offline ? 0 : 700);
+      });
+
+      // Rechazar: vuelve a "Pendiente" y el participante recibe un aviso (RN-063, RN-194)
+      $('btn-rechazar').addEventListener('click', function () {
+        const name = M.displayName(c.participantId);
+        openDialog('¿Rechazar el pago informado?', 'La cuota volverá a Pendiente y ' + name + ' recibirá un aviso.',
+          'Rechazar pago', true, function () {
+            c.status = 'pending';
+            c.reportedPayment = null;
+            applyChange({ type: 'report_rejected', at: nowIso(), by: user.id });
+            $('fecha-pago').value = M.formatDate(data.meta.today);
+          }, this);
+      });
+
+      /* Estados del prototipo */
+      const pick = {
+        'con-datos': urlId,
+        vacio: 'ctb_oficina_r2_user_507',          // "Pendiente" sin pagos registrados
+        error: urlContribution.status === 'pending' ? urlId : 'ctb_oficina_r2_user_234',
+        pendiente: 'ctb_oficina_r2_user_234',      // Pedro: pago informado y rechazado
+        pagada: 'ctb_oficina_r1_user_789',         // Lucía: pago corregido
+        'por-confirmar': 'ctb_oficina_r2_user_789',
+        'sin-conexion': urlId,
+        'ya-no-pendiente': 'ctb_oficina_r2_user_507',
+      };
+      let currentState = 'con-datos';
+
+      $('nota-otras').innerHTML = 'Otras cuotas: ' + [
+        ['ctb_oficina_r2_user_505', 'con un cambio sin enviar'],
+        ['ctb_oficina_r1_user_506', 'pagada con atraso'],
+        ['ctb_oficina_r3_user_502', 'ronda futura ya pagada'],
+        ['ctb_oficina_r2_user_456', 'cuota propia del organizador'],
+        ['ctb_amigas_r3_user_621', 'junta terminada'],
+      ].map(function (x) {
+        const k = M.getContribution(x[0], 'user_456');
+        const u = x[0].indexOf('amigas') !== -1 ? 'user_620' : 'user_456';
+        return '<a href="P-015-detalle-cuota.html?cuota=' + x[0] + '&amp;usuario=' + u + '">' + esc(M.displayName(k.participantId)) +
+          ', ronda ' + k.roundNumber + '</a> (' + x[1] + ')';
+      }).join(', ') + '.';
+
+      const isOrganizer = M.isOrganizer(urlContribution.juntaId, user.id);
+
+      M.initStates({
+        extraStates: [
+          { id: 'pendiente', label: 'Pendiente' },
+          { id: 'pagada', label: 'Pagada' },
+          { id: 'por-confirmar', label: 'Por confirmar' },
+          { id: 'sin-conexion', label: 'Sin conexión' },
+          { id: 'ya-no-pendiente', label: 'Cambiada en otro dispositivo' },
+          { id: 'sin-permiso', label: 'Sin permiso' },
+        ],
+        initial: isOrganizer ? 'con-datos' : 'sin-permiso',
+        onChange: function (state) {
+          currentState = state;
+          offline = state === 'sin-conexion';
+          $('alerta-conflicto').hidden = true;
+          fieldError(null);
+          if (state === 'loading' || state === 'sin-permiso') { $('indicador-cambios').hidden = true; return; }
+          if (!isOrganizer && (state === 'con-datos' || state === 'sin-conexion')) {
+            $('detalle').hidden = true;
+            $('sin-permiso').hidden = false;
+            return;
+          }
+          load(pick[state]);
+          $('fecha-pago').value = M.formatDate(data.meta.today);   // valor inicial: hoy (America/Lima)
+          render();
+          if (state === 'error') {
+            // Fecha de pago posterior a hoy (RN-054)
+            $('fecha-pago').value = '31/12/2026';
+            fieldError(M.validate.paymentDate('31/12/2026', junta));
+          }
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -12,6 +12,7 @@
     Parámetros de la URL que simulan de dónde viene el usuario:
       ?codigo=T9QW3HZ5   viene de P-009 sin sesión (aviso de RN-017)
       ?aviso=contrasena  viene de P-005 (aviso de contraseña cambiada)
+      ?aviso=cuenta-borrada  viene de P-023 ("Su cuenta fue borrada.")
   -->
 </head>
 <body>
@@ -45,6 +46,11 @@
       <!-- Aviso al venir de P-005 -->
       <div class="alert alert--success" id="aviso-contrasena" role="status" hidden>
         <div class="alert__body"><p>Su contraseña se cambió. Inicie sesión con la nueva.</p></div>
+      </div>
+
+      <!-- Aviso al venir de P-023 con la cuenta borrada -->
+      <div class="alert alert--success" id="aviso-cuenta-borrada" role="status" hidden>
+        <div class="alert__body"><p>Su cuenta fue borrada.</p></div>
       </div>
 
       <h1>Iniciar sesión</h1>
@@ -102,6 +108,7 @@
       const params = new URLSearchParams(location.search);
       const savedCode = params.get('codigo');
       const passwordChanged = params.get('aviso') === 'contrasena';
+      const accountDeleted = params.get('aviso') === 'cuenta-borrada';   // viene de P-023
 
       const $ = function (id) { return document.getElementById(id); };
       const form = $('form-login');
@@ -277,6 +284,7 @@
 
           $('aviso-codigo').hidden = !(savedCode || state === 'con-avisos');
           $('aviso-contrasena').hidden = !(passwordChanged || state === 'con-avisos');
+          $('aviso-cuenta-borrada').hidden = !accountDeleted;
           updateCounter();
         },
       });

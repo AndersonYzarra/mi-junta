@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Informar mi pago · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-018 · Informar mi pago (/juntas/{id}/contributions/{contributionId}/report).
+    Prototipo, NO es código de producción. Fuente: spec-pack/09-ui-spec.md §3 P-018
+    y RN-054, RN-060, RN-065, RN-132, RN-135, RN-136 y RN-170 de
+    spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?cuota=ctb_oficina_r3_user_789  cuota que se informa (por defecto, la ronda 3 de Lucía)
+      ?usuario=user_789               usuario con sesión (por defecto, Lucía)
+  -->
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <!-- C-03 · Indicador de cambios sin enviar (aparece al informar sin conexión) -->
+  <div class="status-bar status-bar--pending" id="indicador-cambios" hidden>
+    <span class="icon icon--sync" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-cambios"></span>
+    <a class="status-bar__action" data-nav="P-016-cambios-sin-enviar.html" href="P-016-cambios-sin-enviar.html">Ver</a>
+  </div>
+
+  <main id="contenido" class="container">
+    <a class="back-link" id="enlace-volver" href="P-010-junta-participante.html"></a>
+
+    <div class="page-header">
+      <h1>Informar mi pago</h1>
+      <p class="strong" id="junta-ronda"></p>
+      <p class="cluster">Cuota: <span class="amount" id="monto"></span> <span id="etiquetas"></span></p>
+      <p id="vencimiento"></p>
+    </div>
+
+    <!-- Cargando (C-10) -->
+    <div class="stack" data-estado="loading" aria-hidden="true">
+      <span class="skeleton skeleton--text"></span>
+      <span class="skeleton skeleton--text" style="width: 70%"></span>
+      <span class="skeleton skeleton--button"></span>
+      <span class="skeleton skeleton--button"></span>
+    </div>
+
+    <!-- Vacío: la cuota ya no está pendiente, no hay nada que informar (RN-135) -->
+    <div class="stack" data-estado="vacio">
+      <div class="alert alert--info" role="status">
+        <div class="alert__body"><p id="texto-no-pendiente"></p></div>
+      </div>
+      <a class="btn btn--secondary" id="btn-volver-vacio" href="P-010-junta-participante.html">Volver a la junta</a>
+    </div>
+
+    <!-- Rechazo del servidor (RN-135, RN-136) -->
+    <div class="error-summary" id="resumen" role="alert" tabindex="-1" hidden>
+      <p class="error-summary__title" id="resumen-texto"></p>
+    </div>
+
+    <form class="form stack" id="form-informar" novalidate data-estado="con-datos error sin-conexion organizador">
+      <p class="long-text">Informe su pago solo después de pagar al organizador. Su cuota quedará Por confirmar hasta que él o ella lo revise.</p>
+
+      <!-- Único campo del formulario: no hay campo de archivo ni de comprobante (RN-065) -->
+      <div class="field">
+        <label class="field__label" for="fecha-pago">Fecha de pago</label>
+        <span class="field__help" id="ayuda-fecha"></span>
+        <div class="field__control input-with-button">
+          <input class="input" id="fecha-pago" name="fecha-pago" inputmode="numeric" autocomplete="off" aria-describedby="ayuda-fecha error-fecha">
+          <button class="btn btn--icon" type="button" id="btn-calendario" aria-label="Abrir calendario">
+            <span class="icon icon--calendar" aria-hidden="true"></span>
+          </button>
+          <input type="date" id="selector-fecha" tabindex="-1" aria-hidden="true" class="visually-hidden">
+        </div>
+        <p class="field__error" id="error-fecha" hidden></p>
+      </div>
+
+      <div class="btn-row">
+        <div>
+          <button class="btn btn--primary btn--block" type="submit" id="btn-informar">Informar pago</button>
+        </div>
+        <a class="btn btn--secondary" id="btn-cancelar" href="P-010-junta-participante.html">Cancelar</a>
+      </div>
+    </form>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p id="nota-cuota"></p>
+      <p>No hay campo para adjuntar un comprobante (RN-065). Sin conexión, el informe se guarda en el dispositivo y se envía al volver la conexión (RN-170).</p>
+      <p id="nota-otras"></p>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+
+      const DEFAULT_CUOTA = 'ctb_oficina_r3_user_789';
+      const user = M.getCurrentUser('user_789');
+      const userParam = 'usuario=' + user.id;
+      let cuota = M.getContribution(params.get('cuota') || DEFAULT_CUOTA, user.id) || M.getContribution(DEFAULT_CUOTA, 'user_789');
+      let junta = M.getJunta(cuota.juntaId);
+
+      document.querySelectorAll('[data-nav]').forEach(function (a) {
+        a.href = a.getAttribute('data-nav') + '?' + userParam;
+      });
+
+      const fecha = $('fecha-pago');
+      const submitBtn = $('btn-informar');
+      let offline = false;
+      let forcedState = null;
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('ayuda-fecha').textContent = M.uiTexts.dateHelp;
+      $('texto-no-pendiente').textContent = M.message('RN-135');
+
+      function juntaHref(extra) {
+        return 'P-010-junta-participante.html?junta=' + junta.id + '&' + userParam + (extra || '');
+      }
+
+      function render(c) {
+        cuota = c;
+        junta = M.getJunta(c.juntaId);
+        $('enlace-volver').textContent = junta.name;
+        $('enlace-volver').href = juntaHref();
+        $('btn-cancelar').href = juntaHref();
+        $('btn-volver-vacio').href = juntaHref();
+        $('junta-ronda').textContent = junta.name + ' · Ronda ' + c.roundNumber;
+        $('monto').textContent = M.formatMoney(c.amountCents);
+        $('vencimiento').textContent = 'Vence el ' + M.formatDate(c.dueDate);
+        setBadges(c.status, c.unsent);
+        $('nota-cuota').textContent = 'Cuota de ' + M.displayName(c.participantId) + ' en la ' + junta.name +
+          '. La junta se creó el ' + M.formatDate(junta.createdOn) + ' y hoy es ' + M.formatDate(data.meta.today) +
+          ': la fecha de pago tiene que estar entre esos dos días (RN-132, RN-054).';
+      }
+
+      function setBadges(status, unsent) {
+        $('etiquetas').innerHTML = M.badgeHtml(status) + (unsent ? ' ' + M.unsentBadgeHtml() : '');
+      }
+
+      // Otras cuotas para probar los rechazos
+      const others = [
+        ['ctb_oficina_r2_user_789', 'user_789', 'cuota de Lucía "Por confirmar": se rechaza con RN-135'],
+        ['ctb_oficina_r3_user_456', 'user_456', 'cuota propia de Jorge, el organizador: se rechaza con RN-136'],
+      ];
+      $('nota-otras').innerHTML = 'Probar también: ' + others.map(function (o) {
+        return '<a href="P-018-informar-pago.html?cuota=' + o[0] + '&amp;usuario=' + o[1] + '">' + esc(o[2]) + '</a>';
+      }).join('; ') + '.';
+
+      /* Campo de fecha (C-05) */
+      function setFieldError(text) {
+        const err = $('error-fecha');
+        if (text) {
+          err.textContent = text;
+          err.hidden = false;
+          fecha.setAttribute('aria-invalid', 'true');
+        } else {
+          err.hidden = true;
+          fecha.removeAttribute('aria-invalid');
+        }
+      }
+
+      $('btn-calendario').addEventListener('click', function () {
+        const picker = $('selector-fecha');
+        const iso = M.parseDateInput(fecha.value);
+        if (iso) picker.value = iso;
+        try { picker.showPicker(); } catch (e) { fecha.focus(); }
+      });
+      $('selector-fecha').addEventListener('change', function () {
+        if (this.value) fecha.value = M.formatDate(this.value);
+        setFieldError(null);
+      });
+
+      function showSummary(text) {
+        $('resumen-texto').textContent = text;
+        $('resumen').hidden = false;
+        $('resumen').focus();
+      }
+
+      function setBusy(busy) {
+        submitBtn.disabled = busy;
+        if (busy) submitBtn.setAttribute('aria-busy', 'true');
+        else submitBtn.removeAttribute('aria-busy');
+      }
+
+      $('form-informar').addEventListener('submit', function (event) {
+        event.preventDefault();
+        $('resumen').hidden = true;
+        // Validación del campo (vacío o mal escrito: mensaje de C-05; RN-054; RN-132)
+        const err = M.validate.paymentDate(fecha.value, junta);
+        setFieldError(err);
+        if (err) { fecha.focus(); return; }
+
+        if (offline) {
+          // Sin conexión: se guarda en el outbox y la cuota queda "Por confirmar" con "Sin enviar"
+          setBadges('awaiting_confirmation', true);
+          $('texto-cambios').textContent = M.pendingChangesText(M.getPendingChanges(user.id).length + 1);
+          $('indicador-cambios').hidden = false;
+          setBusy(true);
+          setTimeout(function () { location.href = juntaHref('&aviso=informado-sin-enviar'); }, 1200);
+          return;
+        }
+
+        setBusy(true);
+        setTimeout(function () {
+          // Respuestas del servidor
+          if (forcedState === 'organizador' || junta.organizerId === user.id) {   // RN-136
+            setBusy(false);
+            showSummary(M.message('RN-136'));
+            return;
+          }
+          if (cuota.status !== 'pending') {                                          // RN-135
+            setBusy(false);
+            showSummary(M.message('RN-135'));
+            return;
+          }
+          setBadges('awaiting_confirmation', false);                                // RN-060
+          location.href = juntaHref('&aviso=informado');
+        }, 800);
+      });
+
+      const original = cuota;
+
+      M.initStates({
+        extraStates: [
+          { id: 'sin-conexion', label: 'Sin conexión' },
+          { id: 'organizador', label: 'Organizador' },
+        ],
+        initial: 'con-datos',
+        onChange: function (state) {
+          forcedState = state;
+          offline = state === 'sin-conexion';
+          $('resumen').hidden = true;
+          $('indicador-cambios').hidden = true;
+          setBusy(false);
+          setFieldError(null);
+          fecha.value = M.formatDate(data.meta.today);        // valor inicial: hoy en America/Lima
+
+          if (state === 'organizador') {
+            render(M.getContribution('ctb_oficina_r3_user_456', 'user_456'));
+            showSummary(M.message('RN-136'));
+          } else if (state === 'vacio') {
+            render(M.getContribution('ctb_oficina_r2_user_789', 'user_789'));
+          } else {
+            render(original);
+          }
+
+          if (state === 'error') {
+            fecha.value = '31/12/2026';                         // posterior a hoy
+            setFieldError(M.validate.paymentDate(fecha.value, junta));
+          } else if (state === 'loading') {
+            setBusy(true);
+          }
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

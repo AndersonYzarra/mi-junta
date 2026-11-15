@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Junta · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-011 · Junta: vista del organizador (/juntas/{id} y /juntas/{id}/members).
+    Prototipo, NO es código de producción. Fuente: spec-pack/09-ui-spec.md §3
+    P-011 y RN-013, RN-019, RN-020, RN-022, RN-025, RN-026, RN-027, RN-028,
+    RN-029, RN-035, RN-037, RN-110, RN-114, RN-115, RN-119, RN-122, RN-125,
+    RN-126, RN-129, RN-136, RN-170 y RN-178 de spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?junta=junta_oficina   junta (junta_familia, junta_oficina, junta_ventas, junta_amigas)
+      ?usuario=user_456      usuario con sesión (por defecto, el organizador de la junta)
+      ?tab=miembros|turnos   pestaña (C-09); por defecto "Resumen"
+      ?aviso=creada          viene de P-008 (C-08 "Junta creada…")
+      ?aviso=guardado        viene de P-012 (C-08 "Cambios guardados.")
+      ?aviso=encuesta-respondida  viene de P-024 (C-08 "Gracias por responder.")
+  -->
+  <style>
+    /* Solo composición de esta pantalla, con los tokens de estilos.css */
+    .header-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+    .slots { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); margin-top: var(--space-2); }
+    .member-row__actions { margin-left: auto; }
+    .missing-list { margin: 0; padding: 0; list-style: none; }
+    .missing-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2); min-height: var(--touch-min); border-top: var(--border-width) solid var(--color-border); }
+    .column > * + * { margin-top: var(--space-5); }
+  </style>
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <!-- C-03 · Indicador de cambios sin enviar -->
+  <div class="status-bar" id="indicador-cambios" hidden>
+    <span class="icon icon--sync" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-cambios"></span>
+    <a class="status-bar__action" data-nav="P-016-cambios-sin-enviar.html" href="P-016-cambios-sin-enviar.html">Ver</a>
+  </div>
+
+  <main id="contenido" class="container container--wide">
+    <a class="back-link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mis juntas</a>
+
+    <!-- Cargando (C-10) -->
+    <div class="stack" data-estado="loading" aria-hidden="true">
+      <span class="skeleton skeleton--title"></span>
+      <span class="skeleton skeleton--text" style="width: 40%"></span>
+      <span class="skeleton skeleton--row"></span>
+      <span class="skeleton skeleton--card"></span>
+      <span class="skeleton skeleton--card"></span>
+    </div>
+
+    <!-- Sin permiso (403) -->
+    <div class="stack" data-estado="sin-permiso">
+      <h1>Junta</h1>
+      <div class="alert alert--danger" role="alert">
+        <div class="alert__body">
+          <p>No tiene acceso a esta junta.</p>
+          <p><a data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Ir a Mis juntas</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenido de la junta (todos los estados con datos) -->
+    <div id="vista" data-estado="con-datos vacio completa error sin-conexion">
+      <div class="page-header">
+        <h1 id="titulo"></h1>
+        <div class="header-meta" id="cabecera-meta"></div>
+        <div class="slots" id="cabecera-cupos" hidden>
+          <progress class="progress" id="barra-cupos" max="1" value="0"></progress>
+          <span class="tabular" id="texto-barra-cupos" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <!-- C-09 · Pestañas de la junta: enlaces, no un tablist -->
+      <nav class="tabs" aria-label="Secciones de la junta">
+        <ul id="pestanas"></ul>
+      </nav>
+
+      <div class="layout-split" id="columnas">
+        <div class="column" id="columna-principal"></div>
+        <div class="column" id="columna-lateral"></div>
+      </div>
+    </div>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p id="nota-junta"></p>
+      <p id="nota-otras"></p>
+      <p id="nota-sorteo"></p>
+      <div class="cluster">
+        <label class="choice" style="min-height: 0; padding: 0"><input type="checkbox" id="simular-fecha"><span class="choice__text">Simular que la ronda 1 todavía no vence</span></label>
+      </div>
+      <div class="cluster">
+        <label class="choice" style="min-height: 0; padding: 0"><input type="checkbox" id="simular-orden"><span class="choice__text">Simular que otro dispositivo ya fijó el orden (RN-125)</span></label>
+      </div>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <!-- C-07 · Diálogo de confirmación (regenerar, quitar y sorteo) -->
+  <dialog class="dialog" id="dialogo" aria-labelledby="dialogo-titulo" aria-describedby="dialogo-texto">
+    <h2 class="dialog__title" id="dialogo-titulo" tabindex="-1"></h2>
+    <p id="dialogo-texto"></p>
+    <p class="strong" id="dialogo-dato" hidden></p>
+    <div class="alert alert--danger" id="dialogo-error" role="alert" hidden>
+      <div class="alert__body">
+        <p id="dialogo-error-texto"></p>
+        <p id="dialogo-error-enlace" hidden><a id="dialogo-editar" href="P-012-editar-junta.html">Editar junta</a></p>
+      </div>
+    </div>
+    <div class="dialog__actions">
+      <button class="btn btn--primary" type="button" id="dialogo-confirmar"></button>
+      <button class="btn btn--secondary" type="button" id="dialogo-cancelar">Cancelar</button>
+    </div>
+  </dialog>
+
+  <!-- C-08 · Aviso de resultado -->
+  <div class="toast" id="toast" role="status" hidden>
+    <span class="toast__text" id="toast-texto"></span>
+    <button class="btn btn--icon" type="button" id="toast-cerrar" aria-label="Cerrar"><span class="icon icon--close" aria-hidden="true"></span></button>
+  </div>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+
+      const junta = M.getJunta(params.get('junta') || 'junta_oficina') || M.getJunta('junta_oficina');
+      const user = params.get('usuario') ? M.getCurrentUser() : M.getUser(junta.organizerId);
+      const hasAccess = M.isOrganizer(junta.id, user.id);           // la vista del organizador (ADR-009)
+      const tab = ['miembros', 'turnos'].indexOf(params.get('tab')) !== -1 ? params.get('tab') : 'resumen';
+      const q = 'junta=' + junta.id + '&usuario=' + user.id;
+      const qa = 'junta=' + junta.id + '&amp;usuario=' + user.id;
+      const order = M.getTurnOrder(junta.id);
+      const today = data.meta.today;
+
+      document.title = junta.name + ' · Mi Junta';
+      document.querySelectorAll('[data-nav]').forEach(function (a) { a.href = a.getAttribute('data-nav') + '?usuario=' + user.id; });
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('dialogo-editar').href = 'P-012-editar-junta.html?' + q;
+
+      // C-03
+      const sync = M.getSyncIndicator(user.id);
+      if (sync) {
+        $('indicador-cambios').classList.add(sync.kind === 'rejected' ? 'status-bar--rejected' : 'status-bar--pending');
+        $('texto-cambios').textContent = sync.text;
+      }
+
+      /* ---------------- C-08 · Toast ---------------- */
+      let toastTimer = null;
+      function toast(text) {
+        $('toast-texto').textContent = text;
+        $('toast').hidden = false;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { $('toast').hidden = true; }, 6000);
+      }
+      $('toast-cerrar').addEventListener('click', function () { $('toast').hidden = true; });
+
+      /* ---------------- Modelo de la vista según el estado ---------------- */
+      function inviteCodesOf() {
+        return data.inviteCodes.filter(function (c) { return c.juntaId === junta.id; })
+          .sort(function (a, b) { return a.createdAt < b.createdAt ? -1 : 1; });
+      }
+
+      function slotMembers() {
+        // Miembros antes del orden, en el orden en que entraron (sin datos personales, RN-178)
+        return data.memberships
+          .filter(function (m) { return m.juntaId === junta.id && m.leftAt === null; })
+          .map(function (m) { return { userId: m.userId, name: M.displayName(m.userId), isOrganizer: m.isOrganizer, participates: m.occupiesSlot }; });
+      }
+
+      let view = null;          // se arma en onChange
+      let currentState = 'con-datos';
+      let removed = [];         // participantes quitados en esta sesión del prototipo
+      let regeneratedCode = null;
+      let lastRevokedCode = null;
+
+      function buildView(state) {
+        const fixed = !!junta.turnOrderFixedAt;
+        const v = { before: !fixed, status: junta.status, members: [], code: null };
+        if (state === 'vacio') {
+          // Junta recién creada: solo el organizador, con el código que se generó al crearla
+          v.before = true;
+          v.status = 'open';
+          v.members = slotMembers().filter(function (m) { return m.isOrganizer; });
+          v.code = inviteCodesOf()[0].code;
+        } else if (state === 'completa' || state === 'error') {
+          // Todos los cupos ocupados, antes de fijar el orden
+          v.before = true;
+          v.status = 'full';
+          v.members = slotMembers();
+          if (!fixed) {
+            // Falta un cupo en datos.js: se simula que Ana se unió con el código (UF-05)
+            v.members.push({ userId: 'ana', name: data.examples.newAccount.name, isOrganizer: false, participates: true });
+          }
+          v.code = (M.getInviteCode(junta.id) || inviteCodesOf()[0]).code;
+        } else if (!fixed) {
+          v.members = slotMembers();
+          v.code = M.getInviteCode(junta.id).code;
+        }
+        if (v.before) {
+          v.members = v.members.filter(function (m) { return removed.indexOf(m.userId) === -1; });
+          if (regeneratedCode) v.code = regeneratedCode;
+          v.occupied = v.members.filter(function (m) { return m.participates; }).length;
+          if (state !== 'vacio' && v.status === 'full' && v.occupied < junta.participantCount) v.status = 'open';   // RN-101
+          if (v.status === 'open' && v.occupied >= junta.participantCount) v.status = 'full';                       // RN-100
+        }
+        return v;
+      }
+
+      /* ---------------- Piezas de la vista ---------------- */
+      const offlineReason = function (id) { return '<span class="unavailable-reason" id="' + id + '" tabindex="-1">' + esc(M.message('RN-170')) + '</span>'; };
+
+      function conditionsHtml() {
+        return '<details class="disclosure"><summary>Condiciones de la junta</summary><div class="disclosure__body">' +
+          '<dl class="data-list">' +
+          '<dt>Cuota</dt><dd class="amount">' + M.formatMoney(junta.contributionAmountCents) + '</dd>' +
+          '<dt>Pozo por ronda</dt><dd class="amount">' + M.formatMoney(M.getPotCents(junta)) + '</dd>' +
+          '<dt>Participantes</dt><dd>' + junta.participantCount + '</dd>' +
+          '<dt>Frecuencia</dt><dd>' + esc(M.frequencyLabel(junta)) + '</dd>' +
+          '<dt>Vencimiento de la ronda 1</dt><dd>' + M.formatDate(junta.round1DueDate) + '</dd>' +
+          '<dt>Días de aviso previo</dt><dd>' + junta.reminderLeadDays + '</dd>' +
+          '<dt>Usted participa</dt><dd>' + (junta.organizerParticipates ? 'Sí' : 'No') + '</dd>' +
+          '</dl></div></details>';
+      }
+
+      function rulesHtml(before) {
+        const body = junta.juntaRules
+          ? '<p class="long-text preformatted">' + esc(junta.juntaRules) + '</p>'
+          : '<p>Todavía no escribió reglas para esta junta.</p>' +
+            (before ? '<p><a href="P-012-editar-junta.html?' + qa + '">Escribir reglas</a></p>' : '');
+        return '<details class="disclosure"><summary>Reglas de la junta</summary><div class="disclosure__body stack-sm">' + body + '</div></details>';
+      }
+
+      function manageHtml(before, finished) {
+        // Editar: después del orden, solo el nombre (RN-110). Salir: siempre C-04 (RN-115)
+        return '<div class="stack">' +
+          '<div><a class="btn btn--secondary btn--block" id="btn-editar" href="P-012-editar-junta.html?' + qa + '">' +
+          (before ? 'Editar junta' : 'Editar junta (solo el nombre)') + '</a>' + offlineReason('motivo-editar') + '</div>' +
+          '<div><button class="btn btn--text btn--text-danger" type="button" id="btn-salir" aria-disabled="true" aria-describedby="motivo-salir" style="padding-left: 0">Salir de la junta</button>' +
+          '<span class="unavailable-reason" id="motivo-salir" tabindex="-1">' + esc(M.message('RN-115')) + '</span></div>' +
+          '</div>';
+      }
+
+      function codeCardHtml(v) {
+        const spelled = v.code.split('').join(' ');
+        return '<section class="card card--code stack" aria-labelledby="titulo-codigo">' +
+          '<h2 class="card__title" id="titulo-codigo">Código de invitación</h2>' +
+          '<p class="invite-code" aria-label="' + spelled + '">' + M.formatInviteCode(v.code) + '</p>' +
+          '<p>Compártalo por sus propios medios, por ejemplo por WhatsApp. Mi Junta no lo envía.</p>' +
+          '<button class="btn btn--secondary btn--block" type="button" id="btn-copiar"><span class="icon icon--copy" aria-hidden="true"></span>Copiar código</button>' +
+          '<div><button class="btn btn--text" type="button" id="btn-regenerar" style="padding-left: 0">Regenerar código</button>' + offlineReason('motivo-regenerar') + '</div>' +
+          '</section>';
+      }
+
+      function fixOrderHtml(v) {
+        const free = v.occupied < junta.participantCount;
+        return '<section class="stack" aria-labelledby="titulo-orden">' +
+          '<h2 id="titulo-orden">Fijar el orden de turnos</h2>' +
+          '<div><button class="btn btn--primary btn--block" type="button" id="btn-sorteo">Ejecutar sorteo</button>' +
+          '<span class="unavailable-reason" id="motivo-sorteo" tabindex="-1" hidden></span></div>' +
+          '<div><a class="btn btn--secondary btn--block" id="btn-asignar" href="P-019-asignar-orden.html?' + qa + '">Asignar orden</a>' +
+          '<span class="unavailable-reason" id="motivo-asignar" tabindex="-1" hidden></span></div>' +
+          '</section>';
+      }
+
+      function membersBeforeHtml(v) {
+        const rows = v.members.map(function (m) {
+          const self = m.userId === user.id;
+          return '<li class="list__row">' +
+            '<span class="list__main">' + esc(m.name) + (self ? ' · <span class="muted">Usted, organizador</span>' : '') + '</span>' +
+            (self ? '' : '<button class="btn btn--text member-row__actions" type="button" data-quitar="' + esc(m.userId) + '" data-nombre="' + esc(m.name) + '">Quitar</button>') +
+            '</li>';
+        }).join('');
+        return '<section class="stack-sm" aria-labelledby="titulo-miembros">' +
+          '<h2 id="titulo-miembros">Miembros (' + v.members.length + ')</h2>' +
+          '<span class="unavailable-reason" id="motivo-quitar" tabindex="-1" hidden>' + esc(M.message('RN-170')) + '</span>' +
+          '<ul class="list">' + rows + '</ul></section>';
+      }
+
+      function statusWithUnsent(status, unsent) {
+        return M.badgeHtml(status) + (unsent ? ' ' + M.unsentBadgeHtml() : '');
+      }
+
+      function currentRoundHtml() {
+        const round = M.getCurrentRound(junta.id);
+        const list = M.getContributions(junta.id, { roundNumber: round.number, viewerId: user.id });
+        const paid = list.filter(function (c) { return c.status === 'paid'; }).length;
+        const missing = list.filter(function (c) { return c.status !== 'paid'; });
+        const recipient = round.potRecipientId;
+        return '<section class="card stack" aria-labelledby="titulo-ronda">' +
+          '<h2 class="card__title" id="titulo-ronda">Ronda actual: ' + round.number + ' de ' + junta.participantCount + '</h2>' +
+          '<p>Vence el ' + M.formatDate(round.dueDate) + '</p>' +
+          '<p>Pozo: <span class="amount">' + M.formatMoney(M.getPotCents(junta)) + '</span></p>' +
+          '<p>Recibe el pozo: ' + esc(M.displayName(recipient)) + ' (turno ' + round.number + ')</p>' +
+          '<p>' + paid + ' de ' + list.length + ' cuotas pagadas</p>' +
+          '<progress class="progress" max="' + list.length + '" value="' + paid + '">' + paid + ' de ' + list.length + '</progress>' +
+          (missing.length ? '<div><p class="strong">Faltan pagar:</p><ul class="missing-list">' +
+            missing.map(function (c) { return '<li><span>' + esc(M.displayName(c.participantId)) + '</span><span class="cluster">' + statusWithUnsent(c.status, c.unsent) + '</span></li>'; }).join('') +
+            '</ul></div>' : '') +
+          '<a class="btn btn--primary btn--block" href="P-014-pagos-junta.html?' + qa + '">Ver pagos</a>' +
+          '</section>';
+      }
+
+      function ownTurnHtml() {
+        if (!junta.organizerParticipates) return '';
+        const turn = M.getTurn(junta.id, user.id);
+        const rounds = M.getRounds(junta.id);
+        const current = M.getCurrentRound(junta.id);
+        const own = M.getOwnContributions(junta.id, user.id);
+        // RN-025 turno, RN-037 recibe el pozo de la ronda de su turno, RN-026 estado de cada cuota.
+        // Cada cuota lleva a P-015: el organizador registra su propio pago ahí (RN-136).
+        return '<section class="card card--highlight stack-sm" aria-labelledby="titulo-turno">' +
+          '<p class="text-display" id="titulo-turno">Su turno: ' + turn + '</p>' +
+          '<p>Recibe el pozo en la ronda ' + turn + ', que vence el ' + M.formatDate(rounds[turn - 1].dueDate) + '.</p>' +
+          '</section>' +
+          '<section class="stack-sm" aria-labelledby="titulo-cuotas"><h2 id="titulo-cuotas">Sus cuotas</h2><ul class="list">' +
+          own.map(function (c) {
+            const isCurrent = c.roundNumber === current.number;
+            return '<li><a class="list__row' + (isCurrent ? ' list__row--current' : '') + '" href="P-015-detalle-cuota.html?' + qa + '&amp;cuota=' + c.id + '"' +
+              (isCurrent ? ' aria-current="true"' : '') + '>' +
+              '<span class="list__main">Ronda ' + c.roundNumber + ' · Vence ' + M.formatDate(c.dueDate) + (isCurrent ? '<span class="visually-hidden"> (ronda actual)</span>' : '') + '</span>' +
+              '<span class="cluster">' + statusWithUnsent(c.status, c.unsent) + '</span></a></li>';
+          }).join('') + '</ul></section>';
+      }
+
+      function membersAfterHtml() {
+        const info = M.getMembersForViewer(junta.id, user.id);
+        const round = info.currentRound;
+        const missing = info.members.filter(function (m) { return m.participates && m.currentRoundStatus !== 'paid'; }).length;
+        const rows = info.members.map(function (m) {
+          if (!m.participates) {
+            // Organizador que no participa: solo nombre y rol (RN-118)
+            return '<li class="list__row' + (m.isSelf ? ' list__row--self' : '') + '"><span class="list__main">' + esc(m.name) + (m.isSelf ? ' (usted)' : '') +
+              '</span><span class="badge badge--organizer">Organizador</span></li>';
+          }
+          const next = m.nextDueDate
+            ? M.formatDate(m.nextDueDate) + ' ' + M.badgeHtml(m.nextStatus)
+            : '<span aria-hidden="true">—</span><span class="visually-hidden">Sin próxima cuota</span>';     // RN-119
+          return '<li class="list__row' + (m.isSelf ? ' list__row--self' : '') + '">' +
+            '<span class="list__main strong"><span class="list__num">' + m.turn + '</span>· ' + esc(m.name) + (m.isSelf ? ' (usted)' : '') + '</span>' +
+            '<span class="cluster">Ronda ' + round.number + ': ' + statusWithUnsent(m.currentRoundStatus, m.currentRoundUnsent) + '</span>' +
+            '<span class="cluster">Próxima: ' + next + '</span></li>';
+        }).join('');
+        return '<section class="stack-sm" aria-labelledby="titulo-miembros"><h2 id="titulo-miembros">Ronda actual: ' + round.number + '</h2>' +
+          '<p>Faltan pagar la ronda ' + round.number + ': ' + missing + '</p><ul class="list">' + rows + '</ul></section>';
+      }
+
+      function tabsHtml(before) {
+        const base = 'P-011-junta-organizador.html?' + qa;
+        const items = [['Resumen', base, tab === 'resumen'], ['Miembros', base + '&amp;tab=miembros', tab === 'miembros']];
+        if (!before) items.push(['Pagos', 'P-014-pagos-junta.html?' + qa, false]);
+        if (before) {
+          items.push(['Turnos', base + '&amp;tab=turnos', tab === 'turnos']);
+        } else {
+          const turnosHref = order.kind === 'draw' ? 'P-013-registro-sorteo.html?' + qa : 'P-020-registro-orden-asignado.html?' + qa;
+          items.push(['Turnos', turnosHref, false]);
+        }
+        return items.map(function (i) {
+          return '<li><a class="tabs__link" href="' + i[1] + '"' + (i[2] ? ' aria-current="page"' : '') + '>' + i[0] + '</a></li>';
+        }).join('');
+      }
+
+      /* ---------------- Render ---------------- */
+      function render(state) {
+        view = buildView(state);
+        const v = view;
+        const finished = v.status === 'finished';
+        $('titulo').textContent = junta.name;
+        $('cabecera-meta').innerHTML = M.badgeHtml(v.status) + (v.before ? '<span>· ' + v.occupied + ' de ' + junta.participantCount + ' cupos</span>' : '');
+        $('cabecera-cupos').hidden = !v.before;
+        if (v.before) {
+          $('barra-cupos').max = junta.participantCount;
+          $('barra-cupos').value = v.occupied;
+          $('barra-cupos').textContent = v.occupied + ' de ' + junta.participantCount;
+          $('texto-barra-cupos').textContent = v.occupied + '/' + junta.participantCount;
+        }
+        $('pestanas').innerHTML = tabsHtml(v.before);
+
+        let main = '';
+        let side = '';
+        if (tab === 'miembros') {
+          main = v.before ? membersBeforeHtml(v) : membersAfterHtml();
+        } else if (tab === 'turnos' && v.before) {
+          main = '<div class="alert alert--info"><div class="alert__body"><p>' + esc(M.message('RN-105')) + '</p></div></div>';
+        } else if (v.before) {
+          main = codeCardHtml(v) + fixOrderHtml(v) + membersBeforeHtml(v);
+          side = conditionsHtml() + rulesHtml(true) + manageHtml(true, false);
+        } else {
+          // El código ya no se muestra: quedó anulado al fijar el orden (RN-019, RN-129)
+          main = currentRoundHtml() + ownTurnHtml();
+          side = conditionsHtml() + rulesHtml(false) + manageHtml(false, finished);
+        }
+        $('columna-principal').innerHTML = main;
+        $('columna-lateral').innerHTML = side;
+        $('columna-lateral').hidden = !side;
+        applyAvailability(state);
+      }
+
+      /* ---------------- Disponibilidad de las acciones (C-04) ---------------- */
+      let offline = false;
+
+      function unavailable(el, reasonId, text) {
+        if (!el) return;
+        const reason = $(reasonId);
+        if (text) {
+          el.setAttribute('aria-disabled', 'true');
+          el.setAttribute('aria-describedby', reasonId);
+          if (reason) { reason.textContent = text; reason.hidden = false; }
+        } else {
+          el.removeAttribute('aria-disabled');
+          el.removeAttribute('aria-describedby');
+          if (reason) reason.hidden = true;
+        }
+      }
+
+      function applyAvailability() {
+        const v = view;
+        const free = v.before && v.occupied < junta.participantCount;
+        unavailable($('btn-regenerar'), 'motivo-regenerar', offline ? M.message('RN-170') : null);
+        unavailable($('btn-editar'), 'motivo-editar', offline ? M.message('RN-170') : null);
+        // Sorteo: cupos libres (RN-027) o sin conexión (RN-029)
+        unavailable($('btn-sorteo'), 'motivo-sorteo', free ? M.message('RN-027') : (offline ? M.message('RN-029') : null));
+        // Asignar orden: igual que el sorteo (RN-126) o sin conexión (RN-170)
+        unavailable($('btn-asignar'), 'motivo-asignar', free ? M.message('RN-126') : (offline ? M.message('RN-170') : null));
+        if ($('motivo-quitar')) $('motivo-quitar').hidden = !offline;
+        document.querySelectorAll('[data-quitar]').forEach(function (b) {
+          if (offline) { b.setAttribute('aria-disabled', 'true'); b.setAttribute('aria-describedby', 'motivo-quitar'); }
+          else { b.removeAttribute('aria-disabled'); b.removeAttribute('aria-describedby'); }
+        });
+      }
+
+      /* ---------------- C-07 · Diálogo ---------------- */
+      const dialog = $('dialogo');
+      const confirmBtn = $('dialogo-confirmar');
+      let onConfirm = null;
+      let opener = null;
+      let reloadOnClose = false;
+
+      function openDialog(opts) {
+        opener = opts.opener || document.activeElement;
+        $('dialogo-titulo').textContent = opts.title;
+        $('dialogo-texto').textContent = opts.text;
+        $('dialogo-dato').hidden = !opts.detail;
+        $('dialogo-dato').textContent = opts.detail || '';
+        $('dialogo-error').hidden = true;
+        confirmBtn.textContent = opts.confirm;
+        confirmBtn.className = 'btn ' + (opts.danger ? 'btn--danger' : 'btn--primary');
+        confirmBtn.hidden = false;
+        confirmBtn.disabled = false;
+        confirmBtn.removeAttribute('aria-busy');
+        onConfirm = opts.onConfirm;
+        reloadOnClose = false;
+        if (!dialog.open) dialog.showModal();
+        $('dialogo-titulo').focus();
+      }
+
+      function dialogError(text, withEditLink) {
+        $('dialogo-error-texto').textContent = text;
+        $('dialogo-error-enlace').hidden = !withEditLink;
+        $('dialogo-error').hidden = false;
+        confirmBtn.hidden = true;
+        confirmBtn.removeAttribute('aria-busy');
+      }
+
+      confirmBtn.addEventListener('click', function () {
+        // Mientras espera la respuesta: indicador de carga y disabled (RN-028)
+        confirmBtn.disabled = true;
+        confirmBtn.setAttribute('aria-busy', 'true');
+        setTimeout(function () { if (onConfirm) onConfirm(); }, 700);
+      });
+      // Al cerrar: con el rechazo de RN-125 recarga la junta; si no, el foco vuelve al botón que lo abrió
+      function afterClose() {
+        if (reloadOnClose) {
+          reloadOnClose = false;
+          states.set('con-datos');
+          return;
+        }
+        if (opener && document.body.contains(opener)) opener.focus();
+      }
+      $('dialogo-cancelar').addEventListener('click', function () { dialog.close(); afterClose(); });
+      dialog.addEventListener('cancel', function () { setTimeout(afterClose, 0); });   // Esc equivale a "Cancelar"
+
+      function openDrawDialog(opener) {
+        openDialog({
+          opener: opener,
+          title: '¿Ejecutar el sorteo ahora?',
+          text: 'El sorteo se hace una sola vez y su resultado no se puede cambiar. Se crearán las ' + junta.participantCount +
+            ' rondas con sus cuotas y el código de invitación dejará de servir.',          // RN-028, RN-035, RN-013, RN-019
+          detail: 'La ronda 1 vence el ' + M.formatDate(junta.round1DueDate) + '.',
+          confirm: 'Ejecutar sorteo',
+          onConfirm: function () {
+            if ($('simular-orden').checked) {                                            // RN-125
+              reloadOnClose = true;
+              dialogError(M.message('RN-125'), false);
+              return;
+            }
+            if (junta.round1DueDate < today && !$('simular-fecha').checked) {            // RN-122
+              dialogError(M.message('RN-122'), true);
+              return;
+            }
+            // 201: abre P-013 con C-08 "Sorteo guardado." (el único sorteo de datos.js es el de la Junta Oficina)
+            location.href = 'P-013-registro-sorteo.html?junta=junta_oficina&usuario=user_456&aviso=sorteo';
+          },
+        });
+      }
+
+      /* ---------------- Acciones ---------------- */
+      function copyText(text) {
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch(function () { legacyCopy(text); });
+            return;
+          }
+        } catch (e) { /* respaldo */ }
+        legacyCopy(text);
+      }
+
+      function legacyCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'absolute';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) { /* sin portapapeles */ }
+        ta.remove();
+      }
+
+      // Código nuevo de 8 caracteres que nunca se usó (RN-015, RN-016)
+      function newInviteCode() {
+        const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        const used = data.inviteCodes.map(function (c) { return c.code; }).concat([regeneratedCode, lastRevokedCode]);
+        let code;
+        do {
+          code = '';
+          for (let i = 0; i < 8; i += 1) code += alphabet[Math.floor(Math.random() * alphabet.length)];
+        } while (used.indexOf(code) !== -1);
+        return code;
+      }
+
+      function blockedBy(el, reasonId) {
+        if (el.getAttribute('aria-disabled') === 'true') {        // C-04: no llama a la API; foco al motivo
+          const reason = $(reasonId || el.getAttribute('aria-describedby'));
+          if (reason) reason.focus();
+          return true;
+        }
+        return false;
+      }
+
+      document.addEventListener('click', function (event) {
+        const t = event.target.closest('button, a');
+        if (!t) return;
+
+        if (t.id === 'btn-copiar') {                               // funciona sin conexión
+          copyText(view.code);
+          toast('Código copiado.');
+        } else if (t.id === 'btn-regenerar') {
+          if (blockedBy(t)) return;
+          openDialog({
+            opener: t,
+            title: '¿Regenerar el código?',
+            text: 'El código ' + view.code + ' dejará de servir. Quienes todavía no se unieron necesitarán el código nuevo.',   // RN-020
+            confirm: 'Regenerar código',
+            onConfirm: function () {
+              lastRevokedCode = view.code;
+              regeneratedCode = newInviteCode();
+              dialog.close();
+              render(currentState);
+              $('nota-sorteo').textContent = 'El código ' + lastRevokedCode + ' quedó anulado (RN-020). Si alguien lo ingresa en P-009, ve "' + M.message('RN-020') + '"';
+              if ($('btn-regenerar')) $('btn-regenerar').focus();
+            },
+          });
+        } else if (t.hasAttribute('data-quitar')) {
+          if (blockedBy(t, 'motivo-quitar')) return;
+          const id = t.getAttribute('data-quitar');
+          const name = t.getAttribute('data-nombre');
+          openDialog({
+            opener: t,
+            title: '¿Quitar a ' + name + '?',
+            text: 'Su cupo quedará libre.',
+            confirm: 'Quitar',
+            danger: true,
+            onConfirm: function () {
+              removed.push(id);                                     // API-012: el cupo queda libre
+              dialog.close();
+              render(currentState);
+              $('titulo-miembros').setAttribute('tabindex', '-1');
+              $('titulo-miembros').focus();
+            },
+          });
+        } else if (t.id === 'btn-sorteo') {
+          if (blockedBy(t)) return;
+          openDrawDialog(t);
+        } else if (t.id === 'btn-asignar' || t.id === 'btn-editar') {
+          if (blockedBy(t)) event.preventDefault();
+        } else if (t.id === 'btn-salir') {
+          $('motivo-salir').focus();                                // RN-115: no llama a la API
+        }
+      });
+
+      /* ---------------- Nota del prototipo ---------------- */
+      $('nota-junta').innerHTML = 'Está viendo ' + esc(junta.name) + ' como ' + esc(user.name) + '. Hoy es ' + M.formatDate(today) + '.' +
+        (!hasAccess && M.isMember(junta.id, user.id)
+          ? ' Esta persona es participante: el servidor le entrega la <a href="P-010-junta-participante.html?' + qa + '">vista del participante</a> (ADR-009).'
+          : '');
+      $('nota-otras').innerHTML = 'Otras juntas: ' + data.juntas.filter(function (j) { return j.id !== junta.id; }).map(function (j) {
+        return '<a href="P-011-junta-organizador.html?junta=' + j.id + '">' + esc(j.name) + '</a> (' + esc(M.statusLabel(j.status)) + ')';
+      }).join(', ') + '. Sin permiso: <a href="P-011-junta-organizador.html?junta=' + junta.id + '&amp;usuario=user_301">como Rosa Delgado</a>.';
+      $('nota-sorteo').textContent = 'El estado "Completa" simula todos los cupos ocupados antes del orden' +
+        (junta.turnOrderFixedAt ? '' : ' (el cupo 12 lo ocupa ' + data.examples.newAccount.name + ')') +
+        '. Como la ronda 1 venció el ' + M.formatDate(junta.round1DueDate) + ', el sorteo se rechaza (RN-122), salvo que marque la primera casilla.';
+
+      /* ---------------- Estados ---------------- */
+      const states = M.initStates({
+        extraStates: [
+          { id: 'completa', label: 'Completa' },
+          { id: 'sin-conexion', label: 'Sin conexión' },
+          { id: 'sin-permiso', label: 'Sin permiso' },
+        ],
+        initial: hasAccess ? 'con-datos' : 'sin-permiso',
+        onChange: function (state) {
+          if (dialog.open) { reloadOnClose = false; dialog.close(); }
+          currentState = state;
+          offline = state === 'sin-conexion';
+          removed = [];
+          regeneratedCode = null;
+          const showView = hasAccess && ['loading', 'sin-permiso'].indexOf(state) === -1;
+          if (!hasAccess && state !== 'loading') {
+            // Sin permiso: nunca se pinta la junta
+            $('vista').hidden = true;
+            document.querySelector('[data-estado="sin-permiso"]').hidden = false;
+          }
+          if (showView) render(state);
+          $('indicador-cambios').hidden = !sync || !showView;
+          if (state === 'error' && showView) {
+            // Diálogo del sorteo con el rechazo por la ronda 1 vencida (RN-122)
+            openDrawDialog($('btn-sorteo'));
+            dialogError(M.message('RN-122'), true);
+          }
+        },
+      });
+
+      // Avisos C-08 al volver de otra pantalla
+      const notices = {
+        creada: 'Junta creada. Comparta el código con sus invitados.',   // P-008
+        guardado: 'Cambios guardados.',                                   // P-012
+        'encuesta-respondida': 'Gracias por responder.',                  // P-024
+      };
+      if (hasAccess && notices[params.get('aviso')]) toast(notices[params.get('aviso')]);
+    })();
+  </script>
+</body>
+</html>

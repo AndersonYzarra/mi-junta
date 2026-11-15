@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cambios sin enviar · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-016 · Cambios sin enviar (/sync). Prototipo, NO es código de producción.
+    Fuente: spec-pack/09-ui-spec.md §3 P-016 y RN-087, RN-170, RN-172, RN-173,
+    RN-174, RN-176 y RN-198 de spec-pack/03-reglas-de-negocio.md.
+    Parámetro de la URL: ?usuario=user_456 (por defecto, Jorge, que tiene un
+    cambio por enviar y un cambio rechazado en datos.js).
+  -->
+  <style>
+    .change-list { margin: 0; padding: 0; list-style: none; }
+    .change-list > li > * + * { margin-top: var(--space-1); }
+    .rejection {
+      border-color: var(--color-danger);
+      background: var(--color-danger-soft);
+    }
+    .rejection__text {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-2);
+      color: var(--color-text);
+    }
+    .rejection__text::before {
+      content: "";
+      flex: none;
+      width: var(--icon-size);
+      height: var(--icon-size);
+      background-color: var(--color-danger);
+      -webkit-mask: var(--icon-alert) center / contain no-repeat;
+      mask: var(--icon-alert) center / contain no-repeat;
+    }
+    .rejection .split a { color: var(--color-danger); }
+  </style>
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <a class="back-link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mis juntas</a>
+
+    <div class="page-header">
+      <h1>Cambios sin enviar</h1>
+      <!-- Encabezado de la lista con C-03 (RN-174) -->
+      <p class="status-bar status-bar--pending" id="contador" role="status" style="border-radius: var(--radius-sm)">
+        <span class="icon icon--sync" aria-hidden="true"></span>
+        <span class="status-bar__text" id="texto-contador"></span>
+      </p>
+      <p class="muted" id="texto-solos" data-estado="sin-conexion">Se enviarán solos cuando vuelva la conexión.</p>
+    </div>
+
+    <!-- Vacío -->
+    <div class="empty-state" id="vacio" data-estado="vacio">
+      <p>No tiene cambios sin enviar.</p>
+    </div>
+
+    <!-- Por enviar, en el orden en que se hicieron (RN-087) -->
+    <section id="por-enviar" data-estado="con-datos loading sin-conexion" aria-labelledby="titulo-por-enviar">
+      <h2 id="titulo-por-enviar">Por enviar</h2>
+      <ol class="list change-list section" id="lista-por-enviar"></ol>
+      <div class="section">
+        <button class="btn btn--primary btn--block" type="button" id="btn-enviar">Enviar ahora</button>
+        <span class="unavailable-reason" id="motivo-enviar" tabindex="-1" data-estado="sin-conexion"></span>
+      </div>
+    </section>
+
+    <!-- No se pudieron guardar (RN-172) -->
+    <section class="section-end" id="rechazos" data-estado="con-datos error sin-conexion" aria-labelledby="titulo-rechazos">
+      <h2 id="titulo-rechazos">No se pudieron guardar</h2>
+      <ul class="change-list stack section" id="lista-rechazos"></ul>
+    </section>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p id="nota-usuario"></p>
+      <p>Un cambio pendiente no se puede editar ni borrar: solo se envía, o se pierde si cierra sesión y confirma el aviso de cambios sin enviar (RN-198).</p>
+      <p>Si la sesión vence, los cambios quedan aquí hasta que la misma persona vuelva a iniciar sesión (RN-176). Un rechazo no detiene el envío de los cambios siguientes.</p>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+
+      const user = M.getCurrentUser();
+      const userParam = 'usuario=' + user.id;
+
+      document.querySelectorAll('[data-nav]').forEach(function (a) { a.href = a.getAttribute('data-nav') + '?' + userParam; });
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('motivo-enviar').textContent = M.message('RN-170');
+
+      const typeLabels = {
+        payment_recorded: 'Pago registrado',
+        payment_unmarked: 'Pago desmarcado',
+        payment_reported: 'Pago informado',
+        payment_confirmed: 'Pago confirmado',
+        payment_rejected: 'Pago rechazado',
+      };
+
+      // Rechazos que ya se marcaron con "Entendido" en este navegador
+      // (misma clave que usa MiJunta.markRejectionReviewed en datos.js)
+      function reviewed() {
+        try { return JSON.parse(sessionStorage.getItem('mijunta.rechazosRevisados') || '[]'); } catch (e) { return []; }
+      }
+
+      let pending = [];
+      let rejected = [];
+      let offline = false;
+
+      function loadData() {
+        pending = M.getPendingChanges(user.id).slice().sort(function (a, b) { return a.performedAt < b.performedAt ? -1 : 1; });
+        const done = reviewed();
+        rejected = M.getRejectedChanges(user.id).filter(function (r) { return !r.reviewedAt && done.indexOf(r.clientChangeId) === -1; });
+      }
+
+      // A dónde lleva "Ver cuota": P-015 si es el organizador, P-010 si es participante
+      function contributionUrl(change) {
+        if (M.isOrganizer(change.juntaId, user.id)) {
+          const id = 'ctb_' + change.juntaId.replace('junta_', '') + '_r' + change.roundNumber + '_' + change.participantId;
+          return 'P-015-detalle-cuota.html?cuota=' + id + '&' + userParam;
+        }
+        return 'P-010-junta-participante.html?junta=' + change.juntaId + '&' + userParam;
+      }
+
+      function render() {
+        // RN-174: cuántos cambios faltan enviar
+        $('contador').hidden = pending.length === 0;
+        $('texto-contador').textContent = pending.length ? M.pendingChangesText(pending.length) : '';
+
+        $('lista-por-enviar').innerHTML = pending.map(function (ch, i) {
+          return '<li class="list__row"><div class="list__main">' +
+            '<p class="strong">' + (i + 1) + '. ' + typeLabels[ch.type] + '</p>' +
+            '<p>' + esc(M.getJunta(ch.juntaId).name) + ' · ' + esc(M.displayName(ch.participantId)) + ' · ronda ' + ch.roundNumber + '</p>' +
+            // Fecha y hora en que se hizo en el dispositivo (RN-173)
+            '<p class="muted">Hecho el ' + M.formatDate(ch.performedAt) + ' ' + M.formatTime(ch.performedAt) + '</p>' +
+            '</div></li>';
+        }).join('');
+
+        $('lista-rechazos').innerHTML = rejected.map(function (r) {
+          return '<li class="card rejection" data-id="' + r.clientChangeId + '">' +
+            '<p class="rejection__text" role="alert">' + esc(r.text) + '</p>' +
+            '<p class="muted">' + typeLabels[r.type] + ' · ' + esc(M.getJunta(r.juntaId).name) + ' · hecho el ' +
+              M.formatDate(r.performedAt) + ' ' + M.formatTime(r.performedAt) + '</p>' +
+            '<div class="split"><a class="btn btn--text" style="padding-left: 0" href="' + contributionUrl(r) + '">Ver cuota</a>' +
+            '<button class="btn btn--text" type="button" data-entendido="' + r.clientChangeId + '">Entendido</button></div>' +
+            '</li>';
+        }).join('');
+
+        updateVisibility();
+      }
+
+      function updateVisibility() {
+        const state = currentState;
+        const showPending = ['con-datos', 'loading', 'sin-conexion'].indexOf(state) !== -1 && pending.length > 0;
+        const showRejected = ['con-datos', 'error', 'sin-conexion'].indexOf(state) !== -1 && rejected.length > 0;
+        $('por-enviar').hidden = !showPending;
+        $('rechazos').hidden = !showRejected;
+        // Sin nada por enviar ni rechazos: estado vacío
+        $('vacio').hidden = !(state === 'vacio' || (!showPending && !showRejected && state !== 'loading'));
+        if (state === 'vacio') { $('contador').hidden = true; }
+      }
+
+      // "Entendido" saca el rechazo de la lista; las demás pantallas dejan de
+      // mostrar el indicador C-03 en rojo
+      $('lista-rechazos').addEventListener('click', function (event) {
+        const btn = event.target.closest('[data-entendido]');
+        if (!btn) return;
+        const id = btn.getAttribute('data-entendido');
+        M.markRejectionReviewed(id);
+        rejected = rejected.filter(function (r) { return r.clientChangeId !== id; });
+        render();
+      });
+
+      function setSending(sending) {
+        const btn = $('btn-enviar');
+        btn.disabled = sending;
+        if (sending) {
+          btn.setAttribute('aria-busy', 'true');
+          $('lista-por-enviar').setAttribute('aria-busy', 'true');
+        } else {
+          btn.removeAttribute('aria-busy');
+          $('lista-por-enviar').removeAttribute('aria-busy');
+        }
+      }
+
+      // Enviar ahora: todos los cambios, en el orden en que se hicieron (RN-087)
+      $('btn-enviar').addEventListener('click', function () {
+        if (offline) { $('motivo-enviar').focus(); return; }           // C-04
+        setSending(true);
+        setTimeout(function () {
+          setSending(false);
+          pending = [];                                                 // el servidor los aplicó
+          render();
+        }, 1000);
+      });
+
+      $('nota-usuario').textContent = 'Está viendo los cambios de ' + user.name + '. Última sincronización: ' +
+        M.formatDate(data.meta.lastSyncAt) + ' ' + M.formatTime(data.meta.lastSyncAt) + '.';
+
+      let currentState = 'con-datos';
+      M.initStates({
+        extraStates: [{ id: 'sin-conexion', label: 'Sin conexión' }],
+        initial: 'con-datos',
+        onChange: function (state) {
+          currentState = state;
+          offline = state === 'sin-conexion';
+          const btn = $('btn-enviar');
+          if (offline) {
+            btn.setAttribute('aria-disabled', 'true');
+            btn.setAttribute('aria-describedby', 'motivo-enviar');
+          } else {
+            btn.removeAttribute('aria-disabled');
+            btn.removeAttribute('aria-describedby');
+          }
+          loadData();
+          setSending(state === 'loading');                             // "Loading": enviando
+          render();
+        },
+      });
+      updateVisibility();
+    })();
+  </script>
+</body>
+</html>

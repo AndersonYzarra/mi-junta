@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mi cuenta · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-017 · Mi cuenta (/account). Prototipo, NO es código de producción.
+    Fuente: spec-pack/09-ui-spec.md §3 P-017 y RN-073, RN-159, RN-170, RN-187,
+    RN-188, RN-197, RN-198, RN-208 y RN-209 de spec-pack/03-reglas-de-negocio.md.
+    Parámetro de la URL: ?usuario=user_789 ver la pantalla como otra persona
+    (por defecto, Jorge).
+  -->
+  <style>
+    /* Fila-enlace con su estado a la derecha */
+    .row-link__state {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      color: var(--color-text-muted);
+    }
+    /* Separador entre filas-enlace dentro de <li> */
+    .list > li > a.list__row { border-bottom: var(--border-width) solid var(--color-border); }
+    .list > li:last-child > a.list__row { border-bottom: 0; }
+    .list__row .switch-row {
+      flex: 1 1 100%;
+      padding: 0;
+    }
+  </style>
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html" aria-current="page">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <!-- C-03 · Indicador de cambios sin enviar -->
+  <div class="status-bar" id="indicador-cambios" hidden>
+    <span class="icon icon--sync" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-cambios"></span>
+    <a class="status-bar__action" data-nav="P-016-cambios-sin-enviar.html" href="P-016-cambios-sin-enviar.html">Ver</a>
+  </div>
+
+  <main id="contenido" class="container">
+    <h1>Mi cuenta</h1>
+
+    <!-- Cargando (C-10) -->
+    <div class="stack section" data-estado="loading" aria-hidden="true">
+      <span class="skeleton skeleton--text" style="width: 50%"></span>
+      <span class="skeleton skeleton--text" style="width: 70%"></span>
+      <span class="skeleton skeleton--card"></span>
+      <span class="skeleton skeleton--card"></span>
+      <span class="skeleton skeleton--button"></span>
+    </div>
+
+    <div data-estado="con-datos vacio error sin-conexion guardando iphone dialogo-cerrar">
+      <!-- Solo el nombre y el correo propios: GET /me no entrega DNI ni celular -->
+      <div class="section stack-sm">
+        <p class="strong" id="nombre"></p>
+        <p id="correo"></p>
+      </div>
+
+      <section class="section" aria-labelledby="titulo-notificaciones">
+        <h2 id="titulo-notificaciones">Notificaciones</h2>
+        <!-- Solo correo y push: no existe un interruptor para SMS ni WhatsApp (PRINCIPIO-007) -->
+        <ul class="list section">
+          <li class="list__row">
+            <div class="switch-row">
+              <span class="switch-row__text">
+                <span class="strong" id="rotulo-correo">Recordatorios por correo</span>
+                <span class="field__help" id="ayuda-correo">Le avisamos antes de cada vencimiento, ese día y después, mientras su cuota siga pendiente. Los correos de su cuenta le llegarán igual.</span>
+              </span>
+              <button class="switch" type="button" role="switch" id="sw-correo" data-pref="emailRemindersEnabled" aria-labelledby="rotulo-correo" aria-describedby="ayuda-correo"></button>
+            </div>
+            <p class="field__error" id="error-sw-correo" hidden></p>
+          </li>
+          <li class="list__row">
+            <div class="switch-row">
+              <span class="switch-row__text">
+                <span class="strong" id="rotulo-push">Notificaciones push en este dispositivo</span>
+                <span class="field__help" id="ayuda-push" tabindex="-1" hidden>Para recibir notificaciones en iPhone, agregue Mi Junta a su pantalla de inicio. Necesita iOS 16.4 o posterior.</span>
+              </span>
+              <button class="switch" type="button" role="switch" id="sw-push" data-pref="pushEnabled" aria-labelledby="rotulo-push"></button>
+            </div>
+            <p class="field__error" id="error-sw-push" hidden></p>
+          </li>
+          <!-- Solo si organiza al menos una junta -->
+          <li class="list__row" id="fila-vencidas">
+            <div class="switch-row">
+              <span class="switch-row__text">
+                <span class="strong" id="rotulo-vencidas">Aviso de cuotas vencidas</span>
+                <span class="field__help" id="ayuda-vencidas">Un correo por junta, el día después del vencimiento, con quién falta pagar.</span>
+              </span>
+              <button class="switch" type="button" role="switch" id="sw-vencidas" data-pref="overdueNoticesEnabled" aria-labelledby="rotulo-vencidas" aria-describedby="ayuda-vencidas"></button>
+            </div>
+            <p class="field__error" id="error-sw-vencidas" hidden></p>
+          </li>
+        </ul>
+        <!-- C-04 sin conexión para los interruptores y los enlaces a P-021 y P-023 -->
+        <span class="unavailable-reason" id="motivo-sin-conexion" tabindex="-1" data-estado="sin-conexion"></span>
+      </section>
+
+      <section class="section" aria-labelledby="titulo-seguridad">
+        <h2 id="titulo-seguridad">Seguridad y privacidad</h2>
+        <ul class="list section">
+          <li>
+            <a class="list__row" id="enlace-segundo-factor" data-nav="P-021-segundo-factor.html" href="P-021-segundo-factor.html">
+              <span class="strong">Segundo factor</span>
+              <span class="row-link__state"><span id="estado-segundo-factor"></span><span class="icon icon--chevron-right" aria-hidden="true"></span></span>
+            </a>
+          </li>
+          <li>
+            <a class="list__row" id="enlace-politica" href="P-006-politica-privacidad.html">
+              <span class="list__main">
+                <span class="strong">Política de privacidad</span><br>
+                <span class="list__meta" id="version-aceptada"></span>
+              </span>
+              <span class="icon icon--chevron-right" aria-hidden="true"></span>
+            </a>
+          </li>
+        </ul>
+      </section>
+
+      <div class="section-end stack">
+        <div><button class="btn btn--secondary" type="button" id="btn-cerrar-sesion">Cerrar sesión</button></div>
+        <div><a class="btn btn--text btn--text-danger" id="enlace-borrar" data-nav="P-023-borrar-cuenta.html" href="P-023-borrar-cuenta.html" style="padding-left: 0">Borrar mi cuenta</a></div>
+      </div>
+
+      <aside class="proto-note" aria-label="Nota del prototipo">
+        <p class="proto-note__title">Solo en el prototipo</p>
+        <p id="nota-usuario"></p>
+        <p>Al activar el push, el navegador pediría permiso; aquí se simula que lo da (RN-073). La sesión del servidor se cierra sola después de 30 días sin uso (RN-159). Al cerrar sesión, la app borra del dispositivo sus juntas y sus cambios sin enviar (RN-197).</p>
+        <p id="nota-otros"></p>
+      </aside>
+    </div>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html" aria-current="page"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <!-- C-07 · Cerrar sesión con cambios sin enviar (RN-198) -->
+  <dialog class="dialog" id="dialogo-cerrar" aria-labelledby="dialogo-cerrar-titulo">
+    <h2 class="dialog__title" id="dialogo-cerrar-titulo" tabindex="-1">Cerrar sesión</h2>
+    <p id="dialogo-cerrar-texto"></p>
+    <div class="dialog__actions">
+      <button class="btn btn--danger" type="button" id="dialogo-confirmar">Cerrar sesión</button>
+      <button class="btn btn--secondary" type="button" id="dialogo-cancelar">Cancelar</button>
+    </div>
+  </dialog>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+      const sessionUser = M.getCurrentUser();
+      const userParam = '?usuario=' + sessionUser.id;
+
+      document.querySelectorAll('[data-nav]').forEach(function (a) { a.href = a.getAttribute('data-nav') + userParam; });
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('motivo-sin-conexion').textContent = M.message('RN-170');
+
+      const switches = [$('sw-correo'), $('sw-push'), $('sw-vencidas')];
+      let user = sessionUser;
+      let prefs = {};
+      let offline = false;
+      let failSave = false;
+
+      /* Pinta los datos de una cuenta (el estado "Vacío" usa una cuenta sin juntas) */
+      function render(u) {
+        user = u;
+        prefs = {
+          emailRemindersEnabled: u.emailRemindersEnabled,
+          pushEnabled: u.pushEnabled,
+          overdueNoticesEnabled: u.overdueNoticesEnabled,
+        };
+        $('nombre').textContent = u.name;
+        $('correo').textContent = u.email;
+        switches.forEach(function (sw) {
+          sw.setAttribute('aria-checked', String(!!prefs[sw.getAttribute('data-pref')]));
+          sw.removeAttribute('aria-busy');
+          $('error-' + sw.id).hidden = true;
+        });
+        // Aviso de cuotas vencidas: solo si organiza al menos una junta (RN-208)
+        $('fila-vencidas').hidden = !data.juntas.some(function (j) { return j.organizerId === u.id; });
+        $('estado-segundo-factor').textContent = u.twoFactorEnabled ? 'Activado' : 'Desactivado';
+        // RN-084: versión, fecha y hora de la aceptación
+        $('version-aceptada').textContent = 'Versión ' + u.consent.policyVersion + ', aceptada el ' +
+          M.formatDate(u.consent.acceptedAt) + ' a las ' + M.formatTime(u.consent.acceptedAt);
+        $('enlace-politica').href = 'P-006-politica-privacidad.html?desde=P-017&usuario=' + u.id;
+        $('nota-usuario').textContent = 'Está viendo la cuenta de ' + u.name + '.' +
+          ($('fila-vencidas').hidden ? ' No organiza ninguna junta, por eso no ve el aviso de cuotas vencidas.' : '');
+        // C-03
+        const sync = M.getSyncIndicator(u.id);
+        const bar = $('indicador-cambios');
+        bar.classList.remove('status-bar--rejected', 'status-bar--pending');
+        bar.dataset.visible = sync ? '1' : '';
+        if (sync) {
+          bar.classList.add(sync.kind === 'rejected' ? 'status-bar--rejected' : 'status-bar--pending');
+          $('texto-cambios').textContent = sync.text;
+        }
+      }
+
+      $('nota-otros').innerHTML = 'Ver como: ' + ['user_456', 'user_789', 'user_301']
+        .filter(function (id) { return id !== sessionUser.id; })
+        .map(function (id) { return '<a href="P-017-mi-cuenta.html?usuario=' + id + '">' + esc(M.getUser(id).name) + '</a>'; })
+        .join(', ') + '.';
+
+      /* Interruptores: guardan al pulsar (API-032 y API-031) */
+      switches.forEach(function (sw) {
+        sw.addEventListener('click', function () {
+          if (sw.getAttribute('aria-disabled') === 'true') {     // C-04: no llama a la API
+            $(sw.id === 'sw-push' && iphone ? 'ayuda-push' : 'motivo-sin-conexion').focus();
+            return;
+          }
+          if (sw.getAttribute('aria-busy') === 'true') return;
+          const pref = sw.getAttribute('data-pref');
+          const previous = !!prefs[pref];
+          $('error-' + sw.id).hidden = true;
+          sw.setAttribute('aria-checked', String(!previous));
+          sw.setAttribute('aria-busy', 'true');
+          setTimeout(function () {
+            sw.removeAttribute('aria-busy');
+            if (failSave) {                                       // vuelve a su valor anterior
+              sw.setAttribute('aria-checked', String(previous));
+              $('error-' + sw.id).textContent = M.message('RN-170');
+              $('error-' + sw.id).hidden = false;
+              return;
+            }
+            prefs[pref] = !previous;                              // RN-187, RN-073, RN-208
+          }, 800);
+        });
+      });
+
+      /* Enlaces que no están disponibles sin conexión */
+      ['enlace-segundo-factor', 'enlace-borrar'].forEach(function (id) {
+        $(id).addEventListener('click', function (event) {
+          if (offline) { event.preventDefault(); $('motivo-sin-conexion').focus(); }
+        });
+      });
+
+      /* Cerrar sesión: funciona también sin conexión (RN-197, RN-198) */
+      const dialog = $('dialogo-cerrar');
+      let opener = null;
+
+      function logout() {
+        try { sessionStorage.clear(); } catch (e) { /* sin almacenamiento */ }   // RN-197
+        location.href = 'P-003-iniciar-sesion.html';
+      }
+
+      function openLogoutDialog(trigger) {
+        const pending = M.getPendingChanges(user.id).length;
+        if (!pending) { logout(); return; }
+        opener = trigger;
+        $('dialogo-cerrar-texto').textContent = M.message('RN-198', { n: pending });
+        $('dialogo-confirmar').disabled = false;
+        $('dialogo-confirmar').removeAttribute('aria-busy');
+        if (!dialog.open) dialog.showModal();
+        $('dialogo-cerrar-titulo').focus();
+      }
+
+      $('btn-cerrar-sesion').addEventListener('click', function () { openLogoutDialog(this); });
+      $('dialogo-cancelar').addEventListener('click', function () { dialog.close(); if (opener) opener.focus(); });
+      $('dialogo-confirmar').addEventListener('click', function () {
+        this.disabled = true;
+        this.setAttribute('aria-busy', 'true');
+        setTimeout(logout, 600);
+      });
+      dialog.addEventListener('close', function () { if (opener) opener.focus(); });
+
+      function setUnavailable(el, unavailable, reasonId) {
+        if (unavailable) {
+          el.setAttribute('aria-disabled', 'true');
+          el.setAttribute('aria-describedby', reasonId);
+        } else {
+          el.removeAttribute('aria-disabled');
+          el.removeAttribute('aria-describedby');
+        }
+      }
+
+      let iphone = false;
+
+      M.initStates({
+        extraStates: [
+          { id: 'guardando', label: 'Guardando' },
+          { id: 'sin-conexion', label: 'Sin conexión' },
+          { id: 'iphone', label: 'Push en iPhone' },
+          { id: 'dialogo-cerrar', label: 'Cerrar con cambios' },
+        ],
+        initial: 'con-datos',
+        onChange: function (state) {
+          if (dialog.open) dialog.close();
+          // "Vacío": una cuenta sin juntas (sin aviso de cuotas vencidas ni cambios sin enviar)
+          render(state === 'vacio' ? M.getUser('user_301') : sessionUser);
+          offline = state === 'sin-conexion';
+          iphone = state === 'iphone';
+          failSave = state === 'error';
+
+          switches.forEach(function (sw) {
+            setUnavailable(sw, offline || (iphone && sw.id === 'sw-push'),
+              iphone && sw.id === 'sw-push' ? 'ayuda-push' : 'motivo-sin-conexion');
+          });
+          $('ayuda-push').hidden = !iphone;
+          if (iphone) $('sw-push').setAttribute('aria-checked', 'false');
+          setUnavailable($('enlace-segundo-factor'), offline, 'motivo-sin-conexion');
+          setUnavailable($('enlace-borrar'), offline, 'motivo-sin-conexion');
+
+          if (state === 'guardando') {
+            $('sw-correo').setAttribute('aria-checked', String(!prefs.emailRemindersEnabled));
+            $('sw-correo').setAttribute('aria-busy', 'true');
+          } else if (state === 'error') {
+            // Falló el guardado: el interruptor volvió a su valor y muestra el error
+            $('error-sw-correo').textContent = M.message('RN-170');
+            $('error-sw-correo').hidden = false;
+          }
+
+          $('indicador-cambios').hidden = !$('indicador-cambios').dataset.visible || state === 'loading';
+          if (state === 'dialogo-cerrar') openLogoutDialog($('btn-cerrar-sesion'));
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

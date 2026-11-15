@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Encuesta de KPI-05 · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <style>
+    /* El diálogo se abre sin showModal() para que la barra del prototipo siga
+       usable; el fondo atenuado y el bloqueo del resto (inert) se hacen aquí. */
+    .survey-backdrop { position: fixed; inset: 0; z-index: 25; background: var(--color-backdrop); }
+    #dialogo-encuesta { z-index: 40; }
+  </style>
+  <!--
+    P-024 · Encuesta de KPI-05. No tiene ruta propia: es un diálogo (C-07
+    ampliado) sobre P-011, al crear la primera junta, o sobre P-007. Este
+    archivo muestra el diálogo sobre una versión simplificada de esa pantalla.
+    Prototipo, NO es código de producción. Fuente: spec-pack/09-ui-spec.md §3 P-024
+    y RN-206, RN-210 y RN-211 de spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?desde=P-011 (por defecto) o ?desde=P-007   pantalla de fondo
+      ?junta=junta_familia                         junta de fondo en P-011
+      ?usuario=user_123                            organizador (por defecto, Carmen)
+  -->
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Sin conexión la encuesta no se abre; queda pendiente -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <!-- C-08 · Aviso de resultado -->
+  <div class="toast" id="toast" role="status" data-estado="cerrada">
+    <span class="toast__text">Gracias por responder.</span>
+    <button class="btn btn--icon" type="button" id="toast-cerrar" aria-label="Cerrar"><span class="icon icon--close" aria-hidden="true"></span></button>
+  </div>
+
+  <!-- Pantalla de fondo (P-011 o P-007), simplificada -->
+  <main id="contenido" class="container">
+    <div id="fondo"></div>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p id="nota-momento"></p>
+      <p><strong>[REQUIERE DECISIÓN]</strong> El rango de las dos respuestas numéricas y si las 3 respuestas son obligatorias siguen abiertos (PREG-071). Por eso el prototipo no pone rango ni hace obligatoria ninguna respuesta.</p>
+      <p><button class="btn btn--text" type="button" id="btn-abrir" style="padding-left: 0">Abrir la encuesta otra vez</button></p>
+      <p id="nota-fondo"></p>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <div class="survey-backdrop" id="fondo-dialogo" hidden></div>
+
+  <!-- P-024 · Diálogo de la encuesta (solo las 3 preguntas de RN-206) -->
+  <dialog class="dialog" id="dialogo-encuesta" aria-labelledby="encuesta-titulo" aria-describedby="encuesta-ayuda">
+    <div class="split" style="align-items: flex-start; flex-wrap: nowrap">
+      <h2 class="dialog__title" id="encuesta-titulo" tabindex="-1">Una encuesta de 3 preguntas</h2>
+      <button class="btn btn--icon" type="button" id="btn-cerrar-icono" aria-label="Cerrar sin responder" style="margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) 0 0">
+        <span class="icon icon--close" aria-hidden="true"></span>
+      </button>
+    </div>
+    <p id="encuesta-ayuda">Nos ayuda a medir si Mi Junta le ahorra tiempo.</p>
+
+    <!-- Cargando: esqueleto mientras se consulta si hay una encuesta pendiente -->
+    <div class="stack" data-estado="loading" aria-hidden="true">
+      <span class="skeleton skeleton--text"></span>
+      <span class="skeleton skeleton--button"></span>
+      <span class="skeleton skeleton--text"></span>
+      <span class="skeleton skeleton--button"></span>
+    </div>
+
+    <form id="form-encuesta" novalidate data-estado="con-datos vacio error enviando">
+      <div class="field">
+        <label class="field__label" for="horas">¿Cuántas horas al mes dedica a gestionar sus juntas?</label>
+        <input class="input field__control" id="horas" name="horas" inputmode="numeric" autocomplete="off" aria-describedby="error-horas">
+        <p class="field__error" id="error-horas" hidden></p>
+      </div>
+      <div class="field">
+        <label class="field__label" for="recordatorios">¿Cuántos recordatorios envía a mano al mes?</label>
+        <input class="input field__control" id="recordatorios" name="recordatorios" inputmode="numeric" autocomplete="off" aria-describedby="error-recordatorios">
+        <p class="field__error" id="error-recordatorios" hidden></p>
+      </div>
+      <fieldset class="fieldset">
+        <legend class="fieldset__legend">¿Reenvía por WhatsApp los recordatorios de Mi Junta?</legend>
+        <div class="cluster" style="gap: var(--space-5)">
+          <label class="choice"><input type="radio" name="whatsapp" value="si" id="whatsapp-si"><span class="choice__text">Sí</span></label>
+          <label class="choice"><input type="radio" name="whatsapp" value="no" id="whatsapp-no"><span class="choice__text">No</span></label>
+        </div>
+      </fieldset>
+
+      <div class="dialog__actions">
+        <button class="btn btn--primary" type="submit" id="btn-enviar">Enviar respuestas</button>
+        <button class="btn btn--secondary" type="button" id="btn-cerrar">Cerrar sin responder</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+
+      const from = params.get('desde') === 'P-007' ? 'P-007' : 'P-011';
+      const user = M.getCurrentUser('user_123');
+      const userParam = 'usuario=' + user.id;
+      const organized = data.juntas.filter(function (j) { return j.organizerId === user.id; });
+      const junta = M.getJunta(params.get('junta')) || organized[0] || M.getJunta('junta_familia');
+      const survey = data.organizerSurveys.find(function (s) { return s.organizerId === user.id && s.wave === 'initial'; });
+
+      document.querySelectorAll('[data-nav]').forEach(function (a) {
+        a.href = a.getAttribute('data-nav') + '?' + userParam;
+      });
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+
+      // A dónde vuelve al enviar o cerrar
+      const backHref = from === 'P-011'
+        ? 'P-011-junta-organizador.html?junta=' + junta.id + '&' + userParam
+        : 'P-007-mis-juntas.html?' + userParam;
+
+      /* Fondo simplificado */
+      if (from === 'P-011') {
+        const code = M.getInviteCode(junta.id);
+        const occupied = M.getOccupiedSlots(junta.id);
+        $('fondo').innerHTML =
+          '<a class="back-link" href="P-007-mis-juntas.html?' + userParam + '">Mis juntas</a>' +
+          '<div class="page-header"><h1>' + esc(junta.name) + '</h1>' +
+          '<p class="cluster">' + M.badgeHtml(junta.status) + ' · ' + occupied + ' de ' + junta.participantCount + ' cupos</p></div>' +
+          (code ? '<div class="card card--code"><p>Código de invitación</p><p class="invite-code">' + M.formatInviteCode(code.code) + '</p>' +
+            '<p>Compártalo por sus propios medios, por ejemplo por WhatsApp. Mi Junta no lo envía.</p></div>' : '') +
+          '<p class="section"><a href="' + backHref + '">Ir a la junta completa (P-011)</a></p>';
+      } else {
+        const cards = M.getJuntasForUser(user.id).map(function (it) {
+          return '<li><a class="card card--link" href="' + (it.role === 'organizer' ? 'P-011-junta-organizador.html' : 'P-010-junta-participante.html') +
+            '?junta=' + it.junta.id + '&amp;' + userParam + '"><span class="split"><span class="card__title">' + esc(it.junta.name) + '</span>' +
+            M.badgeHtml(it.junta.status) + '</span></a></li>';
+        }).join('');
+        $('fondo').innerHTML = '<div class="page-header"><h1>Mis juntas</h1></div><ul class="card-grid">' + cards + '</ul>' +
+          '<p class="section"><a href="' + backHref + '">Ir a Mis juntas completa (P-007)</a></p>';
+      }
+
+      // Momento que simula el prototipo
+      $('nota-momento').textContent = from === 'P-011'
+        ? 'Simula el ' + M.formatDate(junta.createdAt) + ' a las ' + M.formatTime(junta.createdAt) + ', cuando ' + user.name +
+          ' creó su primera junta (RN-204).' + (survey && survey.closedAt
+            ? ' En datos.js la cerró sin responder a las ' + M.formatTime(survey.closedAt) + ' (RN-210), así que esa encuesta no se le vuelve a mostrar (RN-211).'
+            : '')
+        : 'Simula que ' + user.name + ' abre la app con una encuesta pendiente.';
+      $('nota-fondo').innerHTML = from === 'P-011'
+        ? '<a href="P-024-encuesta-kpi-05.html?desde=P-007&amp;' + userParam + '">Ver la encuesta sobre Mis juntas (P-007)</a>'
+        : '<a href="P-024-encuesta-kpi-05.html?desde=P-011&amp;' + userParam + '">Ver la encuesta sobre la junta (P-011)</a>';
+
+      /* Diálogo */
+      const dialog = $('dialogo-encuesta');
+      const sendBtn = $('btn-enviar');
+      const numeric = { horas: $('horas'), recordatorios: $('recordatorios') };
+
+      function setFieldError(name, text) {
+        const input = numeric[name];
+        const err = $('error-' + name);
+        if (text) {
+          err.textContent = text;
+          err.hidden = false;
+          input.setAttribute('aria-invalid', 'true');
+        } else {
+          err.hidden = true;
+          input.removeAttribute('aria-invalid');
+        }
+      }
+
+      // Solo se revisa que sea un número entero. El texto del error no está
+      // definido en el spec-pack (PREG-071).
+      const PENDING_TEXT = '[REQUIERE DECISIÓN] Texto pendiente para una respuesta que no es un número entero (PREG-071).';
+
+      function validate() {
+        let firstBad = null;
+        Object.keys(numeric).forEach(function (name) {
+          const v = numeric[name].value.trim();
+          const bad = v !== '' && !/^\d+$/.test(v);
+          setFieldError(name, bad ? PENDING_TEXT : null);
+          if (bad && !firstBad) firstBad = numeric[name];
+        });
+        return firstBad;
+      }
+
+      function setBusy(busy) {
+        sendBtn.disabled = busy;
+        if (busy) sendBtn.setAttribute('aria-busy', 'true');
+        else sendBtn.removeAttribute('aria-busy');
+      }
+
+      // Lo que queda detrás del diálogo y no recibe foco mientras está abierto
+      const behind = ['header', 'main', 'nav.bottom-nav', '.status-bar', '#toast'].map(function (sel) {
+        return document.querySelector(sel);
+      }).filter(Boolean);
+
+      function setBehindInert(on) {
+        behind.forEach(function (el) {
+          if (on) el.setAttribute('inert', '');
+          else el.removeAttribute('inert');
+        });
+        $('fondo-dialogo').hidden = !on;
+      }
+
+      function open() {
+        if (!dialog.open) dialog.show();
+        setBehindInert(true);
+        $('encuesta-titulo').focus();
+      }
+
+      function close() {
+        if (dialog.open) dialog.close();
+        setBehindInert(false);
+      }
+
+      // Foco atrapado en el diálogo (C-07)
+      dialog.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') { event.preventDefault(); closeWithoutAnswer(); return; }
+        if (event.key !== 'Tab') return;
+        const items = Array.prototype.slice.call(dialog.querySelectorAll('button, input, [tabindex="-1"]'))
+          .filter(function (el) { return !el.disabled && el.offsetParent !== null; });
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      });
+
+      function closeWithoutAnswer() {
+        // POST /organizer-surveys/{wave}/dismissal (RN-210); no vuelve a mostrarse (RN-211)
+        close();
+        location.href = backHref;
+      }
+
+      $('form-encuesta').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const bad = validate();
+        if (bad) { bad.focus(); return; }
+        setBusy(true);
+        // POST /organizer-surveys; vuelve con C-08 "Gracias por responder."
+        setTimeout(function () { location.href = backHref + '&aviso=encuesta-respondida'; }, 800);
+      });
+
+      $('btn-cerrar').addEventListener('click', closeWithoutAnswer);
+      $('btn-cerrar-icono').addEventListener('click', closeWithoutAnswer);
+      $('btn-abrir').addEventListener('click', function () { states.set('vacio'); });
+      $('toast-cerrar').addEventListener('click', function () { $('toast').hidden = true; });
+
+      // Respuestas de ejemplo: las de la primera encuesta respondida en datos.js
+      const sample = data.organizerSurveys.find(function (s) { return s.answeredAt; });
+
+      function fill(h, r, w) {
+        numeric.horas.value = h === null || h === undefined ? '' : String(h);
+        numeric.recordatorios.value = r === null || r === undefined ? '' : String(r);
+        $('whatsapp-si').checked = w === true;
+        $('whatsapp-no').checked = w === false;
+      }
+
+      const states = M.initStates({
+        extraStates: [
+          { id: 'enviando', label: 'Enviando' },
+          { id: 'cerrada', label: 'Cerrada' },
+          { id: 'sin-conexion', label: 'Sin conexión' },
+        ],
+        initial: 'vacio',
+        onChange: function (state) {
+          setBusy(false);
+          setFieldError('horas', null);
+          setFieldError('recordatorios', null);
+          if (state === 'vacio') fill(null, null, null);
+          else if (state === 'con-datos' || state === 'enviando') fill(sample.hoursPerMonth, sample.manualRemindersPerMonth, sample.forwardsByWhatsapp);
+          else if (state === 'error') { fill('2.5', sample.manualRemindersPerMonth, null); validate(); }
+
+          if (state === 'enviando') setBusy(true);
+
+          // "Cerrada" y "Sin conexión": el diálogo no está abierto
+          if (state === 'cerrada' || state === 'sin-conexion') {
+            close();
+          } else {
+            open();
+          }
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

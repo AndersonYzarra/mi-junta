@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Segundo factor · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-021 · Segundo factor (/account/two-factor). Should. Prototipo, NO es
+    código de producción. Fuente: spec-pack/09-ui-spec.md §3 P-021 y RN-079,
+    RN-080, RN-081, RN-162 a RN-167 y RN-170 de spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?usuario=user_789  Lucía, segundo factor desactivado (por defecto)
+      ?usuario=user_456  Jorge, segundo factor activado (desactivación, RN-167)
+  -->
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html" aria-current="page">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <a class="back-link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a>
+
+    <div class="page-header">
+      <h1>Segundo factor</h1>
+      <p class="strong" id="texto-estado" role="status"></p>
+      <p class="long-text">Cada vez que inicie sesión, le enviaremos a su correo un código de 6 dígitos que vale 10 minutos.</p>
+    </div>
+
+    <!-- Motivo de C-04 sin conexión, común a todos los botones -->
+    <span class="unavailable-reason" id="motivo" tabindex="-1" data-estado="sin-conexion"></span>
+
+    <!-- Desactivado -->
+    <section class="form stack" id="bloque-desactivado" aria-label="Activar el segundo factor">
+      <button class="btn btn--primary" type="button" id="btn-activar">Activar segundo factor</button>
+    </section>
+
+    <!-- Código enviado (activando) -->
+    <section class="form stack" id="bloque-activando" aria-label="Confirmar el código">
+      <div class="alert alert--info alert--mail">
+        <div class="alert__body"><p id="texto-enviado"></p></div>
+      </div>
+      <form id="form-activar" novalidate>
+        <div class="field">
+          <label class="field__label" for="codigo-activar">Código de verificación</label>
+          <input class="input code-input field__control" id="codigo-activar" inputmode="numeric" autocomplete="one-time-code" maxlength="6" spellcheck="false" aria-describedby="error-codigo-activar">
+          <p class="field__error" id="error-codigo-activar" hidden></p>
+        </div>
+        <button class="btn btn--primary" type="submit" id="btn-confirmar">Confirmar código</button>
+      </form>
+      <div>
+        <button class="btn btn--text" type="button" id="btn-otro" style="padding-left: 0">Pedir otro código</button>
+        <p class="inline-error" id="error-pedir" role="alert" hidden></p>
+      </div>
+    </section>
+
+    <!-- Activado: desactivar exige contraseña y código (RN-167) -->
+    <section class="form stack" id="bloque-activado" aria-labelledby="titulo-desactivar">
+      <h2 id="titulo-desactivar" class="text-h3">Desactivar segundo factor</h2>
+      <form id="form-desactivar" novalidate>
+        <div class="field">
+          <label class="field__label" for="contrasena">Contraseña</label>
+          <div class="field__control input-with-button">
+            <input class="input" id="contrasena" type="password" autocomplete="current-password" aria-describedby="error-contrasena">
+            <button class="btn btn--icon" type="button" id="ver-contrasena" aria-label="Mostrar contraseña" aria-pressed="false" aria-controls="contrasena">
+              <span class="icon icon--eye" aria-hidden="true"></span>
+            </button>
+          </div>
+          <p class="field__error" id="error-contrasena" hidden></p>
+        </div>
+        <div class="field">
+          <label class="field__label" for="codigo-desactivar">Código de verificación</label>
+          <input class="input code-input field__control" id="codigo-desactivar" inputmode="numeric" autocomplete="one-time-code" maxlength="6" spellcheck="false" aria-describedby="error-codigo-desactivar">
+          <p class="field__error" id="error-codigo-desactivar" hidden></p>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn--secondary" type="button" id="btn-enviar-codigo">Enviar código</button>
+          <!-- disabled mientras falte la contraseña o el código (RN-167) -->
+          <button class="btn btn--primary" type="submit" id="btn-desactivar" disabled>Desactivar segundo factor</button>
+        </div>
+        <p class="alert alert--info section" id="aviso-codigo-desactivar" hidden></p>
+        <p class="inline-error" id="error-enviar" role="alert" hidden></p>
+      </form>
+    </section>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo: el correo de <span id="nota-nombre"></span></p>
+      <p id="nota-codigo"></p>
+      <p id="nota-viejos"></p>
+      <p id="nota-contadores" aria-live="polite"></p>
+      <p id="nota-contrasena"></p>
+      <p><button class="btn btn--text" type="button" id="btn-simular" style="padding-left: 0">Simular que pasaron 10 minutos</button></p>
+      <p>Ver como: <a href="P-021-segundo-factor.html?usuario=user_789">Lucía Quispe</a> (desactivado) o <a href="P-021-segundo-factor.html?usuario=user_456">Jorge Mendoza</a> (activado).</p>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html" aria-current="page"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const user = M.getUser(params.get('usuario')) || M.getUser('user_789');
+
+      document.querySelectorAll('[data-nav]').forEach(function (a) {
+        a.href = a.getAttribute('data-nav') + '?usuario=' + user.id;
+      });
+
+      /* ------------------------------------------------------------------
+         Simulación de los códigos de verificación (API-030). Reloj del
+         prototipo: arranca en meta.now y avanza en tiempo real. Lista fija de
+         códigos; 482915 y 730264 son los de los ejemplos de RN-079 y RN-163.
+         ------------------------------------------------------------------ */
+      const CODES = ['482915', '730264', '518306', '947120', '263849', '805173'];
+      const VALID_MS = 600 * 1000;      // RN-080
+      const WINDOW_MS = 900 * 1000;     // RN-164
+      const loadedAt = Date.now();
+      let offset = 0;
+      function now() { return Date.parse(data.meta.now) + (Date.now() - loadedAt) + offset; }
+
+      let codeIndex = 0;
+      let current = null;
+      let history = [];
+      let requests = [];
+
+      function resetCodes() { codeIndex = 0; current = null; history = []; requests = []; offset = 0; }
+
+      // Enviar un código: anula el anterior (RN-163); máximo 5 en 900 s (RN-164)
+      function send() {
+        const t = now();
+        const recent = requests.filter(function (r) { return t - r < WINDOW_MS; });
+        if (recent.length >= 5) {
+          return { ok: false, message: M.message('RN-164', { n: Math.ceil((recent[0] + WINDOW_MS - t) / 60000) }) };
+        }
+        if (current) current.revoked = true;
+        current = { value: CODES[codeIndex % CODES.length], sentAt: t, used: false, revoked: false, failed: 0 };
+        codeIndex += 1;
+        history.push(current);
+        requests.push(t);
+        return { ok: true };
+      }
+
+      function isUsable(c) {
+        return c && !c.used && !c.revoked && c.failed < 5 && now() - c.sentAt <= VALID_MS;
+      }
+
+      function verify(text) {
+        const value = String(text).replace(/\s+/g, '');
+        const invalid = { ok: false, message: M.message('RN-080') };   // RN-080, RN-081, RN-162, RN-163
+        if (history.some(function (c) { return c !== current && c.value === value; })) return invalid;
+        if (!isUsable(current)) return invalid;
+        if (value !== current.value) {
+          current.failed += 1;
+          if (current.failed >= 5) current.revoked = true;            // RN-081
+          return { ok: false, message: M.message('RN-166') };
+        }
+        current.used = true;
+        return { ok: true };
+      }
+
+      /* Interfaz */
+      let enabled = user.twoFactorEnabled;
+      let view = enabled ? 'on' : 'off';      // off | activating | on
+      let offline = false;
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('motivo').textContent = M.message('RN-170');
+      $('texto-enviado').textContent = 'Le enviamos un código a ' + user.email + '.';
+      $('aviso-codigo-desactivar').textContent = 'Le enviamos un código a ' + user.email + '.';
+      $('nota-nombre').textContent = user.name + ' (' + user.email + ')';
+      $('nota-contrasena').innerHTML = 'Contraseña de la cuenta: <strong class="mono">' + data.examples.demoPassword + '</strong>.';
+
+      const buttons = ['btn-activar', 'btn-confirmar', 'btn-otro', 'btn-enviar-codigo', 'btn-desactivar'].map($);
+
+      function fieldError(inputId, text) {
+        const input = $(inputId);
+        const el = $('error-' + inputId);
+        el.textContent = text || '';
+        el.hidden = !text;
+        if (text) input.setAttribute('aria-invalid', 'true');
+        else input.removeAttribute('aria-invalid');
+      }
+
+      function setBusy(btn, busy) {
+        if (busy) btn.setAttribute('aria-busy', 'true');
+        else btn.removeAttribute('aria-busy');
+        btn.disabled = busy;
+      }
+
+      function syncDeactivate() {
+        const busy = $('btn-desactivar').getAttribute('aria-busy') === 'true';
+        $('btn-desactivar').disabled = busy || !$('contrasena').value || !$('codigo-desactivar').value.trim();
+      }
+
+      function render() {
+        $('texto-estado').textContent = 'Estado: ' + (enabled ? 'Activado' : 'Desactivado');
+        $('bloque-desactivado').hidden = view !== 'off';
+        $('bloque-activando').hidden = view !== 'activating';
+        $('bloque-activado').hidden = view !== 'on';
+        buttons.forEach(function (b) {
+          if (offline) { b.setAttribute('aria-disabled', 'true'); b.setAttribute('aria-describedby', 'motivo'); }
+          else { b.removeAttribute('aria-disabled'); b.removeAttribute('aria-describedby'); }
+        });
+        renderNote();
+      }
+
+      function renderNote() {
+        $('nota-codigo').innerHTML = current
+          ? 'Código vigente en el correo: <strong class="mono">' + current.value + '</strong>' +
+            (isUsable(current) ? ', vale hasta las ' + M.formatTime(new Date(current.sentAt + VALID_MS).toISOString()) :
+              ' (ya no sirve: ' + (current.used ? 'usado' : current.failed >= 5 ? 'anulado por 5 intentos fallidos' : current.revoked ? 'anulado' : 'vencido') + ')') + '.'
+          : 'Todavía no se envió ningún código.';
+        const old = history.filter(function (c) { return c !== current; });
+        $('nota-viejos').innerHTML = old.length ? 'Códigos que ya no sirven: ' + old.map(function (c) {
+          return '<span class="mono">' + c.value + '</span> (' + (c.used ? 'usado' : 'anulado') + ')';
+        }).join(', ') + '.' : '';
+        const t = now();
+        $('nota-contadores').textContent = 'Intentos fallidos con este código: ' + (current ? current.failed : 0) +
+          ' de 5. Códigos pedidos en los últimos 15 minutos: ' + requests.filter(function (r) { return t - r < WINDOW_MS; }).length + ' de 5.';
+      }
+
+      function blocked() {
+        if (!offline) return false;
+        $('motivo').focus();                      // C-04: no llama a la API
+        return true;
+      }
+
+      // Activar: envía un código (RN-165) y aparece el campo
+      $('btn-activar').addEventListener('click', function () {
+        if (blocked()) return;
+        const btn = this;
+        setBusy(btn, true);
+        setTimeout(function () {
+          setBusy(btn, false);
+          const result = send();
+          view = 'activating';
+          render();
+          if (!result.ok) { $('error-pedir').textContent = result.message; $('error-pedir').hidden = false; }
+          $('codigo-activar').focus();
+        }, 600);
+      });
+
+      $('form-activar').addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (blocked()) return;
+        const result = verify($('codigo-activar').value);
+        if (!result.ok) { fieldError('codigo-activar', result.message); renderNote(); return; }
+        fieldError('codigo-activar', null);
+        setBusy($('btn-confirmar'), true);
+        setTimeout(function () {                   // RN-166: queda activado
+          setBusy($('btn-confirmar'), false);
+          enabled = true;
+          view = 'on';
+          $('codigo-activar').value = '';
+          render();
+        }, 600);
+      });
+
+      $('btn-otro').addEventListener('click', function () {
+        if (blocked()) return;
+        const result = send();
+        $('error-pedir').textContent = result.ok ? '' : result.message;
+        $('error-pedir').hidden = result.ok;
+        if (result.ok) { fieldError('codigo-activar', null); $('codigo-activar').value = ''; }
+        renderNote();
+      });
+
+      // Desactivar: código nuevo y contraseña (RN-167)
+      $('btn-enviar-codigo').addEventListener('click', function () {
+        if (blocked()) return;
+        const result = send();
+        $('error-enviar').textContent = result.ok ? '' : result.message;
+        $('error-enviar').hidden = result.ok;
+        $('aviso-codigo-desactivar').hidden = !result.ok;
+        renderNote();
+      });
+
+      ['contrasena', 'codigo-desactivar'].forEach(function (id) { $(id).addEventListener('input', syncDeactivate); });
+
+      $('form-desactivar').addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (blocked()) return;
+        if (!$('contrasena').value || !$('codigo-desactivar').value.trim()) return;   // RN-167
+        fieldError('contrasena', null);
+        fieldError('codigo-desactivar', null);
+        if ($('contrasena').value !== data.examples.demoPassword) {
+          fieldError('contrasena', 'La contraseña no es correcta.');
+          return;
+        }
+        const result = verify($('codigo-desactivar').value);
+        if (!result.ok) { fieldError('codigo-desactivar', result.message); renderNote(); return; }
+        setBusy($('btn-desactivar'), true);
+        setTimeout(function () {
+          $('btn-desactivar').removeAttribute('aria-busy');
+          enabled = false;
+          view = 'off';
+          $('contrasena').value = '';
+          $('codigo-desactivar').value = '';
+          $('aviso-codigo-desactivar').hidden = true;
+          syncDeactivate();
+          render();
+        }, 600);
+      });
+
+      $('ver-contrasena').addEventListener('click', function () {
+        const input = $('contrasena');
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        this.setAttribute('aria-pressed', String(show));
+        this.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+        this.querySelector('.icon').className = 'icon ' + (show ? 'icon--eye-off' : 'icon--eye');
+      });
+
+      $('btn-simular').addEventListener('click', function () { offset += VALID_MS + 1000; renderNote(); });
+      setInterval(renderNote, 5000);
+
+      /* Estados del prototipo. Vacío = desactivado, sin ningún código enviado. */
+      M.initStates({
+        extraStates: [
+          { id: 'limite', label: 'Límite de pedidos' },
+          { id: 'activado', label: 'Activado' },
+          { id: 'desactivando', label: 'Desactivando' },
+          { id: 'sin-conexion', label: 'Sin conexión' },
+        ],
+        initial: user.twoFactorEnabled ? 'activado' : 'vacio',
+        onChange: function (state) {
+          resetCodes();
+          offline = state === 'sin-conexion';
+          ['codigo-activar', 'contrasena', 'codigo-desactivar'].forEach(function (id) { $(id).value = ''; fieldError(id, null); });
+          ['error-pedir', 'error-enviar', 'aviso-codigo-desactivar'].forEach(function (id) { $(id).hidden = true; });
+          buttons.forEach(function (b) { setBusy(b, false); });
+
+          enabled = ['activado', 'desactivando'].indexOf(state) !== -1 || (state === 'sin-conexion' && user.twoFactorEnabled);
+          view = enabled ? 'on' : (state === 'vacio' || state === 'sin-conexion' ? 'off' : 'activating');
+
+          if (view === 'activating') send();
+          if (state === 'error') {
+            $('codigo-activar').value = '111111';
+            fieldError('codigo-activar', verify('111111').message);
+          } else if (state === 'loading') {
+            $('codigo-activar').value = current.value;
+            setBusy($('btn-confirmar'), true);
+          } else if (state === 'limite') {
+            for (let i = 0; i < 4; i += 1) { offset += 30 * 1000; send(); }
+            const result = send();
+            $('error-pedir').textContent = result.message;
+            $('error-pedir').hidden = false;
+          } else if (state === 'desactivando') {
+            send();
+            $('aviso-codigo-desactivar').hidden = false;
+            $('contrasena').value = data.examples.demoPassword;
+            $('codigo-desactivar').value = current.value;
+            setBusy($('btn-desactivar'), true);
+          }
+          syncDeactivate();
+          render();
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

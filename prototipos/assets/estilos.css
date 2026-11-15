@@ -1697,12 +1697,13 @@ a.list__row:hover {
 
 .alert--mail { --alert-icon: var(--icon-mail); }
 
-.alert a,
+/* Enlaces de texto dentro de un aviso; los botones que son enlaces conservan su color */
+.alert a:not(.btn),
 .alert .btn--text {
   color: var(--color-secondary);
 }
 
-.alert--danger a,
+.alert--danger a:not(.btn),
 .alert--danger .btn--text {
   color: var(--color-danger);
 }

@@ -1084,10 +1084,12 @@
     return pendingChanges.filter(function (c) { return c.userId === userId; });
   }
 
-  // Rechazos con su texto completo (RN-172)
+  // Rechazos sin revisar, con su texto completo (RN-172). Los que se marcaron
+  // con "Entendido" en P-016 ya no aparecen.
   function getRejectedChanges(userId) {
+    const reviewed = reviewedRejections();
     return rejectedChanges
-      .filter(function (c) { return c.userId === userId; })
+      .filter(function (c) { return c.userId === userId && !c.reviewedAt && reviewed.indexOf(c.clientChangeId) === -1; })
       .map(function (c) {
         const reason = message(c.reasonId, { nombre: displayName(c.participantId), n: c.roundNumber });
         return Object.assign({}, c, { text: message('RN-172', { motivo: reason }) });

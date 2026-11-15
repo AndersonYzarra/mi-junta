@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Borrar mi cuenta · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-023 · Borrar mi cuenta (/account/delete). Should. Prototipo, NO es código
+    de producción. Fuente: spec-pack/09-ui-spec.md §3 P-023 y RN-170, RN-182 a
+    RN-186 y RN-207 de spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?usuario=user_301  Rosa, sin juntas: puede borrar (por defecto)
+      ?usuario=user_789  Lucía, miembro de una junta en curso (RN-182)
+      ?usuario=user_123  Carmen, organiza una junta abierta (RN-207)
+  -->
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html" aria-current="page">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <a class="back-link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a>
+
+    <div class="page-header">
+      <h1>Borrar mi cuenta</h1>
+    </div>
+
+    <!-- Rechazo del servidor: la cuenta sigue igual (RN-182, RN-207) -->
+    <div class="alert alert--danger section" id="rechazo" role="alert" tabindex="-1" data-estado="rechazo-en-curso rechazo-organiza">
+      <div class="alert__body"><p id="texto-rechazo"></p></div>
+    </div>
+
+    <!-- Qué pasa al borrar la cuenta -->
+    <div class="card form section" style="background: var(--color-danger-soft); border-color: var(--color-danger-soft)">
+      <ul class="stack-sm" style="padding-left: var(--space-5)">
+        <li>Se borrarán su nombre, su correo, su contraseña, su DNI y su celular.</li>
+        <li>Saldrá de las juntas que todavía no fijaron su orden de turnos.</li>
+        <li>En las juntas terminadas, sus pagos se conservan a nombre de "Participante eliminado".</li>
+        <li>No podrá borrarla si es miembro de una junta en curso o si organiza una junta que todavía no fija su orden de turnos.</li>
+      </ul>
+    </div>
+
+    <form class="form section" id="form-borrar" novalidate>
+      <div class="field">
+        <label class="field__label" for="contrasena">Contraseña</label>
+        <div class="field__control input-with-button">
+          <input class="input" id="contrasena" type="password" autocomplete="current-password" aria-describedby="error-contrasena">
+          <button class="btn btn--icon" type="button" id="ver-contrasena" aria-label="Mostrar contraseña" aria-pressed="false" aria-controls="contrasena">
+            <span class="icon icon--eye" aria-hidden="true"></span>
+          </button>
+        </div>
+        <p class="field__error" id="error-contrasena" hidden></p>
+      </div>
+      <div class="btn-row">
+        <div>
+          <button class="btn btn--danger btn--block" type="submit" id="btn-borrar">Borrar mi cuenta</button>
+          <span class="unavailable-reason" id="motivo-borrar" tabindex="-1" data-estado="sin-conexion"></span>
+        </div>
+        <a class="btn btn--secondary" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Cancelar</a>
+      </div>
+    </form>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo: qué pasaría con las juntas de <span id="nota-nombre"></span></p>
+      <ul id="nota-juntas"></ul>
+      <p id="nota-contrasena"></p>
+      <p id="nota-otros"></p>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html" aria-current="page"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <!-- C-07 · Confirmación -->
+  <dialog class="dialog" id="dialogo" aria-labelledby="dialogo-titulo">
+    <h2 class="dialog__title" id="dialogo-titulo" tabindex="-1">¿Borrar su cuenta?</h2>
+    <p>Esta acción no se puede deshacer.</p>
+    <div class="dialog__actions">
+      <button class="btn btn--danger" type="button" id="dialogo-confirmar">Borrar mi cuenta</button>
+      <button class="btn btn--secondary" type="button" id="dialogo-cancelar">Cancelar</button>
+    </div>
+  </dialog>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+      const user = M.getUser(params.get('usuario')) || M.getUser('user_301');
+
+      document.querySelectorAll('[data-nav]').forEach(function (a) {
+        a.href = a.getAttribute('data-nav') + '?usuario=' + user.id;
+      });
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('motivo-borrar').textContent = M.message('RN-170');
+
+      /* Qué responde el servidor para esta cuenta (API-033) */
+      const items = M.getJuntasForUser(user.id);
+      const inProgress = items.some(function (i) { return i.junta.status === 'in_progress'; });                         // RN-182
+      const organizesOpen = items.some(function (i) { return i.role === 'organizer' && (i.junta.status === 'open' || i.junta.status === 'full'); }); // RN-207
+      const rejectionId = inProgress ? 'RN-182' : organizesOpen ? 'RN-207' : null;
+
+      // Nota: consecuencias junta por junta
+      $('nota-nombre').textContent = user.name;
+      $('nota-juntas').innerHTML = items.length ? items.map(function (i) {
+        const j = i.junta;
+        let text;
+        if (j.status === 'in_progress') {
+          text = 'está "En curso": no puede borrar su cuenta (RN-182).';
+        } else if (i.role === 'organizer' && (j.status === 'open' || j.status === 'full')) {
+          text = 'la organiza y todavía no fija su orden de turnos: no puede borrar su cuenta (RN-207).';
+        } else if (j.status === 'open' || j.status === 'full') {
+          text = 'saldría de ella y quedaría con ' + (M.getOccupiedSlots(j.id) - 1) + ' de ' + j.participantCount + ' cupos (RN-186).';
+        } else {
+          const paid = M.getContributions(j.id, { viewerId: user.id }).filter(function (c) { return c.participantId === user.id && c.status === 'paid'; }).length;
+          text = 'está "Terminada": sus ' + paid + ' cuotas pagadas se conservan a nombre de "' + M.uiTexts.deletedParticipant + '" (RN-183, RN-184).';
+        }
+        return '<li>' + esc(j.name) + ': ' + text + '</li>';
+      }).join('') : '<li>No es miembro de ninguna junta: puede borrar su cuenta.</li>';
+      $('nota-contrasena').innerHTML = 'Contraseña de la cuenta: <strong class="mono">' + data.examples.demoPassword + '</strong>.';
+      $('nota-otros').innerHTML = 'Ver como: ' + [
+        ['user_301', 'sin juntas'], ['user_789', 'junta en curso'], ['user_123', 'organiza una junta abierta'],
+        ['user_124', 'participa en una junta abierta'], ['user_620', 'solo una junta terminada'],
+      ].filter(function (u) { return u[0] !== user.id; }).map(function (u) {
+        return '<a href="P-023-borrar-cuenta.html?usuario=' + u[0] + '">' + esc(M.getUser(u[0]).name) + '</a> (' + u[1] + ')';
+      }).join(', ') + '.';
+
+      /* Interacción */
+      const form = $('form-borrar');
+      const password = $('contrasena');
+      const deleteBtn = $('btn-borrar');
+      const dialog = $('dialogo');
+      const confirmBtn = $('dialogo-confirmar');
+      let offline = false;
+
+      function passwordError(text) {
+        $('error-contrasena').textContent = text || '';
+        $('error-contrasena').hidden = !text;
+        if (text) password.setAttribute('aria-invalid', 'true');
+        else password.removeAttribute('aria-invalid');
+      }
+
+      function showRejection(id) {
+        $('texto-rechazo').textContent = M.message(id);
+        $('rechazo').hidden = false;
+        $('rechazo').focus();
+      }
+
+      function setBusy(btn, busy) {
+        btn.disabled = busy;
+        if (busy) btn.setAttribute('aria-busy', 'true');
+        else btn.removeAttribute('aria-busy');
+      }
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (offline) { $('motivo-borrar').focus(); return; }          // C-04
+        dialog.showModal();
+        $('dialogo-titulo').focus();
+      });
+
+      $('dialogo-cancelar').addEventListener('click', function () { dialog.close(); });
+      dialog.addEventListener('close', function () { if (!confirmBtn.disabled) deleteBtn.focus(); });
+
+      confirmBtn.addEventListener('click', function () {
+        setBusy(confirmBtn, true);
+        setTimeout(function () {
+          setBusy(confirmBtn, false);
+          dialog.close();
+          $('rechazo').hidden = true;
+          passwordError(null);
+          if (password.value !== data.examples.demoPassword) {          // 401
+            passwordError('La contraseña no es correcta.');
+            password.focus();
+            return;
+          }
+          if (rejectionId) { showRejection(rejectionId); return; }     // 409: la cuenta sigue igual
+          // 204: borra los datos del dispositivo y abre P-003 con el aviso
+          try { sessionStorage.clear(); } catch (e) { /* sin almacenamiento */ }
+          location.href = 'P-003-iniciar-sesion.html?aviso=cuenta-borrada';
+        }, 800);
+      });
+
+      $('ver-contrasena').addEventListener('click', function () {
+        const show = password.type === 'password';
+        password.type = show ? 'text' : 'password';
+        this.setAttribute('aria-pressed', String(show));
+        this.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+        this.querySelector('.icon').className = 'icon ' + (show ? 'icon--eye-off' : 'icon--eye');
+      });
+
+      /* Estados del prototipo. Vacío = inicial con el campo vacío. */
+      M.initStates({
+        extraStates: [
+          { id: 'dialogo', label: 'Diálogo' },
+          { id: 'rechazo-en-curso', label: 'Rechazo: junta en curso' },
+          { id: 'rechazo-organiza', label: 'Rechazo: organiza una junta' },
+          { id: 'sin-conexion', label: 'Sin conexión' },
+        ],
+        initial: 'vacio',
+        onChange: function (state) {
+          if (dialog.open) dialog.close();
+          offline = state === 'sin-conexion';
+          passwordError(null);
+          setBusy(confirmBtn, false);
+          setBusy(deleteBtn, false);
+          password.value = state === 'vacio' ? '' : data.examples.demoPassword;
+          if (offline) { deleteBtn.setAttribute('aria-disabled', 'true'); deleteBtn.setAttribute('aria-describedby', 'motivo-borrar'); }
+          else { deleteBtn.removeAttribute('aria-disabled'); deleteBtn.removeAttribute('aria-describedby'); }
+
+          if (state === 'error') {
+            password.value = 'clave';
+            passwordError('La contraseña no es correcta.');
+          } else if (state === 'loading') {
+            setBusy(deleteBtn, true);
+          } else if (state === 'dialogo') {
+            dialog.showModal();
+          } else if (state === 'rechazo-en-curso') {
+            $('texto-rechazo').textContent = M.message('RN-182');
+          } else if (state === 'rechazo-organiza') {
+            $('texto-rechazo').textContent = M.message('RN-207');
+          }
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

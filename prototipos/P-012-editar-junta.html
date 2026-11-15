@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Editar junta · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-012 · Editar junta (/juntas/{id}/edit). Prototipo, NO es código de producción.
+    Fuente: spec-pack/09-ui-spec.md §3 P-012 (y los campos de P-008) y RN-002 a
+    RN-010, RN-012, RN-041, RN-096, RN-097, RN-098, RN-100, RN-101, RN-106 a
+    RN-110, RN-170, RN-179 y RN-212 de spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?junta=junta_familia  antes de fijar el orden: se edita todo (RN-106)
+      ?junta=junta_oficina  después de fijar el orden: solo el nombre (RN-110)
+      ?usuario=user_…       por defecto, el organizador de la junta
+  -->
+  <style>
+    .pot-box {
+      margin-bottom: var(--space-4);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-sm);
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      font-weight: var(--font-weight-semibold);
+      font-variant-numeric: tabular-nums;
+    }
+    .choice__nested { margin: 0 0 var(--space-2) calc(var(--check-size) + var(--space-3)); }
+    .fieldset[aria-invalid="true"] .choice input { border-color: var(--color-danger); }
+    .date-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  </style>
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <!-- C-03 · Indicador de cambios sin enviar -->
+  <div class="status-bar" id="indicador-cambios" hidden>
+    <span class="icon icon--sync" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-cambios"></span>
+    <a class="status-bar__action" data-nav="P-016-cambios-sin-enviar.html" href="P-016-cambios-sin-enviar.html">Ver</a>
+  </div>
+
+  <main id="contenido" class="container">
+    <div class="form">
+      <a class="back-link" id="enlace-volver" href="P-011-junta-organizador.html"></a>
+      <div class="page-header">
+        <h1>Editar junta</h1>
+      </div>
+
+      <!-- Cargando (C-10) -->
+      <div class="stack" data-estado="loading" aria-hidden="true">
+        <span class="skeleton skeleton--text" style="width: 40%"></span>
+        <span class="skeleton skeleton--button"></span>
+        <span class="skeleton skeleton--text" style="width: 30%"></span>
+        <span class="skeleton skeleton--button"></span>
+        <span class="skeleton skeleton--text" style="width: 50%"></span>
+        <span class="skeleton skeleton--button"></span>
+        <span class="skeleton skeleton--card"></span>
+      </div>
+
+      <!-- Sin permiso (403) -->
+      <div class="alert alert--danger" role="alert" data-estado="sin-permiso">
+        <div class="alert__body">
+          <p>No tiene acceso a esta junta.</p>
+          <a data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Ir a Mis juntas</a>
+        </div>
+      </div>
+
+      <!-- Resumen de errores (C-05) -->
+      <div class="error-summary" id="resumen" role="alert" tabindex="-1" hidden>
+        <ul id="resumen-lista"></ul>
+      </div>
+
+      <form id="form-junta" novalidate data-estado="con-datos vacio error sin-conexion sin-cupo">
+
+        <!-- Después de fijar el orden (RN-110) -->
+        <div class="alert alert--info section" id="aviso-orden" hidden>
+          <div class="alert__body"><p id="texto-aviso-orden"></p></div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="nombre">Nombre de la junta</label>
+          <input class="input field__control" id="nombre" maxlength="60" autocomplete="off" aria-describedby="error-nombre">
+          <p class="field__error" id="error-nombre" hidden></p>
+        </div>
+
+        <!-- Después del orden: los demás datos se muestran como texto, no como campos -->
+        <dl class="data-list section-end" id="datos-fijos" hidden></dl>
+
+        <!-- Antes del orden: los mismos campos de P-008 (RN-106, RN-107) -->
+        <div id="campos-editables">
+          <div class="form-grid form-grid--2">
+            <div class="field">
+              <label class="field__label" for="cuota">Cuota</label>
+              <span class="field__help" id="ayuda-cuota">Lo que paga cada participante en cada ronda.</span>
+              <div class="field__control input-prefix">
+                <span class="input-prefix__symbol" aria-hidden="true">S/</span>
+                <input class="input" id="cuota" inputmode="decimal" placeholder="300.00" autocomplete="off" aria-describedby="ayuda-cuota error-cuota">
+              </div>
+              <p class="field__error" id="error-cuota" hidden></p>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="participantes">Cantidad de participantes</label>
+              <span class="field__help" id="ayuda-participantes"></span>
+              <div class="field__control stepper">
+                <button class="stepper__btn" type="button" data-step="participantes" data-delta="-1" aria-label="Quitar un participante"><span class="icon icon--minus" aria-hidden="true"></span></button>
+                <input class="input" id="participantes" inputmode="numeric" autocomplete="off" aria-describedby="ayuda-participantes error-participantes">
+                <button class="stepper__btn" type="button" data-step="participantes" data-delta="1" aria-label="Agregar un participante"><span class="icon icon--plus" aria-hidden="true"></span></button>
+              </div>
+              <p class="field__error" id="error-participantes" hidden></p>
+            </div>
+          </div>
+
+          <p class="pot-box" id="pozo" aria-live="polite" hidden></p>
+
+          <fieldset class="fieldset" id="grupo-frecuencia" aria-describedby="error-frecuencia">
+            <legend class="fieldset__legend">Frecuencia</legend>
+            <label class="choice"><input type="radio" name="frecuencia" value="weekly" id="frecuencia"><span class="choice__text">Semanal</span></label>
+            <label class="choice"><input type="radio" name="frecuencia" value="every_15_days"><span class="choice__text">Quincenal</span></label>
+            <label class="choice"><input type="radio" name="frecuencia" value="monthly"><span class="choice__text">Mensual</span></label>
+            <label class="choice"><input type="radio" name="frecuencia" value="every_n_days"><span class="choice__text">Cada cierta cantidad de días</span></label>
+            <div class="field choice__nested" id="grupo-cada-dias" hidden>
+              <label class="field__label" for="cada-dias">Cada cuántos días</label>
+              <input class="input field__control" id="cada-dias" inputmode="numeric" autocomplete="off" style="max-width: 160px" aria-describedby="error-cada-dias">
+              <p class="field__error" id="error-cada-dias" hidden></p>
+            </div>
+            <p class="field__error" id="error-frecuencia" hidden></p>
+          </fieldset>
+
+          <div class="field">
+            <label class="field__label" for="vencimiento">Vencimiento de la ronda 1</label>
+            <span class="field__help" id="ayuda-vencimiento"></span>
+            <div class="field__control input-with-button">
+              <input class="input" id="vencimiento" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA" aria-describedby="ayuda-vencimiento error-vencimiento">
+              <button class="btn btn--icon" type="button" id="btn-calendario" aria-label="Abrir calendario"><span class="icon icon--calendar" aria-hidden="true"></span></button>
+              <input class="date-native" type="date" id="vencimiento-nativo" tabindex="-1" aria-hidden="true">
+            </div>
+            <p class="field__error" id="error-vencimiento" hidden></p>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="aviso">Días de aviso previo</label>
+            <span class="field__help" id="ayuda-aviso">El primer recordatorio llega por correo esa cantidad de días antes del vencimiento.</span>
+            <div class="field__control stepper">
+              <button class="stepper__btn" type="button" data-step="aviso" data-delta="-1" aria-label="Quitar un día de aviso"><span class="icon icon--minus" aria-hidden="true"></span></button>
+              <input class="input" id="aviso" inputmode="numeric" autocomplete="off" aria-describedby="ayuda-aviso error-aviso">
+              <button class="stepper__btn" type="button" data-step="aviso" data-delta="1" aria-label="Agregar un día de aviso"><span class="icon icon--plus" aria-hidden="true"></span></button>
+            </div>
+            <p class="field__error" id="error-aviso" hidden></p>
+            <p class="visually-hidden" id="anuncio-aviso" aria-live="polite"></p>
+          </div>
+
+          <fieldset class="fieldset" id="grupo-participa" aria-describedby="error-participa">
+            <legend class="fieldset__legend">¿Usted participa?</legend>
+            <label class="choice"><input type="radio" name="participa" value="si" id="participa"><span class="choice__text">Sí participo<span class="choice__help">Paga cuota y entra al sorteo.</span></span></label>
+            <label class="choice"><input type="radio" name="participa" value="no"><span class="choice__text">No participo<span class="choice__help">Si deja de participar, su cupo quedará libre.</span></span></label>
+            <p class="field__error" id="error-participa" hidden></p>
+          </fieldset>
+
+          <!-- (S) HU-013 -->
+          <div class="field">
+            <label class="field__label" for="reglas">Reglas de la junta (opcional)</label>
+            <span class="field__help" id="ayuda-reglas">Todos los miembros podrán leerlas. Mi Junta no las aplica ni calcula multas.</span>
+            <textarea class="input field__control" id="reglas" aria-describedby="ayuda-reglas contador-reglas error-reglas"></textarea>
+            <span class="char-counter" id="contador-reglas" aria-live="polite"></span>
+            <p class="field__error" id="error-reglas" hidden></p>
+          </div>
+        </div>
+
+        <div class="btn-row section">
+          <div>
+            <button class="btn btn--primary btn--block" type="submit" id="btn-guardar">Guardar cambios</button>
+            <span class="unavailable-reason" id="motivo-guardar" tabindex="-1" data-estado="sin-conexion"></span>
+          </div>
+          <a class="btn btn--secondary" id="btn-cancelar" href="P-011-junta-organizador.html">Cancelar</a>
+        </div>
+      </form>
+
+      <aside class="proto-note" aria-label="Nota del prototipo">
+        <p class="proto-note__title">Solo en el prototipo</p>
+        <p id="nota-junta"></p>
+        <p id="nota-estado" aria-live="polite"></p>
+        <p id="nota-ronda1" hidden></p>
+        <p id="nota-supuesto" hidden></p>
+        <p>Ver: <a href="P-012-editar-junta.html?junta=junta_familia">antes de fijar el orden (Junta Familia)</a>, <a href="P-012-editar-junta.html?junta=junta_oficina">después de fijar el orden (Junta Oficina)</a>.</p>
+      </aside>
+    </div>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+
+      const junta = M.getJunta(params.get('junta')) || M.getJunta('junta_familia');
+      const user = params.get('usuario') ? M.getCurrentUser() : M.getUser(junta.organizerId);
+      const isOrganizer = junta.organizerId === user.id;            // RN-077: se valida en el servidor
+      const beforeOrder = junta.status === 'open' || junta.status === 'full';
+      const occupiedNow = M.getOccupiedSlots(junta.id);
+      const juntaUrl = 'P-011-junta-organizador.html?junta=' + junta.id + '&usuario=' + user.id;
+
+      document.title = 'Editar ' + junta.name + ' · Mi Junta';
+      document.querySelectorAll('[data-nav]').forEach(function (a) { a.href = a.getAttribute('data-nav') + '?usuario=' + user.id; });
+      $('enlace-volver').href = juntaUrl;
+      $('enlace-volver').textContent = junta.name;
+      $('btn-cancelar').href = juntaUrl;
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('ayuda-vencimiento').textContent = M.uiTexts.dateHelp;
+      $('motivo-guardar').textContent = M.message('RN-170');
+      $('texto-aviso-orden').textContent = M.message('RN-110');
+      $('vencimiento-nativo').min = junta.createdOn;
+
+      const sync = M.getSyncIndicator(user.id);
+      if (sync) {
+        $('indicador-cambios').classList.add(sync.kind === 'rejected' ? 'status-bar--rejected' : 'status-bar--pending');
+        $('texto-cambios').textContent = sync.text;
+      }
+
+      /* Situación de la junta que usa la validación. "sin-cupo" la cambia por un supuesto (RN-109). */
+      let orgParticipates = junta.organizerParticipates;
+      let occupied = occupiedNow;
+
+      const f = {
+        nombre: $('nombre'), cuota: $('cuota'), participantes: $('participantes'), cadaDias: $('cada-dias'),
+        vencimiento: $('vencimiento'), aviso: $('aviso'), reglas: $('reglas'),
+      };
+      const radios = function (name) { return Array.prototype.slice.call(document.querySelectorAll('input[name="' + name + '"]')); };
+      const checked = function (name) { const r = radios(name).find(function (x) { return x.checked; }); return r ? r.value : null; };
+
+      function setError(input, errorId, text) {
+        const el = $(errorId);
+        el.textContent = text || '';
+        el.hidden = !text;
+        if (input) {
+          if (text) input.setAttribute('aria-invalid', 'true'); else input.removeAttribute('aria-invalid');
+        }
+      }
+
+      function setGroupError(group, name, errorId, text) {
+        setError(null, errorId, text);
+        if (text) $(group).setAttribute('aria-invalid', 'true'); else $(group).removeAttribute('aria-invalid');
+        radios(name).forEach(function (r) { if (text) r.setAttribute('aria-invalid', 'true'); else r.removeAttribute('aria-invalid'); });
+      }
+
+      // Cupos ocupados después del cambio de participación del organizador (RN-212)
+      function occupiedAfter() {
+        const p = checked('participa');
+        if (orgParticipates && p === 'no') return occupied - 1;       // libera su cupo
+        if (!orgParticipates && p === 'si') return occupied + 1;      // ocuparía uno
+        return occupied;
+      }
+
+      /* Las mismas reglas de la creación (RN-107), más RN-108 y RN-109 */
+      const rules = {
+        nombre: function () { return f.nombre.value.trim() ? M.validate.juntaName(f.nombre.value) : null; },
+        cuota: function () { return f.cuota.value.trim() ? M.validate.contributionAmount(f.cuota.value) : null; },
+        participantes: function () {
+          if (!f.participantes.value.trim()) return null;
+          const err = M.validate.participantCount(f.participantes.value);
+          if (err) return err;
+          const base = orgParticipates && checked('participa') === 'no' ? occupied - 1 : occupied;
+          return Number(f.participantes.value) < base ? M.message('RN-108', { n: base }) : null;   // RN-108
+        },
+        cadaDias: function () {
+          if (checked('frecuencia') !== 'every_n_days' || !f.cadaDias.value.trim()) return null;
+          return M.validate.frequencyDays(f.cadaDias.value);
+        },
+        // RN-009 compara con la fecha de creación de la junta
+        vencimiento: function () { return f.vencimiento.value.trim() ? M.validate.round1DueDate(f.vencimiento.value, junta.createdOn) : null; },
+        aviso: function () {
+          if (!f.aviso.value.trim()) return null;
+          const freq = checked('frecuencia');
+          const n = f.cadaDias.value.trim() ? Number(f.cadaDias.value) : null;
+          return M.validate.reminderLeadDays(f.aviso.value, freq === 'every_n_days' && !n ? null : freq, n);
+        },
+        reglas: function () { return M.validate.juntaRules(f.reglas.value); },
+      };
+      const errorIds = { nombre: 'error-nombre', cuota: 'error-cuota', participantes: 'error-participantes', cadaDias: 'error-cada-dias', vencimiento: 'error-vencimiento', aviso: 'error-aviso', reglas: 'error-reglas' };
+      const fieldIds = { nombre: 'nombre', cuota: 'cuota', participantes: 'participantes', cadaDias: 'cada-dias', vencimiento: 'vencimiento', aviso: 'aviso', reglas: 'reglas' };
+      const editable = beforeOrder ? Object.keys(rules) : ['nombre'];
+
+      // RN-109: elegir participar sin cupos libres
+      function participationError() {
+        if (!orgParticipates && checked('participa') === 'si' && occupied >= Number(f.participantes.value || 0)) return M.message('RN-109');
+        return null;
+      }
+
+      function check(name) {
+        const err = rules[name]();
+        setError(f[name], errorIds[name], err);
+        return err;
+      }
+
+      Object.keys(rules).forEach(function (name) { f[name].addEventListener('blur', function () { check(name); }); });
+
+      /* Pozo en vivo (RN-041) y estado que tendría la junta al guardar (RN-100, RN-101) */
+      function updatePot() {
+        const ok = f.cuota.value.trim() && !M.validate.contributionAmount(f.cuota.value) &&
+          f.participantes.value.trim() && !M.validate.participantCount(f.participantes.value);
+        const pot = $('pozo');
+        if (!ok) { pot.hidden = true; } else {
+          pot.textContent = 'Pozo por ronda: ' + M.formatMoney(M.getPotCents({ contributionAmountCents: M.parseMoneyInput(f.cuota.value), participantCount: Number(f.participantes.value) }));
+          pot.hidden = false;
+        }
+        updateStatusNote();
+      }
+
+      function updateStatusNote() {
+        if (!beforeOrder) { $('nota-estado').textContent = ''; return; }
+        const count = Number(f.participantes.value);
+        const after = occupiedAfter();
+        if (!count || M.validate.participantCount(count) || count < after) { $('nota-estado').textContent = ''; return; }
+        const status = after >= count ? 'full' : 'open';
+        $('nota-estado').textContent = 'Con estos datos, al guardar quedan ' + after + ' de ' + count + ' cupos ocupados y la junta queda "' +
+          M.statusLabel(status) + '" (' + (status === 'full' ? 'RN-100' : 'RN-101') + ').';
+      }
+
+      f.cuota.addEventListener('input', updatePot);
+      f.participantes.addEventListener('input', updatePot);
+
+      document.querySelectorAll('[data-step]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const input = $(btn.getAttribute('data-step'));
+          input.value = Math.max(0, (Number(input.value) || 0) + Number(btn.getAttribute('data-delta')));
+          if (input === f.participantes) { updatePot(); check('participantes'); } else { check('aviso'); }
+        });
+      });
+
+      // RN-098
+      function applyLeadAdjustment() {
+        const freq = checked('frecuencia');
+        if (!freq || !f.aviso.value.trim()) return;
+        const n = freq === 'every_n_days' ? Number(f.cadaDias.value) : null;
+        if (freq === 'every_n_days' && (!n || M.validate.frequencyDays(n))) return;
+        const before = Number(f.aviso.value);
+        const after = M.adjustLeadDays(before, freq, n);
+        if (after !== before) {
+          f.aviso.value = after;
+          $('anuncio-aviso').textContent = 'Días de aviso previo: ' + after;
+        }
+        check('aviso');
+      }
+
+      radios('frecuencia').forEach(function (r) {
+        r.addEventListener('change', function () {
+          $('grupo-cada-dias').hidden = checked('frecuencia') !== 'every_n_days';
+          setGroupError('grupo-frecuencia', 'frecuencia', 'error-frecuencia', null);
+          if (checked('frecuencia') !== 'every_n_days') setError(f.cadaDias, 'error-cada-dias', null);
+          applyLeadAdjustment();
+        });
+      });
+      f.cadaDias.addEventListener('change', function () { check('cadaDias'); applyLeadAdjustment(); });
+      radios('participa').forEach(function (r) {
+        r.addEventListener('change', function () {
+          setGroupError('grupo-participa', 'participa', 'error-participa', participationError());
+          check('participantes');
+          updateStatusNote();
+        });
+      });
+
+      $('btn-calendario').addEventListener('click', function () {
+        const nat = $('vencimiento-nativo');
+        const iso = M.parseDateInput(f.vencimiento.value);
+        if (iso) nat.value = iso;
+        try { nat.showPicker(); } catch (e) { nat.focus(); nat.click(); }
+      });
+      $('vencimiento-nativo').addEventListener('change', function () {
+        if (this.value) { f.vencimiento.value = M.formatDate(this.value); check('vencimiento'); updateRound1Note(); }
+      });
+      f.vencimiento.addEventListener('input', updateRound1Note);
+
+      // La ronda 1 vencida se puede guardar (RN-009), pero no deja fijar el orden (RN-122, P-011)
+      function updateRound1Note() {
+        const iso = M.parseDateInput(f.vencimiento.value);
+        const show = beforeOrder && iso && iso < data.meta.today && iso >= junta.createdOn;
+        $('nota-ronda1').hidden = !show;
+        if (show) {
+          $('nota-ronda1').textContent = 'La ronda 1 (' + f.vencimiento.value + ') es anterior a hoy, ' + M.formatDate(data.meta.today) +
+            '. Se puede guardar, porque RN-009 la compara con la creación de la junta (' + M.formatDate(junta.createdOn) +
+            '), pero al fijar el orden de turnos P-011 mostrará el rechazo de RN-122.';
+        }
+      }
+
+      function updateCounter() {
+        $('contador-reglas').textContent = String(f.reglas.value.length).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' / 2,000';
+      }
+      f.reglas.addEventListener('input', function () { updateCounter(); if (f.reglas.getAttribute('aria-invalid')) check('reglas'); });
+
+      /* Envío */
+      let offline = false;
+      const submitBtn = $('btn-guardar');
+
+      function showSummary(items) {
+        $('resumen-lista').innerHTML = items.map(function (it) { return '<li><a href="#' + it.id + '">' + esc(it.text) + '</a></li>'; }).join('');
+        $('resumen').hidden = false;
+        $('resumen').focus();
+      }
+
+      function clearErrors() {
+        Object.keys(rules).forEach(function (n) { setError(f[n], errorIds[n], null); });
+        setGroupError('grupo-frecuencia', 'frecuencia', 'error-frecuencia', null);
+        setGroupError('grupo-participa', 'participa', 'error-participa', null);
+        $('resumen').hidden = true;
+      }
+
+      function validateAll() {
+        const items = [];
+        const missing = [];
+        const missingMsg = M.message('RN-002');
+        const required = beforeOrder ? ['nombre', 'cuota', 'participantes', 'vencimiento', 'aviso'] : ['nombre'];
+        required.forEach(function (n) {
+          if (!f[n].value.trim()) { missing.push(fieldIds[n]); setError(f[n], errorIds[n], missingMsg); }
+        });
+        if (beforeOrder && checked('frecuencia') === 'every_n_days' && !f.cadaDias.value.trim()) {
+          missing.push('cada-dias'); setError(f.cadaDias, 'error-cada-dias', missingMsg);
+        }
+        if (missing.length) items.push({ id: missing[0], text: missingMsg });
+        editable.forEach(function (n) {
+          const err = rules[n]();
+          if (err) { setError(f[n], errorIds[n], err); items.push({ id: fieldIds[n], text: err }); }
+        });
+        if (beforeOrder) {
+          const pErr = participationError();
+          if (pErr) { setGroupError('grupo-participa', 'participa', 'error-participa', pErr); items.push({ id: 'participa', text: pErr }); }
+        }
+        return items;
+      }
+
+      function setBusy(busy) {
+        submitBtn.disabled = busy;
+        if (busy) submitBtn.setAttribute('aria-busy', 'true'); else submitBtn.removeAttribute('aria-busy');
+      }
+
+      $('form-junta').addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (offline) { $('motivo-guardar').focus(); return; }   // C-04
+        clearErrors();
+        const items = validateAll();
+        if (items.length) { showSummary(items); return; }
+        setBusy(true);
+        setTimeout(function () { location.href = juntaUrl + '&aviso=guardado'; }, 900);   // 200: vuelve a P-011
+      });
+
+      /* Modo: antes o después de fijar el orden */
+      $('campos-editables').hidden = !beforeOrder;
+      $('aviso-orden').hidden = beforeOrder;
+      $('datos-fijos').hidden = beforeOrder;
+
+      function renderFixed(withRules) {
+        const rows = [
+          ['Cuota', '<span class="amount">' + M.formatMoney(junta.contributionAmountCents) + '</span>'],
+          ['Participantes', String(junta.participantCount)],
+          ['Frecuencia', esc(M.frequencyLabel(junta))],
+          ['Ronda 1', M.formatDate(junta.round1DueDate)],
+          ['Aviso previo', junta.reminderLeadDays + (junta.reminderLeadDays === 1 ? ' día' : ' días')],
+          ['Usted participa', junta.organizerParticipates ? 'Sí' : 'No'],
+          ['Reglas de la junta', withRules && junta.juntaRules
+            ? '<span class="preformatted" style="font-weight: 400">' + esc(junta.juntaRules) + '</span>'
+            : '<span class="muted" style="font-weight: 400">Todavía no escribió reglas para esta junta.</span>'],
+        ];
+        $('datos-fijos').innerHTML = rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>'; }).join('');
+      }
+
+      function fill(v) {
+        ['nombre', 'cuota', 'participantes', 'cadaDias', 'vencimiento', 'aviso', 'reglas'].forEach(function (n) { f[n].value = v[n] || ''; });
+        radios('frecuencia').forEach(function (r) { r.checked = r.value === v.frecuencia; });
+        radios('participa').forEach(function (r) { r.checked = r.value === v.participa; });
+        $('grupo-cada-dias').hidden = v.frecuencia !== 'every_n_days';
+        $('ayuda-participantes').textContent = 'Hoy hay ' + occupied + ' cupos ocupados.';
+        updatePot();
+        updateCounter();
+        updateRound1Note();
+      }
+
+      const current = {
+        nombre: junta.name, cuota: (junta.contributionAmountCents / 100).toFixed(2), participantes: String(junta.participantCount),
+        frecuencia: junta.frequency, cadaDias: junta.frequencyDays ? String(junta.frequencyDays) : '',
+        vencimiento: M.formatDate(junta.round1DueDate), aviso: String(junta.reminderLeadDays),
+        participa: junta.organizerParticipates ? 'si' : 'no', reglas: junta.juntaRules || '',
+      };
+
+      $('nota-junta').textContent = junta.name + ' está "' + M.statusLabel(junta.status) + '" con ' + occupiedNow + ' de ' +
+        junta.participantCount + ' cupos ocupados. Organiza ' + M.displayName(junta.organizerId) + '. Hoy es ' + M.formatDate(data.meta.today) + '.';
+
+      const extraStates = [{ id: 'sin-conexion', label: 'Sin conexión' }, { id: 'sin-permiso', label: 'Sin permiso' }];
+      if (beforeOrder) extraStates.unshift({ id: 'sin-cupo', label: 'Sin cupo para participar' });
+
+      M.initStates({
+        extraStates: extraStates,
+        initial: isOrganizer ? 'con-datos' : 'sin-permiso',
+        onChange: function (state) {
+          clearErrors();
+          setBusy(false);
+          offline = state === 'sin-conexion';
+          $('anuncio-aviso').textContent = '';
+          if (offline) {
+            submitBtn.setAttribute('aria-disabled', 'true');
+            submitBtn.setAttribute('aria-describedby', 'motivo-guardar');
+          } else {
+            submitBtn.removeAttribute('aria-disabled');
+            submitBtn.removeAttribute('aria-describedby');
+          }
+          $('indicador-cambios').hidden = !sync || state === 'loading' || state === 'sin-permiso';
+
+          // Supuesto de RN-109: el organizador no participa y todos los cupos están ocupados
+          const assumption = state === 'sin-cupo';
+          orgParticipates = assumption ? false : junta.organizerParticipates;
+          occupied = assumption ? junta.participantCount : occupiedNow;
+          $('nota-supuesto').hidden = !assumption;
+          $('nota-supuesto').textContent = assumption ? 'Supuesto del prototipo: ' + M.displayName(junta.organizerId) +
+            ' no participa y los ' + junta.participantCount + ' cupos están ocupados, como Jorge en la Junta Ventas del ejemplo de RN-109.' : '';
+
+          renderFixed(state !== 'vacio');
+          if (state === 'vacio') {
+            fill(Object.assign({}, current, { reglas: '' }));       // junta sin reglas escritas
+          } else if (state === 'error') {
+            if (beforeOrder) {
+              fill(Object.assign({}, current, {
+                nombre: 'JF', cuota: '1,000', participantes: String(occupiedNow - 2), frecuencia: 'every_n_days', cadaDias: '61',
+                vencimiento: '31/02/2027', aviso: '0',
+              }));
+            } else {
+              fill(Object.assign({}, current, { nombre: 'JO' }));
+            }
+            showSummary(validateAll());
+          } else if (assumption) {
+            fill(Object.assign({}, current, { participa: 'si' }));
+            showSummary(validateAll());
+          } else {
+            fill(current);
+          }
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

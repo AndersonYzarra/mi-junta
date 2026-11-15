@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Código de verificación · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-022 · Código de verificación al iniciar sesión (/login/code). Should.
+    Prototipo, NO es código de producción. Fuente: spec-pack/09-ui-spec.md §3
+    P-022 (mensajes de P-021) y RN-078, RN-079, RN-080, RN-081, RN-162, RN-163,
+    RN-164, RN-166 y RN-170 de spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?usuario=user_456  la cuenta que ingresó su contraseña en P-003 (por defecto, Jorge)
+      ?codigo=T9QW3HZ5   código de invitación guardado al venir de P-009
+  -->
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <!-- Sin sesión todavía: sin barra de navegación (C-01) -->
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" id="enlace-marca" href="P-003-iniciar-sesion.html">Mi Junta</a>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <div class="auth-card stack">
+      <h1>Código de verificación</h1>
+      <p id="texto-vigencia" aria-live="polite"></p>
+
+      <!-- Código vencido o anulado (RN-080, RN-081, RN-162, RN-163) -->
+      <div class="alert alert--danger" id="aviso-invalido" role="alert" data-estado="vencido">
+        <div class="alert__body"><p id="texto-invalido"></p></div>
+      </div>
+
+      <form id="form-codigo" novalidate>
+        <div class="field">
+          <label class="field__label" for="codigo">Código de verificación</label>
+          <input class="input code-input field__control" id="codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" spellcheck="false" aria-describedby="error-codigo">
+          <p class="field__error" id="error-codigo" hidden></p>
+        </div>
+        <div>
+          <button class="btn btn--primary btn--block" type="submit" id="btn-entrar">Entrar</button>
+          <span class="unavailable-reason" id="motivo-entrar" tabindex="-1" data-estado="sin-conexion"></span>
+        </div>
+      </form>
+
+      <div>
+        <button class="btn btn--text" type="button" id="btn-otro" style="padding-left: 0">Pedir otro código</button>
+        <p class="inline-error" id="error-pedir" role="alert" hidden></p>
+      </div>
+      <p><a class="btn btn--text" id="enlace-volver" href="P-003-iniciar-sesion.html" style="padding-left: 0">Volver a iniciar sesión</a></p>
+
+      <aside class="proto-note" aria-label="Nota del prototipo">
+        <p class="proto-note__title">Solo en el prototipo: el correo de <span id="nota-nombre"></span></p>
+        <p id="nota-codigo"></p>
+        <p id="nota-usado"></p>
+        <p id="nota-contadores" aria-live="polite"></p>
+        <p>La sesión no se abre sin un código válido (RN-078). El código vale 600 segundos (RN-080) y se anula con 5 intentos fallidos (RN-081).</p>
+        <p><button class="btn btn--text" type="button" id="btn-simular" style="padding-left: 0">Simular que pasaron 10 minutos</button></p>
+      </aside>
+    </div>
+  </main>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const user = M.getUser(params.get('usuario')) || M.getUser('user_456');
+      const savedCode = params.get('codigo');
+
+      /* ------------------------------------------------------------------
+         Simulación de los códigos de verificación (API-030). Reloj del
+         prototipo: arranca en meta.now (America/Lima) y avanza en tiempo real.
+         Los códigos salen de esta lista fija; 482915 y 730264 son los de los
+         ejemplos de RN-079 y RN-163.
+         ------------------------------------------------------------------ */
+      const CODES = ['482915', '730264', '518306', '947120', '263849', '805173'];
+      const VALID_MS = 600 * 1000;      // RN-080
+      const WINDOW_MS = 900 * 1000;     // RN-164
+      const loadedAt = Date.now();
+      let offset = 0;
+      function now() { return Date.parse(data.meta.now) + (Date.now() - loadedAt) + offset; }
+      function iso(ms) { return new Date(ms).toISOString(); }
+
+      let codeIndex = 0;
+      let current = null;
+      let history = [];
+      let requests = [];
+
+      function reset() {
+        codeIndex = 0;
+        current = null;
+        requests = [];
+        offset = 0;
+        // Código de un inicio de sesión anterior, ya usado (RN-162)
+        history = [{ value: '361507', sentAt: now() - 10 * 3600 * 1000, used: true, revoked: false, failed: 0 }];
+      }
+
+      // Enviar un código nuevo: anula el anterior (RN-163); máximo 5 en 900 s (RN-164)
+      function send() {
+        const t = now();
+        const recent = requests.filter(function (r) { return t - r < WINDOW_MS; });
+        if (recent.length >= 5) {
+          const n = Math.ceil((recent[0] + WINDOW_MS - t) / 60000);
+          return { ok: false, message: M.message('RN-164', { n: n }) };   // no cuenta (RN-193)
+        }
+        if (current) current.revoked = true;
+        current = { value: CODES[codeIndex % CODES.length], sentAt: t, used: false, revoked: false, failed: 0 };
+        codeIndex += 1;
+        history.push(current);
+        requests.push(t);
+        return { ok: true };
+      }
+
+      function isUsable(c) {
+        return c && !c.used && !c.revoked && c.failed < 5 && now() - c.sentAt <= VALID_MS;
+      }
+
+      // Revisar un código: válido, equivocado (RN-166) o que ya no sirve
+      function verify(text) {
+        const value = String(text).replace(/\s+/g, '');
+        const invalid = { ok: false, kind: 'invalid', message: M.message('RN-080') };
+        const old = history.find(function (c) { return c !== current && c.value === value; });
+        if (old) return invalid;                                      // usado (RN-162) o anulado (RN-163)
+        if (!isUsable(current)) return invalid;                       // vencido (RN-080) o anulado (RN-081)
+        if (value !== current.value) {
+          current.failed += 1;
+          if (current.failed >= 5) current.revoked = true;            // RN-081
+          return { ok: false, kind: 'wrong', message: M.message('RN-166') };
+        }
+        current.used = true;
+        return { ok: true };
+      }
+
+      /* Interfaz */
+      const input = $('codigo');
+      const errorEl = $('error-codigo');
+      const enterBtn = $('btn-entrar');
+      let offline = false;
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('motivo-entrar').textContent = M.message('RN-170');
+      $('texto-invalido').textContent = M.message('RN-080');
+      $('nota-nombre').textContent = user.name + ' (' + user.email + ')';
+      if (savedCode) $('enlace-volver').href = 'P-003-iniciar-sesion.html?codigo=' + encodeURIComponent(savedCode);
+
+      function render() {
+        $('texto-vigencia').textContent = current
+          ? 'Le enviamos un código de 6 dígitos a su correo. Vale hasta las ' + M.formatTime(iso(current.sentAt + VALID_MS)) + '.'
+          : '';
+        $('nota-codigo').innerHTML = current
+          ? 'Código vigente en el correo: <strong class="mono">' + current.value + '</strong>' +
+            (isUsable(current) ? '' : ' (ya no sirve: ' + (current.failed >= 5 ? 'anulado por 5 intentos fallidos' : current.used ? 'usado' : 'vencido') + ')') + '.'
+          : '';
+        const old = history.filter(function (c) { return c !== current; });
+        $('nota-usado').innerHTML = 'Códigos que ya no sirven: ' + old.map(function (c) {
+          return '<span class="mono">' + c.value + '</span> (' + (c.used ? 'usado' : 'anulado') + ')';
+        }).join(', ') + '.';
+        const t = now();
+        const recent = requests.filter(function (r) { return t - r < WINDOW_MS; }).length;
+        $('nota-contadores').textContent = 'Intentos fallidos con este código: ' + (current ? current.failed : 0) +
+          ' de 5. Códigos pedidos en los últimos 15 minutos: ' + recent + ' de 5.';
+      }
+
+      function setFieldError(text) {
+        errorEl.textContent = text || '';
+        errorEl.hidden = !text;
+        if (text) input.setAttribute('aria-invalid', 'true');
+        else input.removeAttribute('aria-invalid');
+      }
+
+      function setBusy(btn, busy) {
+        btn.disabled = busy;
+        if (busy) btn.setAttribute('aria-busy', 'true');
+        else btn.removeAttribute('aria-busy');
+      }
+
+      // Con 201 sigue el mismo camino que P-003 (P-006 o P-007, o P-009 con el código guardado)
+      function destination() {
+        const q = '?usuario=' + user.id + (savedCode ? '&codigo=' + encodeURIComponent(savedCode) : '');
+        if (user.id === data.examples.policyAcceptancePendingUserId) return 'P-006-politica-privacidad.html' + q + '&modo=aceptacion';
+        if (savedCode) return 'P-009-unirse-junta.html' + q;
+        return 'P-007-mis-juntas.html' + q;
+      }
+
+      $('form-codigo').addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (offline) { $('motivo-entrar').focus(); return; }          // C-04
+        $('aviso-invalido').hidden = true;
+        const result = verify(input.value);
+        render();
+        if (!result.ok) {
+          setFieldError(result.message);
+          input.focus();
+          return;
+        }
+        setFieldError(null);
+        setBusy(enterBtn, true);
+        setTimeout(function () { location.href = destination(); }, 700);
+      });
+
+      $('btn-otro').addEventListener('click', function () {
+        if (offline) { $('motivo-entrar').focus(); return; }
+        const result = send();
+        $('error-pedir').hidden = result.ok;
+        $('error-pedir').textContent = result.ok ? '' : result.message;
+        if (result.ok) { setFieldError(null); input.value = ''; $('aviso-invalido').hidden = true; }
+        render();
+      });
+
+      $('btn-simular').addEventListener('click', function () {
+        offset += VALID_MS + 1000;
+        render();
+      });
+
+      setInterval(render, 5000);
+
+      M.initStates({
+        extraStates: [
+          { id: 'vencido', label: 'Código vencido o anulado' },
+          { id: 'limite', label: 'Límite de pedidos' },
+          { id: 'sin-conexion', label: 'Sin conexión' },
+        ],
+        initial: 'vacio',
+        onChange: function (state) {
+          reset();
+          send();                                   // RN-079: el código llegó al ingresar la contraseña
+          offline = state === 'sin-conexion';
+          setBusy(enterBtn, false);
+          setFieldError(null);
+          $('error-pedir').hidden = true;
+          input.value = '';
+          [enterBtn, $('btn-otro')].forEach(function (b) {
+            if (offline) { b.setAttribute('aria-disabled', 'true'); b.setAttribute('aria-describedby', 'motivo-entrar'); }
+            else { b.removeAttribute('aria-disabled'); b.removeAttribute('aria-describedby'); }
+          });
+
+          if (state === 'con-datos') {
+            input.value = current.value;
+          } else if (state === 'error') {
+            input.value = '111111';
+            setFieldError(verify(input.value).message);
+          } else if (state === 'loading') {
+            input.value = current.value;
+            setBusy(enterBtn, true);
+          } else if (state === 'vencido') {
+            offset += VALID_MS + 1000;               // pasaron más de 600 s
+            input.value = current.value;
+          } else if (state === 'limite') {
+            for (let i = 0; i < 4; i += 1) { offset += 30 * 1000; send(); }   // 5 pedidos en 2 minutos
+            const result = send();
+            $('error-pedir').textContent = result.message;
+            $('error-pedir').hidden = false;
+          }
+          render();
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

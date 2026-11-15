@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sorteo · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-013 · Registro del sorteo (/juntas/{id}/draw). Prototipo, NO es código de
+    producción. Fuente: spec-pack/09-ui-spec.md §3 P-013 y RN-024, RN-033,
+    RN-034, RN-035, RN-121 y RN-123 de spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?junta=junta_oficina   junta (la única con sorteo en datos.js)
+      ?usuario=user_789      usuario con sesión (por defecto, Lucía)
+      ?aviso=sorteo          viene del diálogo del sorteo de P-011 (C-08 "Sorteo guardado.")
+  -->
+  <style>
+    .record-meta > * + * { margin-top: var(--space-2); }
+  </style>
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión: se lee completo desde el snapshot -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <!-- C-03 · Indicador de cambios sin enviar -->
+  <div class="status-bar" id="indicador-cambios" hidden>
+    <span class="icon icon--sync" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-cambios"></span>
+    <a class="status-bar__action" data-nav="P-016-cambios-sin-enviar.html" href="P-016-cambios-sin-enviar.html">Ver</a>
+  </div>
+
+  <main id="contenido" class="container">
+    <a class="back-link" id="enlace-volver" href="P-010-junta-participante.html"></a>
+
+    <!-- Cargando (C-10) -->
+    <div class="stack" data-estado="loading" aria-hidden="true">
+      <span class="skeleton skeleton--title"></span>
+      <span class="skeleton skeleton--text" style="width: 70%"></span>
+      <span class="skeleton skeleton--card"></span>
+      <span class="skeleton skeleton--card"></span>
+    </div>
+
+    <!-- Sin permiso (403, RN-024) -->
+    <div class="stack" data-estado="error">
+      <h1>Sorteo de turnos</h1>
+      <div class="alert alert--danger" role="alert">
+        <div class="alert__body">
+          <p>No tiene acceso a esta junta.</p>
+          <p><a data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Ir a Mis juntas</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vacío: la junta no tiene sorteo (API-016 404) -->
+    <div class="stack" data-estado="vacio">
+      <h1>Sorteo de turnos</h1>
+      <div class="alert alert--info">
+        <div class="alert__body">
+          <p id="texto-sin-sorteo"></p>
+          <p id="enlace-orden-asignado" hidden><a id="enlace-p020" href="P-020-registro-orden-asignado.html">Ver orden de turnos</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Con datos: registro de solo lectura, sin ninguna acción que lo cambie (RN-035) -->
+    <div class="stack-lg" data-estado="con-datos sin-conexion">
+      <div class="page-header record-meta">
+        <h1>Sorteo de turnos</h1>
+        <p id="ejecutado-por"></p>
+      </div>
+
+      <section class="stack-sm" aria-labelledby="titulo-orden">
+        <h2 id="titulo-orden">Orden de turnos</h2>
+        <ol class="list" id="lista-orden" aria-labelledby="titulo-orden"></ol>
+      </section>
+
+      <section class="stack" aria-labelledby="titulo-verificar">
+        <h2 id="titulo-verificar">Datos para verificar el sorteo</h2>
+        <p class="long-text">Con la semilla, la versión del algoritmo y la lista de entrada, cualquier persona obtiene el mismo orden de turnos.</p>
+        <dl class="stack-sm">
+          <dt class="strong">Versión del algoritmo</dt>
+          <dd class="mono" id="version-algoritmo" style="margin: 0"></dd>
+          <dt class="strong">Semilla</dt>
+          <dd style="margin: 0"><code class="seed" id="semilla"></code></dd>
+        </dl>
+        <details class="disclosure">
+          <summary id="resumen-entrada"></summary>
+          <div class="disclosure__body stack-sm">
+            <p class="muted">En el orden en que cada uno ocupó su cupo.</p>
+            <ol id="lista-entrada"></ol>
+          </div>
+        </details>
+        <details class="disclosure">
+          <summary id="resumen-resultado"></summary>
+          <div class="disclosure__body"><ol id="lista-resultado"></ol></div>
+        </details>
+        <button class="btn btn--secondary btn--block" type="button" id="btn-copiar"><span class="icon icon--copy" aria-hidden="true"></span>Copiar datos del sorteo</button>
+      </section>
+    </div>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p id="nota-usuario"></p>
+      <p>La semilla de datos.js es reproducible: con el algoritmo del anexo A de 03 y esta lista de entrada sale exactamente este orden.</p>
+      <p id="nota-otros"></p>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <!-- C-08 · Aviso de resultado -->
+  <div class="toast" id="toast" role="status" hidden>
+    <span class="toast__text" id="toast-texto"></span>
+    <button class="btn btn--icon" type="button" id="toast-cerrar" aria-label="Cerrar"><span class="icon icon--close" aria-hidden="true"></span></button>
+  </div>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+
+      const junta = M.getJunta(params.get('junta') || 'junta_oficina') || M.getJunta('junta_oficina');
+      const user = M.getCurrentUser(params.get('usuario') ? null : 'user_789');
+      const member = M.isMember(junta.id, user.id);                    // RN-024
+      const organizer = M.isOrganizer(junta.id, user.id);
+      const draw = M.getDraw(junta.id);
+      const q = 'junta=' + junta.id + '&usuario=' + user.id;
+
+      document.title = 'Sorteo de ' + junta.name + ' · Mi Junta';
+      document.querySelectorAll('[data-nav]').forEach(function (a) { a.href = a.getAttribute('data-nav') + '?usuario=' + user.id; });
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+
+      // Volver a la vista de la junta según el rol (P-010 o P-011)
+      const back = $('enlace-volver');
+      back.textContent = junta.name;
+      back.href = (organizer ? 'P-011-junta-organizador.html?' : 'P-010-junta-participante.html?') + q;
+
+      const sync = M.getSyncIndicator(user.id);
+      if (sync) {
+        $('indicador-cambios').classList.add(sync.kind === 'rejected' ? 'status-bar--rejected' : 'status-bar--pending');
+        $('texto-cambios').textContent = sync.text;
+      }
+
+      /* Junta sin sorteo: orden asignado a mano o todavía sin orden */
+      const assignment = M.getTurnAssignment(junta.id);
+      if (assignment) {
+        $('texto-sin-sorteo').textContent = 'Este orden lo asignó el organizador, sin sorteo.';
+        $('enlace-orden-asignado').hidden = false;
+        $('enlace-p020').href = 'P-020-registro-orden-asignado.html?' + q;
+      } else {
+        $('texto-sin-sorteo').textContent = M.message('RN-105');
+      }
+
+      /* Registro del sorteo (RN-121, RN-034) */
+      const shown = draw || M.getDraw('junta_oficina');                  // para el estado "Con datos" de juntas sin sorteo
+      const names = function (ids) { return ids.map(M.displayName); };
+      const executedBy = M.displayName(shown.executedBy);
+      $('ejecutado-por').textContent = 'Ejecutado por ' + executedBy + ' el ' + M.formatDate(shown.executedAt) + ' a las ' + M.formatTime(shown.executedAt);
+      $('lista-orden').innerHTML = shown.result.map(function (id, i) {
+        const self = id === user.id;
+        return '<li class="list__row' + (self ? ' list__row--self' : '') + '"><span class="list__main"><span class="list__num">' + (i + 1) + '</span>' +
+          esc(M.displayName(id)) + (self ? ' (usted)' : '') + '</span></li>';
+      }).join('');
+      $('version-algoritmo').textContent = shown.algorithmVersion;
+      $('semilla').textContent = M.formatSeed(shown.seedHex);
+      $('resumen-entrada').textContent = 'Lista de entrada (' + shown.input.length + ')';
+      $('resumen-resultado').textContent = 'Resultado (' + shown.result.length + ')';
+      $('lista-entrada').innerHTML = names(shown.input).map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('');   // RN-123
+      $('lista-resultado').innerHTML = names(shown.result).map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('');
+
+      /* C-08 */
+      let toastTimer = null;
+      function toast(text) {
+        $('toast-texto').textContent = text;
+        $('toast').hidden = false;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { $('toast').hidden = true; }, 6000);
+      }
+      $('toast-cerrar').addEventListener('click', function () { $('toast').hidden = true; });
+
+      /* Copiar datos del sorteo: texto plano, uno por línea */
+      function plainText() {
+        return [
+          'Versión del algoritmo: ' + shown.algorithmVersion,
+          'Semilla: ' + shown.seedHex,
+          'Lista de entrada: ' + names(shown.input).join(', '),
+          'Resultado: ' + names(shown.result).join(', '),
+        ].join('\n');
+      }
+
+      function legacyCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'absolute';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) { /* sin portapapeles */ }
+        ta.remove();
+      }
+
+      $('btn-copiar').addEventListener('click', function () {
+        const text = plainText();
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(function () { legacyCopy(text); });
+          else legacyCopy(text);
+        } catch (e) { legacyCopy(text); }
+        $('btn-copiar').setAttribute('data-copiado', text);
+        toast('Datos copiados.');
+      });
+
+      /* Nota del prototipo */
+      $('nota-usuario').textContent = 'Está viendo el sorteo de ' + junta.name + ' como ' + user.name + (organizer ? ' (organizador)' : '') + '.';
+      $('nota-otros').innerHTML = 'Ver como: <a href="P-013-registro-sorteo.html?junta=junta_oficina&amp;usuario=user_456">Jorge Mendoza</a> (organizador), ' +
+        '<a href="P-013-registro-sorteo.html?junta=junta_oficina&amp;usuario=user_234">Pedro Ramírez</a>, ' +
+        '<a href="P-013-registro-sorteo.html?junta=junta_oficina&amp;usuario=user_301">Rosa Delgado</a> (no es miembro). ' +
+        'Junta sin sorteo: <a href="P-013-registro-sorteo.html?junta=junta_ventas&amp;usuario=user_610">Junta Ventas</a>.';
+
+      M.initStates({
+        extraStates: [{ id: 'sin-conexion', label: 'Sin conexión' }],
+        initial: !member ? 'error' : (draw ? 'con-datos' : 'vacio'),
+        onChange: function (state) {
+          const denied = !member && state !== 'loading';
+          if (denied) {
+            // Quien no es miembro nunca ve el registro (RN-024), en ningún estado
+            document.querySelectorAll('main [data-estado]').forEach(function (el) {
+              el.hidden = el.getAttribute('data-estado') !== 'error';
+            });
+          }
+          $('indicador-cambios').hidden = denied || !sync || ['con-datos', 'sin-conexion'].indexOf(state) === -1;
+          back.hidden = state === 'error' || denied;
+        },
+      });
+
+      if (params.get('aviso') === 'sorteo' && member) toast('Sorteo guardado.');
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orden de turnos · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-020 · Registro del orden asignado (/juntas/{id}/turn-assignment).
+    Prototipo, NO es código de producción. Fuente: spec-pack/09-ui-spec.md §3 P-020
+    y RN-093, RN-128, RN-177 y RN-195 de spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?junta=junta_ventas  junta (por defecto, la Junta Ventas)
+      ?usuario=user_610    usuario con sesión (por defecto, Marta)
+    Si la junta no tiene un orden asignado en datos.js, usa el que acaba de
+    guardar P-019 en este navegador (sessionStorage).
+  -->
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión: se lee desde el snapshot -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <a class="back-link" id="enlace-volver" href="P-010-junta-participante.html"></a>
+
+    <div class="page-header">
+      <h1>Orden de turnos</h1>
+    </div>
+
+    <!-- Cargando (C-10) -->
+    <div class="stack" data-estado="loading" aria-hidden="true">
+      <span class="skeleton skeleton--text"></span>
+      <span class="skeleton skeleton--text" style="width: 60%"></span>
+      <span class="skeleton skeleton--row"></span>
+      <span class="skeleton skeleton--row"></span>
+      <span class="skeleton skeleton--row"></span>
+    </div>
+
+    <!-- Error: sin permiso (403). Quien no es miembro no ve el registro -->
+    <div class="alert alert--danger" role="alert" data-estado="error">
+      <div class="alert__body">
+        <p>No tiene acceso a esta junta.</p>
+        <a data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Ir a Mis juntas</a>
+      </div>
+    </div>
+
+    <!-- Vacío: la junta todavía no fijó su orden de turnos -->
+    <div class="alert alert--info" data-estado="vacio">
+      <div class="alert__body"><p id="texto-sin-orden"></p></div>
+    </div>
+
+    <!-- Con datos: el registro, de solo lectura (RN-128, RN-195) -->
+    <section class="stack" data-estado="con-datos sin-conexion" aria-labelledby="titulo-lista">
+      <p>Este orden lo asignó el organizador, sin sorteo.</p>
+      <p class="strong" id="asignado-por"></p>
+      <h2 class="visually-hidden" id="titulo-lista">Turnos</h2>
+      <ol class="list" id="lista-turnos"></ol>
+    </section>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p>El registro no tiene ninguna acción que lo cambie (RN-128).</p>
+      <p id="nota-otras"></p>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+      const SIM_KEY = 'mijunta.p019.asignacion';
+
+      const junta = M.getJunta(params.get('junta')) || M.getJunta('junta_ventas');
+      const user = M.getCurrentUser(junta.id === 'junta_ventas' ? 'user_610' : junta.organizerId);
+      const userParam = 'usuario=' + user.id;
+      const member = M.isMember(junta.id, user.id);
+      const organizer = M.isOrganizer(junta.id, user.id);
+
+      document.querySelectorAll('[data-nav]').forEach(function (a) {
+        a.href = a.getAttribute('data-nav') + '?' + userParam;
+      });
+
+      // Si el orden salió del sorteo, la pestaña "Turnos" lleva a P-013
+      if (M.getDraw(junta.id)) {
+        location.replace('P-013-registro-sorteo.html?junta=' + junta.id + '&' + userParam);
+        return;
+      }
+
+      // Registro: el de datos.js o el que acaba de guardar P-019 (simulado)
+      let record = M.getTurnAssignment(junta.id);
+      let rows = null;
+      let simulated = false;
+      if (record) {
+        rows = record.result.map(function (id) { return { id: id, name: M.displayName(id) }; });
+      } else {
+        try {
+          const saved = JSON.parse(sessionStorage.getItem(SIM_KEY) || 'null');
+          if (saved && saved.juntaId === junta.id) {
+            record = saved;
+            rows = saved.result;
+            simulated = true;
+          }
+        } catch (e) { record = null; }
+      }
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('texto-sin-orden').textContent = M.message('RN-105');
+
+      // Volver a P-010 o P-011 según el rol
+      const back = $('enlace-volver');
+      back.textContent = junta.name;
+      back.href = (organizer ? 'P-011-junta-organizador.html' : 'P-010-junta-participante.html') + '?junta=' + junta.id + '&' + userParam;
+
+      if (record) {
+        // RN-195: resultado, quién lo asignó y cuándo, en America/Lima (RN-093) y HH:MM (RN-177)
+        $('asignado-por').textContent = 'Asignado por ' + M.displayName(record.assignedBy) + ' el ' +
+          M.formatDate(record.assignedAt) + ' a las ' + M.formatTime(record.assignedAt);
+        $('lista-turnos').innerHTML = rows.map(function (r, i) {
+          const self = r.id === user.id;
+          return '<li class="list__row' + (self ? ' list__row--self' : '') + '">' +
+            '<span class="list__main"><span class="list__num">' + (i + 1) + '</span>' + esc(r.name) + (self ? ' (usted)' : '') + '</span></li>';
+        }).join('');
+      }
+
+      $('nota-otras').innerHTML = (simulated ? 'Este orden lo guardó P-019 en este navegador; no está en datos.js. ' : '') +
+        'Ver como: ' + [
+          ['junta_ventas', 'user_610', 'Marta, participante de la Junta Ventas'],
+          ['junta_ventas', 'user_456', 'Jorge, organizador que no participa'],
+          ['junta_amigas', 'user_610', 'Marta en la Junta Amigas, con un participante eliminado'],
+          ['junta_ventas', 'user_789', 'Lucía, que no es miembro (403)'],
+        ].map(function (o) {
+          return '<a href="P-020-registro-orden-asignado.html?junta=' + o[0] + '&amp;usuario=' + o[1] + '">' + esc(o[2]) + '</a>';
+        }).join('; ') + '.';
+
+      M.initStates({
+        extraStates: [{ id: 'sin-conexion', label: 'Sin conexión' }],
+        initial: !member ? 'error' : (record ? 'con-datos' : 'vacio'),
+        onChange: function (state) {
+          // Sin registro, "Con datos" y "Sin conexión" muestran el caso vacío
+          if (!record && (state === 'con-datos' || state === 'sin-conexion')) {
+            document.querySelector('[data-estado="vacio"]').hidden = false;
+          }
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

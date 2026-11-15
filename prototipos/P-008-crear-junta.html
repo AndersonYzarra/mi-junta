@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crear junta · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-008 · Crear junta (/juntas/new). Prototipo, NO es código de producción.
+    Fuente: spec-pack/09-ui-spec.md §3 P-008 y RN-001 a RN-012, RN-015, RN-016,
+    RN-041, RN-068, RN-096, RN-097, RN-098, RN-153, RN-170 y RN-179 de
+    spec-pack/03-reglas-de-negocio.md.
+    Parámetro de la URL: ?usuario=user_… (por defecto, Jorge).
+  -->
+  <style>
+    /* Pozo por ronda calculado en vivo (RN-041) */
+    .pot-box {
+      margin-bottom: var(--space-4);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-sm);
+      background: var(--color-primary-soft);
+      color: var(--color-primary);
+      font-weight: var(--font-weight-semibold);
+      font-variant-numeric: tabular-nums;
+    }
+    .choice__nested { margin: 0 0 var(--space-2) calc(var(--check-size) + var(--space-3)); }
+    .fieldset[aria-invalid="true"] .choice input { border-color: var(--color-danger); }
+    .date-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  </style>
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <!-- C-03 · Indicador de cambios sin enviar -->
+  <div class="status-bar" id="indicador-cambios" hidden>
+    <span class="icon icon--sync" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-cambios"></span>
+    <a class="status-bar__action" data-nav="P-016-cambios-sin-enviar.html" href="P-016-cambios-sin-enviar.html">Ver</a>
+  </div>
+
+  <main id="contenido" class="container">
+    <div class="form">
+      <a class="back-link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mis juntas</a>
+      <div class="page-header">
+        <h1>Crear junta</h1>
+      </div>
+
+      <!-- Cargando (C-10) -->
+      <div class="stack" data-estado="loading" aria-hidden="true">
+        <span class="skeleton skeleton--text" style="width: 40%"></span>
+        <span class="skeleton skeleton--button"></span>
+        <span class="skeleton skeleton--text" style="width: 30%"></span>
+        <span class="skeleton skeleton--button"></span>
+        <span class="skeleton skeleton--text" style="width: 50%"></span>
+        <span class="skeleton skeleton--button"></span>
+        <span class="skeleton skeleton--card"></span>
+      </div>
+
+      <!-- Resumen de errores (C-05) -->
+      <div class="error-summary" id="resumen" role="alert" tabindex="-1" hidden>
+        <ul id="resumen-lista"></ul>
+      </div>
+
+      <form id="form-junta" novalidate data-estado="con-datos vacio error sin-conexion correo-sin-verificar primera-junta">
+        <div class="field">
+          <label class="field__label" for="nombre">Nombre de la junta</label>
+          <input class="input field__control" id="nombre" maxlength="60" autocomplete="off" aria-describedby="error-nombre">
+          <p class="field__error" id="error-nombre" hidden></p>
+        </div>
+
+        <div class="form-grid form-grid--2">
+          <div class="field">
+            <label class="field__label" for="cuota">Cuota</label>
+            <span class="field__help" id="ayuda-cuota">Lo que paga cada participante en cada ronda.</span>
+            <div class="field__control input-prefix">
+              <span class="input-prefix__symbol" aria-hidden="true">S/</span>
+              <input class="input" id="cuota" inputmode="decimal" placeholder="300.00" autocomplete="off" aria-describedby="ayuda-cuota error-cuota">
+            </div>
+            <p class="field__error" id="error-cuota" hidden></p>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="participantes">Cantidad de participantes</label>
+            <div class="field__control stepper">
+              <button class="stepper__btn" type="button" data-step="participantes" data-delta="-1" aria-label="Quitar un participante"><span class="icon icon--minus" aria-hidden="true"></span></button>
+              <input class="input" id="participantes" inputmode="numeric" autocomplete="off" aria-describedby="error-participantes">
+              <button class="stepper__btn" type="button" data-step="participantes" data-delta="1" aria-label="Agregar un participante"><span class="icon icon--plus" aria-hidden="true"></span></button>
+            </div>
+            <p class="field__error" id="error-participantes" hidden></p>
+          </div>
+        </div>
+
+        <!-- Visible solo cuando cuota y participantes son válidos (RN-041) -->
+        <p class="pot-box" id="pozo" aria-live="polite" hidden></p>
+
+        <fieldset class="fieldset" id="grupo-frecuencia" aria-describedby="error-frecuencia">
+          <legend class="fieldset__legend">Frecuencia</legend>
+          <label class="choice"><input type="radio" name="frecuencia" value="weekly" id="frecuencia"><span class="choice__text">Semanal</span></label>
+          <label class="choice"><input type="radio" name="frecuencia" value="every_15_days"><span class="choice__text">Quincenal</span></label>
+          <label class="choice"><input type="radio" name="frecuencia" value="monthly"><span class="choice__text">Mensual</span></label>
+          <label class="choice"><input type="radio" name="frecuencia" value="every_n_days"><span class="choice__text">Cada cierta cantidad de días</span></label>
+          <div class="field choice__nested" id="grupo-cada-dias" hidden>
+            <label class="field__label" for="cada-dias">Cada cuántos días</label>
+            <input class="input field__control" id="cada-dias" inputmode="numeric" autocomplete="off" style="max-width: 160px" aria-describedby="error-cada-dias">
+            <p class="field__error" id="error-cada-dias" hidden></p>
+          </div>
+          <p class="field__error" id="error-frecuencia" hidden></p>
+        </fieldset>
+
+        <div class="field">
+          <label class="field__label" for="vencimiento">Vencimiento de la ronda 1</label>
+          <span class="field__help" id="ayuda-vencimiento"></span>
+          <div class="field__control input-with-button">
+            <input class="input" id="vencimiento" inputmode="numeric" autocomplete="off" placeholder="DD/MM/AAAA" aria-describedby="ayuda-vencimiento error-vencimiento">
+            <button class="btn btn--icon" type="button" id="btn-calendario" aria-label="Abrir calendario"><span class="icon icon--calendar" aria-hidden="true"></span></button>
+            <input class="date-native" type="date" id="vencimiento-nativo" tabindex="-1" aria-hidden="true">
+          </div>
+          <p class="field__error" id="error-vencimiento" hidden></p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="aviso">Días de aviso previo</label>
+          <span class="field__help" id="ayuda-aviso">El primer recordatorio llega por correo esa cantidad de días antes del vencimiento.</span>
+          <div class="field__control stepper">
+            <button class="stepper__btn" type="button" data-step="aviso" data-delta="-1" aria-label="Quitar un día de aviso"><span class="icon icon--minus" aria-hidden="true"></span></button>
+            <input class="input" id="aviso" inputmode="numeric" autocomplete="off" aria-describedby="ayuda-aviso error-aviso">
+            <button class="stepper__btn" type="button" data-step="aviso" data-delta="1" aria-label="Agregar un día de aviso"><span class="icon icon--plus" aria-hidden="true"></span></button>
+          </div>
+          <p class="field__error" id="error-aviso" hidden></p>
+          <!-- RN-098: el cambio automático se anuncia -->
+          <p class="visually-hidden" id="anuncio-aviso" aria-live="polite"></p>
+        </div>
+
+        <fieldset class="fieldset" id="grupo-participa" aria-describedby="error-participa">
+          <legend class="fieldset__legend">¿Usted participa?</legend>
+          <label class="choice"><input type="radio" name="participa" value="si" id="participa"><span class="choice__text">Sí participo<span class="choice__help">Paga cuota y entra al sorteo.</span></span></label>
+          <label class="choice"><input type="radio" name="participa" value="no"><span class="choice__text">No participo</span></label>
+          <p class="field__error" id="error-participa" hidden></p>
+        </fieldset>
+
+        <!-- (S) HU-013 -->
+        <div class="field">
+          <label class="field__label" for="reglas">Reglas de la junta (opcional)</label>
+          <span class="field__help" id="ayuda-reglas">Todos los miembros podrán leerlas. Mi Junta no las aplica ni calcula multas.</span>
+          <textarea class="input field__control" id="reglas" aria-describedby="ayuda-reglas contador-reglas error-reglas"></textarea>
+          <span class="char-counter" id="contador-reglas" aria-live="polite"></span>
+          <p class="field__error" id="error-reglas" hidden></p>
+        </div>
+
+        <div class="btn-row section">
+          <div>
+            <button class="btn btn--primary btn--block" type="submit" id="btn-crear">Crear junta</button>
+            <span class="unavailable-reason" id="motivo-crear" tabindex="-1" data-estado="sin-conexion"></span>
+          </div>
+          <a class="btn btn--secondary" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Cancelar</a>
+        </div>
+      </form>
+
+      <aside class="proto-note" aria-label="Nota del prototipo">
+        <p class="proto-note__title">Solo en el prototipo</p>
+        <p id="nota-usuario"></p>
+        <p>El código de invitación lo genera el servidor (RN-015, RN-016) y se ve en la junta. datos.js no guarda juntas nuevas: al crear, se abre la Junta Familia como si fuera la junta creada.</p>
+        <p id="nota-otros"></p>
+      </aside>
+    </div>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+      const today = data.meta.today;
+
+      const user = M.getCurrentUser();
+      const userParam = 'usuario=' + user.id;
+      document.querySelectorAll('[data-nav]').forEach(function (a) {
+        a.href = a.getAttribute('data-nav') + '?' + userParam;
+      });
+
+      // Primera junta del organizador: después abre la encuesta de KPI-05 (RN-204)
+      const organizesAny = data.juntas.some(function (j) { return j.organizerId === user.id; });
+      const answeredSurvey = data.organizerSurveys.some(function (s) { return s.organizerId === user.id; });
+      const userFirstJunta = !organizesAny && !answeredSurvey;
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('ayuda-vencimiento').textContent = M.uiTexts.dateHelp;
+      $('motivo-crear').textContent = M.message('RN-170');
+      $('vencimiento-nativo').min = today;
+
+      const sync = M.getSyncIndicator(user.id);
+      if (sync) {
+        $('indicador-cambios').classList.add(sync.kind === 'rejected' ? 'status-bar--rejected' : 'status-bar--pending');
+        $('texto-cambios').textContent = sync.text;
+      }
+
+      /* Campos */
+      const f = {
+        nombre: $('nombre'), cuota: $('cuota'), participantes: $('participantes'), cadaDias: $('cada-dias'),
+        vencimiento: $('vencimiento'), aviso: $('aviso'), reglas: $('reglas'),
+      };
+      const radios = function (name) { return Array.prototype.slice.call(document.querySelectorAll('input[name="' + name + '"]')); };
+      const checked = function (name) { const r = radios(name).find(function (x) { return x.checked; }); return r ? r.value : null; };
+
+      function setError(input, errorId, text) {
+        const el = $(errorId);
+        el.textContent = text || '';
+        el.hidden = !text;
+        if (input) {
+          if (text) input.setAttribute('aria-invalid', 'true');
+          else input.removeAttribute('aria-invalid');
+        }
+      }
+
+      function setGroupError(group, name, errorId, text) {
+        setError(null, errorId, text);
+        if (text) $(group).setAttribute('aria-invalid', 'true');
+        else $(group).removeAttribute('aria-invalid');
+        radios(name).forEach(function (r) { if (text) r.setAttribute('aria-invalid', 'true'); else r.removeAttribute('aria-invalid'); });
+      }
+
+      /* Reglas de cada campo con los textos del catálogo. Vacío → null (lo marca el envío con RN-002). */
+      const rules = {
+        nombre: function () { return f.nombre.value.trim() ? M.validate.juntaName(f.nombre.value) : null; },        // RN-096
+        cuota: function () { return f.cuota.value.trim() ? M.validate.contributionAmount(f.cuota.value) : null; },  // RN-097, RN-003, RN-004
+        participantes: function () { return f.participantes.value.trim() ? M.validate.participantCount(f.participantes.value) : null; }, // RN-005
+        cadaDias: function () {
+          if (checked('frecuencia') !== 'every_n_days' || !f.cadaDias.value.trim()) return null;
+          return M.validate.frequencyDays(f.cadaDias.value);                                                           // RN-008
+        },
+        vencimiento: function () { return f.vencimiento.value.trim() ? M.validate.round1DueDate(f.vencimiento.value, today) : null; }, // C-05, RN-009
+        aviso: function () {
+          if (!f.aviso.value.trim()) return null;
+          const freq = checked('frecuencia');
+          const n = f.cadaDias.value.trim() ? Number(f.cadaDias.value) : null;
+          return M.validate.reminderLeadDays(f.aviso.value, freq === 'every_n_days' && !n ? null : freq, n);           // RN-010, RN-012
+        },
+        reglas: function () { return M.validate.juntaRules(f.reglas.value); },                                         // RN-179
+      };
+      const errorIds = { nombre: 'error-nombre', cuota: 'error-cuota', participantes: 'error-participantes', cadaDias: 'error-cada-dias', vencimiento: 'error-vencimiento', aviso: 'error-aviso', reglas: 'error-reglas' };
+      const fieldIds = { nombre: 'nombre', cuota: 'cuota', participantes: 'participantes', cadaDias: 'cada-dias', vencimiento: 'vencimiento', aviso: 'aviso', reglas: 'reglas' };
+
+      function check(name) {
+        const err = rules[name]();
+        setError(f[name], errorIds[name], err);
+        return err;
+      }
+
+      Object.keys(rules).forEach(function (name) {
+        f[name].addEventListener('blur', function () { check(name); });
+      });
+
+      /* Pozo por ronda: cuota × participantes en céntimos enteros (RN-041) */
+      function updatePot() {
+        const ok = f.cuota.value.trim() && !M.validate.contributionAmount(f.cuota.value) &&
+          f.participantes.value.trim() && !M.validate.participantCount(f.participantes.value);
+        const pot = $('pozo');
+        if (!ok) { pot.hidden = true; return; }
+        const cents = M.getPotCents({ contributionAmountCents: M.parseMoneyInput(f.cuota.value), participantCount: Number(f.participantes.value) });
+        pot.textContent = 'Pozo por ronda: ' + M.formatMoney(cents);
+        pot.hidden = false;
+      }
+      f.cuota.addEventListener('input', updatePot);
+      f.participantes.addEventListener('input', updatePot);
+
+      /* Botones − y + */
+      document.querySelectorAll('[data-step]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const input = $(btn.getAttribute('data-step'));
+          const current = Number(input.value) || 0;
+          input.value = Math.max(0, current + Number(btn.getAttribute('data-delta')));
+          if (input === f.participantes) { updatePot(); check('participantes'); } else { check('aviso'); }
+        });
+      });
+
+      /* Frecuencia y RN-098: si el periodo es igual o menor que el aviso, el aviso pasa a periodo − 1 */
+      function applyLeadAdjustment() {
+        const freq = checked('frecuencia');
+        if (!freq || !f.aviso.value.trim()) return;
+        const n = freq === 'every_n_days' ? Number(f.cadaDias.value) : null;
+        if (freq === 'every_n_days' && (!n || M.validate.frequencyDays(n))) return;
+        const before = Number(f.aviso.value);
+        const after = M.adjustLeadDays(before, freq, n);
+        if (after !== before) {
+          f.aviso.value = after;
+          $('anuncio-aviso').textContent = 'Días de aviso previo: ' + after;
+        }
+        check('aviso');
+      }
+
+      radios('frecuencia').forEach(function (r) {
+        r.addEventListener('change', function () {
+          $('grupo-cada-dias').hidden = checked('frecuencia') !== 'every_n_days';
+          setGroupError('grupo-frecuencia', 'frecuencia', 'error-frecuencia', null);
+          if (checked('frecuencia') !== 'every_n_days') setError(f.cadaDias, 'error-cada-dias', null);
+          applyLeadAdjustment();
+        });
+      });
+      f.cadaDias.addEventListener('change', function () { check('cadaDias'); applyLeadAdjustment(); });
+      radios('participa').forEach(function (r) {
+        r.addEventListener('change', function () { setGroupError('grupo-participa', 'participa', 'error-participa', null); });
+      });
+
+      /* Fecha (C-05): texto DD/MM/AAAA y selector nativo con el botón de calendario */
+      $('btn-calendario').addEventListener('click', function () {
+        const nat = $('vencimiento-nativo');
+        const iso = M.parseDateInput(f.vencimiento.value);
+        if (iso) nat.value = iso;
+        try { nat.showPicker(); } catch (e) { nat.focus(); nat.click(); }
+      });
+      $('vencimiento-nativo').addEventListener('change', function () {
+        if (this.value) { f.vencimiento.value = M.formatDate(this.value); check('vencimiento'); }
+      });
+
+      /* Contador de las reglas: "{n} / 2,000" */
+      function updateCounter() {
+        const n = f.reglas.value.length;
+        $('contador-reglas').textContent = String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' / 2,000';
+      }
+      f.reglas.addEventListener('input', function () { updateCounter(); if (f.reglas.getAttribute('aria-invalid')) check('reglas'); });
+
+      /* Envío */
+      let offline = false;
+      let unverified = !user.emailVerifiedAt;
+      let firstJunta = userFirstJunta;
+      const submitBtn = $('btn-crear');
+
+      function showSummary(items) {
+        $('resumen-lista').innerHTML = items.map(function (it) {
+          return '<li><a href="#' + it.id + '">' + esc(it.text) + '</a></li>';
+        }).join('');
+        $('resumen').hidden = false;
+        $('resumen').focus();
+      }
+
+      function clearErrors() {
+        Object.keys(rules).forEach(function (n) { setError(f[n], errorIds[n], null); });
+        setGroupError('grupo-frecuencia', 'frecuencia', 'error-frecuencia', null);
+        setGroupError('grupo-participa', 'participa', 'error-participa', null);
+        $('resumen').hidden = true;
+      }
+
+      function validateAll() {
+        const items = [];
+        const missing = [];
+        const missingMsg = M.message('RN-002');
+        // Datos obligatorios (RN-002); el campo vacío lleva el mensaje del formulario (C-05)
+        ['nombre', 'cuota', 'participantes'].forEach(function (n) {
+          if (!f[n].value.trim()) { missing.push(fieldIds[n]); setError(f[n], errorIds[n], missingMsg); }
+        });
+        if (!checked('frecuencia')) {
+          missing.push('frecuencia');
+          setGroupError('grupo-frecuencia', 'frecuencia', 'error-frecuencia', M.message('RN-007'));   // RN-007
+        } else if (checked('frecuencia') === 'every_n_days' && !f.cadaDias.value.trim()) {
+          missing.push('cada-dias'); setError(f.cadaDias, 'error-cada-dias', missingMsg);
+        }
+        ['vencimiento', 'aviso'].forEach(function (n) {
+          if (!f[n].value.trim()) { missing.push(fieldIds[n]); setError(f[n], errorIds[n], missingMsg); }
+        });
+        if (!checked('participa')) {
+          missing.push('participa');
+          setGroupError('grupo-participa', 'participa', 'error-participa', missingMsg);
+        }
+        if (missing.length) items.push({ id: missing[0], text: missingMsg });
+        Object.keys(rules).forEach(function (n) {
+          const err = rules[n]();
+          if (err) { setError(f[n], errorIds[n], err); items.push({ id: fieldIds[n], text: err }); }
+        });
+        return items;
+      }
+
+      function setBusy(busy) {
+        submitBtn.disabled = busy;
+        if (busy) submitBtn.setAttribute('aria-busy', 'true'); else submitBtn.removeAttribute('aria-busy');
+      }
+
+      $('form-junta').addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (offline) { $('motivo-crear').focus(); return; }      // C-04: no se crea ninguna junta
+        clearErrors();
+        const items = validateAll();
+        if (items.length) { showSummary(items); return; }
+        setBusy(true);
+        setTimeout(function () {
+          setBusy(false);
+          if (unverified) {                                       // RN-153, respuesta del servidor
+            showSummary([{ id: 'nombre', text: M.message('RN-153') }]);
+            return;
+          }
+          // 201: la junta "Abierta" con su código. Se representa con la Junta Familia.
+          location.href = firstJunta
+            ? 'P-024-encuesta-kpi-05.html?desde=P-011&junta=junta_familia&usuario=user_123'
+            : 'P-011-junta-organizador.html?junta=junta_familia&usuario=user_123&aviso=creada';
+        }, 900);
+      });
+
+      /* Valores de cada estado */
+      const familia = M.getJunta('junta_familia');
+      const valid = {
+        nombre: familia.name, cuota: (familia.contributionAmountCents / 100).toFixed(2), participantes: String(familia.participantCount),
+        frecuencia: familia.frequency, cadaDias: '', vencimiento: '30/01/2027', aviso: String(familia.reminderLeadDays),
+        participa: 'si', reglas: familia.juntaRules,
+      };
+      const invalid = {
+        nombre: 'JF', cuota: '20.85', participantes: '51', frecuencia: 'every_n_days', cadaDias: '1',
+        vencimiento: '30/11/2026', aviso: '8', participa: null, reglas: 'Pagamos el día 30. '.repeat(106),
+      };
+
+      function fill(v) {
+        ['nombre', 'cuota', 'participantes', 'cadaDias', 'vencimiento', 'aviso', 'reglas'].forEach(function (n) { f[n].value = v[n] || ''; });
+        radios('frecuencia').forEach(function (r) { r.checked = r.value === v.frecuencia; });
+        radios('participa').forEach(function (r) { r.checked = r.value === v.participa; });
+        $('grupo-cada-dias').hidden = v.frecuencia !== 'every_n_days';
+        updatePot();
+        updateCounter();
+      }
+
+      /* Nota del prototipo */
+      const organized = data.juntas.filter(function (j) { return j.organizerId === user.id; }).length;
+      $('nota-usuario').textContent = 'Está viendo la pantalla como ' + user.name + '. ' +
+        (organized ? 'Ya organiza ' + organized + (organized === 1 ? ' junta' : ' juntas') + ' y puede crear otra: no hay límite (RN-001).'
+          : 'Todavía no organiza ninguna junta: al crear su primera junta se abre la encuesta de KPI-05.') +
+        ' Hoy es ' + M.formatDate(today) + '.';
+      $('nota-otros').innerHTML = 'Ver como: ' + [['user_456', 'organiza dos juntas'], ['user_789', 'su primera junta'], ['user_301', 'correo sin verificar']]
+        .filter(function (u) { return u[0] !== user.id; })
+        .map(function (u) { return '<a href="P-008-crear-junta.html?usuario=' + u[0] + '">' + esc(M.getUser(u[0]).name) + '</a> (' + u[1] + ')'; })
+        .join(', ') + '.';
+
+      M.initStates({
+        extraStates: [
+          { id: 'sin-conexion', label: 'Sin conexión' },
+          { id: 'correo-sin-verificar', label: 'Correo sin verificar' },
+          { id: 'primera-junta', label: 'Primera junta' },
+        ],
+        initial: 'vacio',
+        onChange: function (state) {
+          clearErrors();
+          setBusy(false);
+          offline = state === 'sin-conexion';
+          unverified = state === 'correo-sin-verificar' || !user.emailVerifiedAt;
+          firstJunta = state === 'primera-junta' || userFirstJunta;
+          $('anuncio-aviso').textContent = '';
+          if (offline) {
+            submitBtn.setAttribute('aria-disabled', 'true');
+            submitBtn.setAttribute('aria-describedby', 'motivo-crear');
+          } else {
+            submitBtn.removeAttribute('aria-disabled');
+            submitBtn.removeAttribute('aria-describedby');
+          }
+          $('indicador-cambios').hidden = !sync || state === 'loading';
+
+          if (state === 'vacio') {
+            fill({ aviso: '3' });                                  // RN-011: el aviso empieza en 3
+          } else if (state === 'error') {
+            fill(invalid);
+            showSummary(validateAll());
+          } else if (state === 'correo-sin-verificar') {
+            fill(valid);
+            showSummary([{ id: 'nombre', text: M.message('RN-153') }]);
+          } else {
+            fill(valid);
+          }
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

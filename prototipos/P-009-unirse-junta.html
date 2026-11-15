@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unirse a una junta · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <style>
+    /* ".alert a" de estilos.css pinta los enlaces del aviso; los botones conservan sus colores */
+    .alert a.btn--primary { color: var(--color-on-dark); text-decoration: none; }
+    .alert a.btn--secondary { color: var(--color-secondary); text-decoration: none; }
+  </style>
+  <!--
+    P-009 · Unirse a una junta (/join). Prototipo, NO es código de producción.
+    Fuente: spec-pack/09-ui-spec.md §3 P-009 y RN-017, RN-018, RN-019, RN-020,
+    RN-021, RN-116, RN-117, RN-129, RN-153, RN-170 y RN-190 de
+    spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?usuario=user_…   usuario con sesión (por defecto, Lucía)
+      ?sesion=no        sin sesión (caso de Ana, UF-05 paso 2)
+      ?codigo=T9QW3HZ5  código guardado: se precarga y, con sesión, se vuelve a enviar
+  -->
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" id="enlace-marca" href="P-003-iniciar-sesion.html">Mi Junta</a>
+      <nav class="app-header__nav" id="nav-encabezado" aria-label="Principal" hidden>
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html" aria-current="page">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <div class="auth-card stack">
+      <h1>Unirse a una junta</h1>
+
+      <!-- Cargando: el formulario se reemplaza por el esqueleto (C-10) -->
+      <div class="stack" data-estado="loading" aria-hidden="true" hidden>
+        <span class="skeleton skeleton--text" style="width: 60%"></span>
+        <span class="skeleton skeleton--button"></span>
+        <span class="skeleton skeleton--button"></span>
+      </div>
+
+      <form id="form-unirse" novalidate>
+        <div class="field">
+          <label class="field__label" for="codigo">Código de invitación</label>
+          <span class="field__help" id="ayuda-codigo">Son 8 letras y números. Se lo comparte el organizador.</span>
+          <!-- Acepta minúsculas y espacios: se normaliza antes de validar (RN-190) -->
+          <input class="input field__control code-input" id="codigo" name="codigo" autocapitalize="characters"
+                 autocomplete="off" spellcheck="false" maxlength="16" aria-describedby="ayuda-codigo error-codigo">
+          <p class="field__error" id="error-codigo" hidden></p>
+        </div>
+
+        <div>
+          <button class="btn btn--primary btn--block" type="submit" id="btn-unirse" disabled>Unirse</button>
+          <span class="unavailable-reason" id="motivo-unirse" tabindex="-1" data-estado="sin-conexion"></span>
+        </div>
+      </form>
+
+      <!-- Sin sesión (RN-017): la app guarda el código para enviarlo después -->
+      <div class="alert alert--info" id="aviso-sin-sesion" role="alert" hidden>
+        <div class="alert__body">
+          <p id="texto-sin-sesion"></p>
+          <div class="btn-row btn-row--wrap">
+            <a class="btn btn--primary" id="btn-iniciar" href="P-003-iniciar-sesion.html">Iniciar sesión</a>
+            <a class="btn btn--secondary" id="btn-crear" href="P-001-crear-cuenta.html">Crear cuenta</a>
+          </div>
+        </div>
+      </div>
+
+      <aside class="proto-note" aria-label="Nota del prototipo">
+        <p class="proto-note__title">Solo en el prototipo</p>
+        <p id="nota-usuario"></p>
+        <p>Códigos de prueba:</p>
+        <ul id="codigos-prueba"></ul>
+        <p id="contador-invalidos" aria-live="polite"></p>
+        <p><button class="btn btn--text" type="button" id="fin-bloqueo" style="padding-left: 0">Simular que pasó 1 hora</button></p>
+      </aside>
+    </div>
+  </main>
+
+  <nav class="bottom-nav" id="nav-inferior" aria-label="Principal" hidden>
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html" aria-current="page"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+
+      const urlSession = params.get('sesion') !== 'no';
+      const savedCode = params.get('codigo');
+      let user = M.getCurrentUser('user_789');
+      const userParam = '?usuario=' + user.id;
+
+      const form = $('form-unirse');
+      const input = $('codigo');
+      const submitBtn = $('btn-unirse');
+      const fieldErr = $('error-codigo');
+      const reason = $('motivo-unirse');
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('texto-sin-sesion').textContent = M.message('RN-017');
+      reason.textContent = M.message('RN-170');
+      document.querySelectorAll('[data-nav]').forEach(function (a) { a.href = a.getAttribute('data-nav') + userParam; });
+
+      // Códigos de prueba de datos.js y lo que responde cada uno
+      const ex = data.examples.inviteCodes;
+      const familia = M.getJunta('junta_familia');
+      $('codigos-prueba').innerHTML = [
+        [ex.valid.toLowerCase().slice(0, 4) + ' ' + ex.valid.toLowerCase().slice(4), 'vigente de la ' + familia.name + ', escrito en minúsculas y con un espacio (RN-190)'],
+        [ex.regenerated, 'anulado al regenerarlo (RN-020)'],
+        [ex.revokedByDraw, 'anulado al fijar el orden de la Junta Oficina (RN-019)'],
+        [ex.unknown, 'no corresponde a ninguna junta (RN-116)'],
+      ].map(function (c) { return '<li><span class="mono">' + esc(c[0]) + '</span>: ' + c[1] + '.</li>'; }).join('');
+
+      /* Estado de la simulación */
+      let offline = false;
+      let session = urlSession;
+      let unverified = !user.emailVerifiedAt;
+      let forceFull = false;
+      let invalidCount = 0;          // códigos inexistentes en la última hora (RN-117)
+      let blocked = false;
+
+      function updateNote() {
+        $('nota-usuario').textContent = session
+          ? 'Sesión de ' + user.name + (unverified ? ', con el correo sin verificar.' : '.')
+          : 'Sin sesión: la persona todavía no inició sesión ni tiene cuenta.';
+        $('contador-invalidos').textContent = blocked
+          ? 'La cuenta está bloqueada 1 hora: los códigos que escriba no se validan ni se cuentan (RN-117).'
+          : 'Códigos no válidos en la última hora: ' + invalidCount + ' de 10. Un código anulado no se cuenta (RN-192).';
+      }
+
+      function setError(text) {
+        if (text) {
+          fieldErr.textContent = text;
+          fieldErr.hidden = false;
+          input.setAttribute('aria-invalid', 'true');
+        } else {
+          fieldErr.hidden = true;
+          input.removeAttribute('aria-invalid');
+        }
+      }
+
+      function setBusy(busy) {
+        if (busy) submitBtn.setAttribute('aria-busy', 'true');
+        else submitBtn.removeAttribute('aria-busy');
+        syncButton();
+      }
+
+      // "Unirse" pide el campo con texto
+      function syncButton() {
+        submitBtn.disabled = !input.value.trim() || submitBtn.getAttribute('aria-busy') === 'true';
+      }
+
+      function setOffline(isOffline) {
+        offline = isOffline;
+        if (isOffline) {
+          submitBtn.setAttribute('aria-disabled', 'true');
+          submitBtn.setAttribute('aria-describedby', 'motivo-unirse');
+        } else {
+          submitBtn.removeAttribute('aria-disabled');
+          submitBtn.removeAttribute('aria-describedby');
+        }
+      }
+
+      function applySession() {
+        $('nav-encabezado').hidden = !session;
+        $('nav-inferior').hidden = !session;
+        document.body.classList.toggle('has-bottom-nav', session);
+        $('enlace-marca').href = session ? 'P-007-mis-juntas.html' + userParam : 'P-003-iniciar-sesion.html';
+        // La app guarda el código y lo vuelve a enviar después de iniciar sesión o crear la cuenta
+        const code = encodeURIComponent(M.normalizeInviteCode(input.value) || savedCode || '');
+        $('btn-iniciar').href = 'P-003-iniciar-sesion.html' + (code ? '?codigo=' + code : '');
+        $('btn-crear').href = 'P-001-crear-cuenta.html' + (code ? '?codigo=' + code : '');
+      }
+
+      input.addEventListener('input', function () {
+        syncButton();
+        setError(null);
+        $('aviso-sin-sesion').hidden = true;
+      });
+
+      function joinPage(junta) {
+        const page = junta.organizerId === user.id ? 'P-011-junta-organizador.html' : 'P-010-junta-participante.html';
+        return page + '?junta=' + junta.id + '&usuario=' + user.id;
+      }
+
+      // API-013
+      function submit() {
+        setError(null);
+        $('aviso-sin-sesion').hidden = true;
+        if (offline) { reason.focus(); return; }                       // C-04
+        if (!input.value.trim()) return;
+        if (!session) {                                                  // RN-017
+          applySession();
+          $('aviso-sin-sesion').hidden = false;
+          return;
+        }
+        if (unverified) { setError(M.message('RN-153')); input.focus(); return; }   // RN-153
+        if (blocked) { setError(M.message('RN-117')); input.focus(); return; }      // RN-117
+        setBusy(true);
+        setTimeout(function () {
+          setBusy(false);
+          const result = M.checkInviteCode(input.value, user.id);      // RN-190, RN-116, RN-019, RN-018, RN-021
+          if (result.ok && forceFull && !result.alreadyMember) {
+            setError(M.message('RN-018'));
+            input.focus();
+            return;
+          }
+          if (!result.ok) {
+            if (result.messageId === 'RN-116') {
+              invalidCount += 1;
+              if (invalidCount >= 10) blocked = true;
+            }
+            setError(result.message);                                    // el código escrito se conserva
+            updateNote();
+            input.focus();
+            return;
+          }
+          // 201: se une; 200 ALREADY_MEMBER: abre la junta sin mensaje de error (RN-021)
+          location.href = joinPage(result.junta) + (result.alreadyMember ? '' : '&aviso=unido');
+        }, 700);
+      }
+
+      form.addEventListener('submit', function (event) { event.preventDefault(); submit(); });
+
+      $('fin-bloqueo').addEventListener('click', function () {
+        blocked = false;
+        invalidCount = 0;
+        setError(null);
+        updateNote();
+      });
+
+      /* Estados del prototipo */
+      const states = M.initStates({
+        extraStates: [
+          { id: 'sin-sesion', label: 'Sin sesión' },
+          { id: 'correo-sin-verificar', label: 'Correo sin verificar' },
+          { id: 'junta-llena', label: 'Junta llena' },
+          { id: 'bloqueado', label: 'Demasiados códigos' },
+          { id: 'sin-conexion', label: 'Sin conexión' },
+        ],
+        initial: urlSession ? 'con-datos' : 'sin-sesion',
+        onChange: function (state) {
+          setError(null);
+          $('aviso-sin-sesion').hidden = true;
+          setOffline(state === 'sin-conexion');
+          session = state === 'sin-sesion' ? false : (state === 'con-datos' || state === 'vacio' ? urlSession : true);
+          unverified = state === 'correo-sin-verificar' ? true : !user.emailVerifiedAt;
+          if (state === 'correo-sin-verificar' && user.emailVerifiedAt) unverified = true;
+          forceFull = state === 'junta-llena';
+          blocked = state === 'bloqueado';
+          invalidCount = blocked ? 10 : 0;
+          form.hidden = state === 'loading';
+          submitBtn.removeAttribute('aria-busy');
+
+          input.value = state === 'vacio' ? '' : (savedCode || ex.valid);
+          if (state === 'error') input.value = ex.regenerated;
+
+          applySession();
+          syncButton();
+
+          if (state === 'error') setError(M.message('RN-019'));
+          if (state === 'sin-sesion') $('aviso-sin-sesion').hidden = false;
+          if (state === 'correo-sin-verificar') setError(M.message('RN-153'));
+          if (state === 'junta-llena') setError(M.message('RN-018'));
+          if (state === 'bloqueado') setError(M.message('RN-117'));
+          updateNote();
+        },
+      });
+
+      // Vuelve de iniciar sesión o crear la cuenta con el código guardado: se reenvía (UF-05 paso 3)
+      if (savedCode && urlSession && states.get() === 'con-datos') {
+        setTimeout(submit, 400);
+      }
+    })();
+  </script>
+</body>
+</html>

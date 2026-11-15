@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recuperar contraseña · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-004 · Recuperar contraseña (/password-reset). Prototipo, NO es código de
+    producción. Fuente: spec-pack/09-ui-spec.md §3 P-004 y RN-155, RN-156,
+    RN-170 y RN-188 de spec-pack/03-reglas-de-negocio.md.
+  -->
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" href="P-003-iniciar-sesion.html">Mi Junta</a>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <div class="auth-card stack">
+      <div class="page-header">
+        <h1>Recuperar contraseña</h1>
+      </div>
+
+      <!-- Inicial: campo y botón (se ocultan al enviar) -->
+      <form id="form-recuperar" class="stack" novalidate data-estado="vacio loading sin-conexion">
+        <p>Le enviaremos un enlace a su correo. El enlace sirve por 1 hora.</p>
+        <div class="field">
+          <label class="field__label" for="correo">Correo</label>
+          <input class="input field__control" id="correo" name="correo" type="email" autocomplete="email" spellcheck="false">
+        </div>
+        <div>
+          <!-- disabled mientras el campo esté vacío ("Correo escrito") -->
+          <button class="btn btn--primary btn--block" type="submit" id="btn-enviar" disabled>Enviar enlace</button>
+          <span class="unavailable-reason" id="motivo-enviar" tabindex="-1" data-estado="sin-conexion"></span>
+        </div>
+      </form>
+
+      <!-- Enviado: el mismo mensaje exista o no la cuenta (RN-156) -->
+      <div class="alert alert--info alert--mail" role="status" id="mensaje-enviado" data-estado="con-datos error">
+        <div class="alert__body"><p id="texto-enviado"></p></div>
+      </div>
+
+      <p><a href="P-003-iniciar-sesion.html" class="btn btn--text" style="padding-left: 0">Volver a iniciar sesión</a></p>
+
+      <aside class="proto-note" aria-label="Nota del prototipo">
+        <p class="proto-note__title">Solo en el prototipo</p>
+        <p id="nota-resultado">Escriba un correo registrado (por ejemplo <span class="mono">lucia@example.com</span>) o uno sin cuenta (por ejemplo <span class="mono">ana.salinas@example.com</span>): la pantalla responde igual (RN-156).</p>
+        <div id="nota-correo" hidden>
+          <p><strong id="correo-asunto"></strong></p>
+          <p id="correo-cuerpo"></p>
+          <p>Este correo llega aunque la persona haya desactivado los recordatorios por correo (RN-188).</p>
+        </div>
+        <p id="nota-sin-cuenta" hidden>Este correo no tiene cuenta en Mi Junta: no se envía ningún correo, pero el mensaje de la pantalla es el mismo (RN-156).</p>
+      </aside>
+    </div>
+  </main>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const $ = function (id) { return document.getElementById(id); };
+      const email = $('correo');
+      const sendBtn = $('btn-enviar');
+      let offline = false;
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('motivo-enviar').textContent = M.message('RN-170');
+      $('texto-enviado').textContent = M.message('RN-156');
+
+      function syncButton() {
+        const busy = sendBtn.getAttribute('aria-busy') === 'true';
+        sendBtn.disabled = !email.value.trim() || busy;
+      }
+
+      email.addEventListener('input', syncButton);
+
+      // Muestra en la nota el correo que recibiría la persona (RN-155: vale 3600 s)
+      function showEmailNote(address) {
+        const user = data.users.find(function (u) { return u.email && u.email.toLowerCase() === address.trim().toLowerCase(); });
+        $('nota-resultado').hidden = true;
+        if (!user) {
+          $('nota-correo').hidden = true;
+          $('nota-sin-cuenta').hidden = false;
+          return;
+        }
+        const expires = new Date(new Date(data.meta.now).getTime() + 3600 * 1000).toISOString();
+        $('correo-asunto').textContent = M.message('RN-155-subject');
+        $('correo-cuerpo').textContent = M.message('RN-155-body', {
+          nombre: user.name,
+          enlace: '/password-reset/confirm?token=tok_recuperacion',
+          fecha: M.formatDate(expires),
+          hora: M.formatTime(expires),
+        });
+        $('nota-correo').hidden = false;
+        $('nota-sin-cuenta').hidden = true;
+      }
+
+      $('form-recuperar').addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (!email.value.trim()) return;
+        if (offline) { $('motivo-enviar').focus(); return; }       // C-04
+        sendBtn.setAttribute('aria-busy', 'true');
+        syncButton();
+        const address = email.value;
+        setTimeout(function () {
+          // API-006: siempre la misma respuesta (RN-156)
+          states.set('con-datos');
+          showEmailNote(address);
+        }, 800);
+      });
+
+      const states = M.initStates({
+        extraStates: [{ id: 'sin-conexion', label: 'Sin conexión' }],
+        initial: 'vacio',
+        onChange: function (state) {
+          offline = state === 'sin-conexion';
+          sendBtn.removeAttribute('aria-busy');
+          $('nota-resultado').hidden = false;
+          $('nota-correo').hidden = true;
+          $('nota-sin-cuenta').hidden = true;
+          email.value = '';
+
+          if (state === 'loading') {
+            email.value = M.getUser('user_789').email;
+            sendBtn.setAttribute('aria-busy', 'true');
+          } else if (state === 'sin-conexion') {
+            email.value = M.getUser('user_789').email;
+          } else if (state === 'con-datos') {
+            showEmailNote(M.getUser('user_789').email);        // correo registrado
+          } else if (state === 'error') {
+            showEmailNote(data.examples.newAccount.email);     // correo sin cuenta: mismo mensaje
+          }
+
+          if (offline) {
+            sendBtn.setAttribute('aria-disabled', 'true');
+            sendBtn.setAttribute('aria-describedby', 'motivo-enviar');
+          } else {
+            sendBtn.removeAttribute('aria-disabled');
+            sendBtn.removeAttribute('aria-describedby');
+          }
+          syncButton();
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

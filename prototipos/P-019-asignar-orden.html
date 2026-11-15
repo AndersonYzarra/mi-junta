@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Asignar orden · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <style>
+    /* Fila de participante con su selector de turno */
+    .turn-row { align-items: center; }
+    .turn-row__select { flex: 0 0 9rem; }
+    .turn-row__error { flex-basis: 100%; margin-top: 0; }
+  </style>
+  <!--
+    P-019 · Asignar orden de turnos (/juntas/{id}/turn-assignment/new).
+    Prototipo, NO es código de producción. Fuente: spec-pack/09-ui-spec.md §3 P-019
+    y RN-030, RN-039, RN-122, RN-125, RN-126, RN-127, RN-128, RN-129 y RN-170 de
+    spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?junta=junta_familia  junta (por defecto, la Junta Familia de Carmen)
+      ?usuario=user_123     usuario con sesión (por defecto, Carmen)
+    La Junta Familia tiene 11 de 12 cupos en datos.js. En los estados "Con datos",
+    "Vacío", "Error" y "Loading", el cupo 12 se simula ocupado por Ana
+    (examples.newAccount), que se une con el código T9QW3HZ5.
+  -->
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <a class="back-link" id="enlace-volver" href="P-011-junta-organizador.html"></a>
+
+    <div class="page-header">
+      <h1>Asignar orden de turnos</h1>
+    </div>
+
+    <!-- Sin permiso (403): quien pide no es el organizador -->
+    <div class="alert alert--danger" role="alert" data-estado="sin-permiso">
+      <div class="alert__body">
+        <p>No tiene acceso a esta junta.</p>
+        <a data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Ir a Mis juntas</a>
+      </div>
+    </div>
+
+    <!-- La junta ya tiene su orden de turnos (RN-125) -->
+    <div class="alert alert--info" role="alert" data-estado="ya-tiene-orden">
+      <div class="alert__body">
+        <p id="texto-ya-tiene-orden"></p>
+        <a id="enlace-orden-existente" href="P-020-registro-orden-asignado.html">Ver el orden de turnos</a>
+      </div>
+    </div>
+
+    <form id="form-orden" novalidate data-estado="con-datos vacio error loading sin-conexion cupos-libres">
+      <p class="long-text">Elija un turno distinto para cada participante. El orden no se podrá cambiar después.</p>
+
+      <!-- Resumen de errores (C-05) -->
+      <div class="error-summary section" id="resumen" role="alert" tabindex="-1" hidden>
+        <ul id="resumen-lista"></ul>
+      </div>
+
+      <p class="section muted" id="texto-cupos"></p>
+
+      <!-- Participantes que ocupan un cupo, en el orden en que se unieron (RN-030) -->
+      <ul class="list section" id="lista-participantes"></ul>
+
+      <div class="btn-row section">
+        <div>
+          <button class="btn btn--primary btn--block" type="submit" id="btn-guardar">Guardar orden</button>
+          <span class="unavailable-reason" id="motivo-guardar" tabindex="-1" hidden></span>
+        </div>
+        <a class="btn btn--secondary" id="btn-cancelar" href="P-011-junta-organizador.html">Cancelar</a>
+      </div>
+    </form>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p id="nota-simulacion"></p>
+      <p id="nota-ronda1"></p>
+      <label class="choice">
+        <input type="checkbox" id="simular-fecha">
+        <span class="choice__text">Simular que Carmen ya cambió la ronda 1 a una fecha posterior a hoy en "Editar junta", para ver el orden guardado</span>
+      </label>
+      <p>El organizador que no participa no aparece en la lista (RN-030). En datos.js no hay una junta sin orden con un organizador que no participa: la Junta Ventas ya tiene su orden.</p>
+      <p>Probar también: <a href="P-019-asignar-orden.html?junta=junta_ventas&amp;usuario=user_456">Junta Ventas, que ya tiene su orden (RN-125)</a>; <a href="P-019-asignar-orden.html?junta=junta_familia&amp;usuario=user_789">Lucía, que no es la organizadora (403)</a>.</p>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <!-- C-07 · Confirmar el orden (RN-039, RN-128, RN-129) -->
+  <dialog class="dialog" id="dialogo-guardar" aria-labelledby="dialogo-titulo">
+    <h2 class="dialog__title" id="dialogo-titulo" tabindex="-1">¿Guardar este orden de turnos?</h2>
+    <p>Quedará registrado a su nombre y no se podrá cambiar. Se crearán las rondas con sus cuotas y el código de invitación dejará de servir.</p>
+    <p class="muted" id="dialogo-codigo"></p>
+    <div class="inline-error" id="dialogo-error" role="alert" hidden>
+      <span><span id="dialogo-error-texto"></span> <a id="enlace-editar" href="P-012-editar-junta.html">Editar junta</a></span>
+    </div>
+    <div class="dialog__actions">
+      <button class="btn btn--primary" type="button" id="dialogo-confirmar">Guardar orden</button>
+      <button class="btn btn--secondary" type="button" id="dialogo-cancelar">Cancelar</button>
+    </div>
+  </dialog>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+      const SIM_KEY = 'mijunta.p019.asignacion';
+
+      const junta = M.getJunta(params.get('junta')) || M.getJunta('junta_familia');
+      const user = M.getCurrentUser(junta.organizerId);
+      const userParam = 'usuario=' + user.id;
+      const isOrganizer = M.isOrganizer(junta.id, user.id);
+      const alreadyFixed = !!M.getTurnOrder(junta.id);              // RN-125
+      const code = M.getInviteCode(junta.id);
+
+      document.querySelectorAll('[data-nav]').forEach(function (a) {
+        a.href = a.getAttribute('data-nav') + '?' + userParam;
+      });
+
+      const juntaHref = 'P-011-junta-organizador.html?junta=' + junta.id + '&' + userParam;
+      $('enlace-volver').textContent = junta.name;
+      $('enlace-volver').href = isOrganizer ? juntaHref : 'P-010-junta-participante.html?junta=' + junta.id + '&' + userParam;
+      $('btn-cancelar').href = juntaHref;
+      $('enlace-editar').href = 'P-012-editar-junta.html?junta=' + junta.id + '&' + userParam;
+      $('texto-ya-tiene-orden').textContent = M.message('RN-125');
+      $('enlace-orden-existente').href = (M.getDraw(junta.id) ? 'P-013-registro-sorteo.html' : 'P-020-registro-orden-asignado.html') +
+        '?junta=' + junta.id + '&' + userParam;
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('dialogo-codigo').textContent = code
+        ? 'El código ' + M.formatInviteCode(code.code) + ' dejará de servir (RN-129).'
+        : '';
+
+      // Participantes que ocupan un cupo, en el orden en que se unieron.
+      // El organizador que no participa no ocupa cupo y no aparece (RN-030).
+      const realMembers = data.memberships
+        .filter(function (m) { return m.juntaId === junta.id && m.leftAt === null && m.occupiesSlot; })
+        .sort(function (a, b) { return a.slotTakenAt < b.slotTakenAt ? -1 : 1; })
+        .map(function (m) { return { id: m.userId, name: M.displayName(m.userId), isSelf: m.userId === user.id }; });
+      const freeSlots = junta.participantCount - realMembers.length;
+      const simulatedMember = { id: 'user_simulado_ana', name: data.examples.newAccount.name, isSelf: false, simulated: true };
+
+      $('nota-simulacion').textContent = junta.name + ' tiene ' + realMembers.length + ' de ' + junta.participantCount +
+        ' cupos ocupados en datos.js. ' + (freeSlots === 1
+          ? 'Salvo en "Cupos libres", el cupo ' + junta.participantCount + ' se simula ocupado por ' + simulatedMember.name + ', que se une con el código ' + (code ? code.code : '') + '.'
+          : '');
+      $('nota-ronda1').textContent = 'La ronda 1 vence el ' + M.formatDate(junta.round1DueDate) + ' y hoy es ' +
+        M.formatDate(data.meta.today) + (junta.round1DueDate < data.meta.today
+          ? ': al guardar, el servidor rechaza el orden (RN-122).'
+          : '.');
+
+      let members = [];
+      let offline = false;
+      let slotsFree = false;
+
+      function renderList(preset) {
+        const n = junta.participantCount;
+        $('lista-participantes').innerHTML = members.map(function (m, i) {
+          const options = ['<option value="">—</option>'];
+          for (let t = 1; t <= n; t += 1) {
+            options.push('<option value="' + t + '"' + (preset && preset[i] === t ? ' selected' : '') + '>' + t + '</option>');
+          }
+          return '<li class="list__row turn-row' + (m.isSelf ? ' list__row--self' : '') + '">' +
+            '<span class="list__main">' + esc(m.name) + (m.isSelf ? ' (usted)' : '') + (m.simulated ? ' <span class="muted">(simulado)</span>' : '') + '</span>' +
+            '<span class="turn-row__select">' +
+            '<label class="visually-hidden" for="turno-' + i + '">Turno de ' + esc(m.name) + '</label>' +
+            '<select class="input" id="turno-' + i + '" data-index="' + i + '" aria-describedby="error-turno-' + i + '">' + options.join('') + '</select>' +
+            '</span>' +
+            '<span class="field__error turn-row__error" id="error-turno-' + i + '" hidden></span></li>';
+        }).join('');
+        $('texto-cupos').textContent = members.length + ' de ' + n + ' cupos ocupados';
+      }
+
+      function selects() { return Array.prototype.slice.call(document.querySelectorAll('#lista-participantes select')); }
+
+      function clearErrors() {
+        selects().forEach(function (s, i) {
+          s.removeAttribute('aria-invalid');
+          $('error-turno-' + i).hidden = true;
+        });
+        $('resumen').hidden = true;
+      }
+
+      // RN-127: cada participante con un turno distinto, del 1 al n
+      function validate() {
+        clearErrors();
+        const n = junta.participantCount;
+        const values = selects().map(function (s) { return s.value; });
+        const counts = {};
+        values.forEach(function (v) { if (v) counts[v] = (counts[v] || 0) + 1; });
+        const bad = [];
+        values.forEach(function (v, i) { if (!v || counts[v] > 1) bad.push(i); });
+        if (!bad.length && values.length === n) return null;
+        const msg = M.message('RN-127', { n: n });
+        bad.forEach(function (i) {
+          const s = selects()[i];
+          s.setAttribute('aria-invalid', 'true');
+          const err = $('error-turno-' + i);
+          err.textContent = msg;
+          err.hidden = false;
+        });
+        $('resumen-lista').innerHTML = '<li><a href="#turno-' + bad[0] + '">' + esc(msg) + '</a></li>';
+        $('resumen').hidden = false;
+        return msg;
+      }
+
+      function setUnavailable(reasonText) {
+        const btn = $('btn-guardar');
+        const reason = $('motivo-guardar');
+        if (reasonText) {
+          btn.setAttribute('aria-disabled', 'true');
+          btn.setAttribute('aria-describedby', 'motivo-guardar');
+          reason.textContent = reasonText;
+          reason.hidden = false;
+        } else {
+          btn.removeAttribute('aria-disabled');
+          btn.removeAttribute('aria-describedby');
+          reason.hidden = true;
+        }
+      }
+
+      /* Guardar: C-04 si no se puede, validación y diálogo */
+      const dialog = $('dialogo-guardar');
+      const confirmBtn = $('dialogo-confirmar');
+
+      $('form-orden').addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (offline || slotsFree) { $('motivo-guardar').focus(); return; }
+        if (validate()) { $('resumen').focus(); return; }
+        openDialog(false);
+      });
+
+      function openDialog(busy) {
+        $('dialogo-error').hidden = true;
+        confirmBtn.disabled = busy;
+        if (busy) confirmBtn.setAttribute('aria-busy', 'true');
+        else confirmBtn.removeAttribute('aria-busy');
+        if (!dialog.open) dialog.showModal();
+        $('dialogo-titulo').focus();
+      }
+
+      $('dialogo-cancelar').addEventListener('click', function () { dialog.close(); });
+      dialog.addEventListener('close', function () { $('btn-guardar').focus(); });
+
+      confirmBtn.addEventListener('click', function () {
+        confirmBtn.disabled = true;                                       // evita una segunda pulsación
+        confirmBtn.setAttribute('aria-busy', 'true');
+        setTimeout(function () {
+          const round1Past = junta.round1DueDate < data.meta.today && !$('simular-fecha').checked;
+          if (round1Past) {                                               // RN-122
+            confirmBtn.disabled = false;
+            confirmBtn.removeAttribute('aria-busy');
+            $('dialogo-error-texto').textContent = M.message('RN-122');
+            $('dialogo-error').hidden = false;
+            return;
+          }
+          // 201: se guarda el registro (quién y cuándo, RN-039) y abre P-020
+          const order = [];
+          selects().forEach(function (s, i) { order[Number(s.value) - 1] = { id: members[i].id, name: members[i].name }; });
+          try {
+            sessionStorage.setItem(SIM_KEY, JSON.stringify({
+              juntaId: junta.id, result: order, assignedBy: user.id, assignedAt: data.meta.now,
+            }));
+          } catch (e) { /* sin almacenamiento */ }
+          location.href = 'P-020-registro-orden-asignado.html?junta=' + junta.id + '&' + userParam;
+        }, 900);
+      });
+
+      M.initStates({
+        extraStates: [
+          { id: 'cupos-libres', label: 'Cupos libres' },
+          { id: 'ya-tiene-orden', label: 'Ya tiene orden' },
+          { id: 'sin-conexion', label: 'Sin conexión' },
+          { id: 'sin-permiso', label: 'Sin permiso' },
+        ],
+        initial: !isOrganizer ? 'sin-permiso' : (alreadyFixed ? 'ya-tiene-orden' : 'vacio'),
+        onChange: function (state) {
+          if (dialog.open) dialog.close();
+          offline = state === 'sin-conexion';
+          slotsFree = state === 'cupos-libres';
+          // Lista: la real en "Cupos libres"; con el cupo simulado en los demás
+          members = realMembers.slice();
+          if (!slotsFree && freeSlots === 1) members.push(simulatedMember);
+
+          let preset = null;
+          const n = junta.participantCount;
+          if (state === 'con-datos' || state === 'loading' || state === 'sin-conexion') {
+            preset = members.map(function (m, i) { return i + 1; });     // un orden válido
+          } else if (state === 'error') {
+            preset = members.map(function (m, i) { return i < 2 ? 1 : (i === 2 ? null : i + 1); });   // repetido y vacío
+          }
+          renderList(preset);
+
+          if (offline) setUnavailable(M.message('RN-170'));
+          else if (slotsFree) setUnavailable(M.message('RN-126'));
+          else setUnavailable(null);
+
+          if (state === 'error') validate();
+          if (state === 'loading') openDialog(true);
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

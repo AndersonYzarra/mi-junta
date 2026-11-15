@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Junta · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <style>
+    /* Fila de miembro: datos apilados en la base y en una sola línea desde 768 px (09, P-010) */
+    .member-row { display: grid; gap: var(--space-1); }
+    .member-row__data { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+    @media (min-width: 768px) {
+      .member-row { grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) minmax(0, 3fr); align-items: center; gap: var(--space-3); }
+    }
+    .quota-row__actions { flex-basis: 100%; }
+    @media (min-width: 768px) { .quota-row__actions { flex-basis: auto; } }
+  </style>
+  <!--
+    P-010 · Junta: vista del participante (/juntas/{id} y /juntas/{id}/members).
+    Prototipo, NO es código de producción. Fuente: spec-pack/09-ui-spec.md §3
+    P-010 y RN-014, RN-022, RN-023, RN-025, RN-026, RN-037, RN-041, RN-061,
+    RN-094, RN-095, RN-105, RN-111, RN-113, RN-114, RN-118, RN-119, RN-135,
+    RN-170 y RN-183 de spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?junta=junta_oficina  junta (por defecto, la Junta Oficina)
+      ?usuario=user_789     usuario con sesión (por defecto, Lucía)
+      ?vista=miembros       pestaña "Miembros" (también ?vista=turnos antes del orden)
+      ?aviso=unido          viene de P-009: simula que acaba de unirse y muestra C-08
+  -->
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión (RN-094, RN-095) -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <!-- C-03 · Indicador de cambios sin enviar -->
+  <div class="status-bar status-bar--pending" data-estado="sin-enviar">
+    <span class="icon icon--sync" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-cambios"></span>
+    <a class="status-bar__action" data-nav="P-016-cambios-sin-enviar.html" href="P-016-cambios-sin-enviar.html">Ver</a>
+  </div>
+
+  <main id="contenido" class="container">
+    <a class="back-link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mis juntas</a>
+
+    <!-- Cargando (C-10) -->
+    <div class="stack" data-estado="loading" aria-hidden="true">
+      <span class="skeleton skeleton--title"></span>
+      <span class="skeleton skeleton--text" style="width: 50%"></span>
+      <span class="skeleton skeleton--row"></span>
+      <span class="skeleton skeleton--card"></span>
+      <span class="skeleton skeleton--card"></span>
+    </div>
+
+    <!-- Error de red sin snapshot -->
+    <div class="alert alert--danger section" role="alert" data-estado="error">
+      <div class="alert__body">
+        <p id="texto-error"></p>
+        <button class="btn btn--secondary" type="button" id="btn-reintentar">Intentar de nuevo</button>
+      </div>
+    </div>
+
+    <!-- Sin permiso (403, RN-024) -->
+    <div class="empty-state section" data-estado="sin-permiso">
+      <p>No tiene acceso a esta junta.</p>
+      <p><a class="btn btn--secondary" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Ir a Mis juntas</a></p>
+    </div>
+
+    <!-- Contenido de la junta -->
+    <div data-estado="con-datos vacio sin-conexion sin-enviar" id="contenido-junta">
+      <div class="page-header">
+        <h1 id="titulo-junta"></h1>
+        <p class="cluster" id="subtitulo-junta"></p>
+      </div>
+
+      <!-- C-09 · Pestañas de la junta -->
+      <nav class="tabs" aria-label="Secciones de la junta">
+        <ul>
+          <li><a class="tabs__link" id="tab-resumen" href="#">Resumen</a></li>
+          <li><a class="tabs__link" id="tab-miembros" href="#">Miembros</a></li>
+          <li><a class="tabs__link" id="tab-turnos" href="#">Turnos</a></li>
+        </ul>
+      </nav>
+
+      <div id="panel"></div>
+
+      <!-- Salir de la junta: siempre visible, salvo en una junta terminada -->
+      <div class="section-end" id="bloque-salir">
+        <button class="btn btn--text btn--text-danger" type="button" id="btn-salir" style="padding-left: 0">Salir de la junta</button>
+        <span class="unavailable-reason" id="motivo-salir" tabindex="-1" hidden></span>
+        <p class="inline-error" id="error-salir" tabindex="-1" hidden></p>
+      </div>
+    </div>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p id="nota-vista"></p>
+      <p id="nota-otras"></p>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <!-- C-07 · Salir de la junta (RN-111, RN-113) -->
+  <dialog class="dialog" id="dialogo-salir" aria-labelledby="dialogo-salir-titulo">
+    <h2 class="dialog__title" id="dialogo-salir-titulo" tabindex="-1"></h2>
+    <p>Su cupo quedará libre y necesitará un código nuevo para volver a unirse.</p>
+    <div class="dialog__actions">
+      <button class="btn btn--danger" type="button" id="dialogo-confirmar">Salir de la junta</button>
+      <button class="btn btn--secondary" type="button" id="dialogo-cancelar">Cancelar</button>
+    </div>
+  </dialog>
+
+  <!-- C-08 · Aviso de resultado -->
+  <div class="toast" id="toast" role="status" hidden>
+    <span class="toast__text" id="toast-texto"></span>
+    <button class="btn btn--icon" type="button" id="toast-cerrar" aria-label="Cerrar"><span class="icon icon--close" aria-hidden="true"></span></button>
+  </div>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+
+      const urlJuntaId = M.getJunta(params.get('junta')) ? params.get('junta') : 'junta_oficina';
+      const urlUser = M.getCurrentUser('user_789');
+      const view = ['miembros', 'turnos'].indexOf(params.get('vista')) !== -1 ? params.get('vista') : 'resumen';
+      const joined = params.get('aviso') === 'unido';
+
+      // ADR-009: el organizador recibe la vista P-011
+      if (M.isOrganizer(urlJuntaId, urlUser.id)) {
+        location.replace('P-011-junta-organizador.html?junta=' + urlJuntaId + '&usuario=' + urlUser.id);
+        return;
+      }
+
+      // Viene de P-009: simula en memoria que la persona ocupó un cupo (RN-100 si se llena)
+      if (joined && !M.isMember(urlJuntaId, urlUser.id)) {
+        const j = M.getJunta(urlJuntaId);
+        data.memberships.push({ juntaId: j.id, userId: urlUser.id, isOrganizer: false, occupiesSlot: true, slotTakenAt: data.meta.now, leftAt: null });
+        if (j.status === 'open' && M.getOccupiedSlots(j.id) >= j.participantCount) j.status = 'full';
+      }
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('texto-error').textContent = M.message('RN-170');
+      $('texto-cambios').textContent = M.pendingChangesText(1);
+
+      /* C-08 */
+      let toastTimer = null;
+      function toast(text) {
+        $('toast-texto').textContent = text;
+        $('toast').hidden = false;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { $('toast').hidden = true; }, 6000);
+      }
+      $('toast-cerrar').addEventListener('click', function () { $('toast').hidden = true; });
+
+      /* Contexto: junta y usuario que se muestran. El estado "Vacío" usa la
+         Junta Familia antes de fijar el orden, vista por un familiar. */
+      let ctx = null;
+      let offline = false;
+      let unsentSim = false;
+
+      function context(state) {
+        const juntaId = state === 'vacio' ? 'junta_familia' : urlJuntaId;
+        const user = state === 'vacio' ? M.getUser('user_124') : urlUser;
+        return { junta: M.getJunta(juntaId), user: user, q: '?junta=' + juntaId + '&usuario=' + user.id };
+      }
+
+      function linkFor(file) { return file + '?usuario=' + ctx.user.id; }
+
+      function definitionList(j) {
+        const rows = [
+          ['Cuota', M.formatMoney(j.contributionAmountCents)],
+          ['Pozo por ronda', M.formatMoney(M.getPotCents(j))],                 // RN-041
+          ['Participantes', String(j.participantCount)],
+          ['Frecuencia', M.frequencyLabel(j)],
+          ['Vencimiento de la ronda 1', M.formatDate(j.round1DueDate)],
+          ['Días de aviso previo', j.reminderLeadDays + (j.reminderLeadDays === 1 ? ' día' : ' días')],
+        ];
+        return '<dl class="data-list">' + rows.map(function (r) {
+          return '<dt>' + r[0] + '</dt><dd' + (r[0].indexOf('Cuota') === 0 || r[0].indexOf('Pozo') === 0 ? ' class="amount"' : '') + '>' + esc(r[1]) + '</dd>';
+        }).join('') + '</dl>';
+      }
+
+      function rulesBlock(j) {
+        // RN-014: las reglas que escribió el organizador, tal cual
+        const body = j.juntaRules
+          ? '<p class="preformatted long-text">' + esc(j.juntaRules) + '</p>'
+          : '<p class="muted">El organizador no escribió reglas para esta junta.</p>';
+        return '<details class="disclosure"><summary>Reglas de la junta</summary><div class="disclosure__body">' + body + '</div></details>';
+      }
+
+      function conditionsBlock(j) {
+        return '<details class="disclosure"><summary>Condiciones de la junta</summary><div class="disclosure__body">' +
+          definitionList(j) + '</div></details>';
+      }
+
+      function turnsLink() {
+        const order = M.getTurnOrder(ctx.junta.id);
+        if (!order) return null;
+        return order.kind === 'draw'
+          ? { href: 'P-013-registro-sorteo.html' + ctx.q, text: 'Ver sorteo' }
+          : { href: 'P-020-registro-orden-asignado.html' + ctx.q, text: 'Ver orden de turnos' };
+      }
+
+      // Cuotas propias (RN-026). En el estado "Sin enviar" se simula que la
+      // persona informó sin conexión el pago de la ronda siguiente a la actual.
+      function ownContributions() {
+        const list = M.getOwnContributions(ctx.junta.id, ctx.user.id);
+        const current = M.getCurrentRound(ctx.junta.id);
+        if (!unsentSim || !current) return list;
+        return list.map(function (c) {
+          if (c.roundNumber === current.number + 1 && c.status === 'pending') {
+            return Object.assign({}, c, { status: 'awaiting_confirmation', unsent: true });
+          }
+          return c;
+        });
+      }
+
+      function badges(c) {
+        return M.badgeHtml(c.status) + (c.unsent ? ' ' + M.unsentBadgeHtml() : '');
+      }
+
+      function reportButton(c) {
+        // Solo cuotas propias en "Pendiente" (RN-061, RN-135); funciona sin conexión (RN-170)
+        if (c.status !== 'pending' || ctx.junta.status === 'finished') return '';
+        return '<a class="btn btn--secondary" href="P-018-informar-pago.html?cuota=' + c.id + '&amp;usuario=' + ctx.user.id + '">Informar mi pago</a>';
+      }
+
+      /* Pestaña "Resumen" */
+      function renderSummary() {
+        const j = ctx.junta;
+        const beforeOrder = j.status === 'open' || j.status === 'full';
+        if (beforeOrder) {
+          return '<div class="stack">' +
+            '<div class="alert alert--info"><div class="alert__body"><p>' + esc(M.message('RN-105')) + '</p></div></div>' +
+            conditionsBlock(j) + rulesBlock(j) + '</div>';
+        }
+        const turn = M.getTurn(j.id, ctx.user.id);                                // RN-025
+        const rounds = M.getRounds(j.id);
+        const current = M.getCurrentRound(j.id);
+        const own = ownContributions();
+        const ownCurrent = own.find(function (c) { return c.roundNumber === current.number; });
+        const ownTurnRound = own.find(function (c) { return c.roundNumber === turn; });
+        const recipient = current.potRecipientId;
+        const tl = turnsLink();
+
+        const quotaRows = own.map(function (c) {
+          return '<li class="list__row' + (c.roundNumber === current.number ? ' list__row--current' : '') + '"' +
+            (c.roundNumber === current.number ? ' aria-current="true"' : '') + '>' +
+            '<span class="list__main">Ronda ' + c.roundNumber + ' · Vence ' + M.formatDate(c.dueDate) +
+            (c.roundNumber === current.number ? '<span class="visually-hidden"> (ronda actual)</span>' : '') + '</span>' +
+            '<span class="cluster">' + badges(c) + '</span>' +
+            (reportButton(c) ? '<span class="quota-row__actions">' + reportButton(c) + '</span>' : '') +
+            '</li>';
+        }).join('');
+
+        return '<div class="stack">' +
+          // Tarjeta destacada "Su turno" (RN-025, RN-037)
+          '<div class="card card--highlight">' +
+            '<p class="text-display">Su turno: ' + turn + '</p>' +
+            '<p>Recibe el pozo en la ronda ' + turn + ', que vence el ' + M.formatDate(ownTurnRound.dueDate) + '.</p>' +
+          '</div>' +
+          // Ronda actual
+          '<div class="card">' +
+            '<h2 class="card__title">Ronda actual: ' + current.number + ' de ' + rounds.length + '</h2>' +
+            '<p>Vence el ' + M.formatDate(current.dueDate) + '</p>' +
+            '<p>Pozo: <span class="amount">' + M.formatMoney(M.getPotCents(j)) + '</span></p>' +
+            '<p>Recibe el pozo: ' + esc(M.displayName(recipient)) + ' (turno ' + M.getTurn(j.id, recipient) + ')</p>' +
+            '<p class="cluster">Su cuota: ' + badges(ownCurrent) + '</p>' +
+            (reportButton(ownCurrent) ? '<p>' + reportButton(ownCurrent).replace('btn btn--secondary', 'btn btn--secondary btn--block') + '</p>' : '') +
+            (tl ? '<p><a href="' + tl.href + '">' + tl.text + ' ›</a></p>' : '') +
+          '</div>' +
+          '<h2 class="section">Sus cuotas</h2>' +
+          '<ul class="list">' + quotaRows + '</ul>' +
+          '<div class="section">' + conditionsBlock(j) + rulesBlock(j) + '</div>' +
+          '</div>';
+      }
+
+      /* Pestaña "Miembros": solo los datos que permite RN-022 */
+      function renderMembers() {
+        const result = M.getMembersForViewer(ctx.junta.id, ctx.user.id);
+        const current = result.currentRound;
+        const rows = result.members;
+        if (!current) {
+          // Antes de fijar el orden: solo los nombres
+          return '<h2>Miembros (' + rows.length + ')</h2>' +
+            '<ul class="list section">' + rows.map(function (m) {
+              return '<li class="list__row' + (m.isSelf ? ' list__row--self' : '') + '"><span class="list__main">' + esc(m.name) +
+                (m.isSelf ? ' (usted)' : '') + '</span>' + (m.isOrganizerRole ? '<span class="badge badge--organizer">Organizador</span>' : '') + '</li>';
+            }).join('') + '</ul>';
+        }
+        const participants = rows.filter(function (m) { return m.participates; });
+        const missing = participants.filter(function (m) { return m.currentRoundStatus !== 'paid'; }).length;
+        return '<h2>Ronda actual: ' + current.number + '</h2>' +
+          '<p class="section">Faltan pagar la ronda ' + current.number + ': ' + missing + '</p>' +
+          '<ul class="list section">' + rows.map(function (m) {
+            if (!m.participates) {
+              // RN-118: el organizador que no participa, solo con su nombre y su rol
+              return '<li class="list__row"><span class="list__main">' + esc(m.name) + '</span><span class="badge badge--organizer">Organizador</span></li>';
+            }
+            const next = m.nextDueDate
+              ? M.formatDate(m.nextDueDate) + ' ' + M.badgeHtml(m.nextStatus)
+              : '<span aria-hidden="true">—</span><span class="visually-hidden">Sin próxima cuota</span>';   // RN-119
+            return '<li class="list__row' + (m.isSelf ? ' list__row--self' : '') + '"><div class="member-row list__main">' +
+              '<span class="strong"><span class="list__num">' + m.turn + '</span>· ' + esc(m.name) + (m.isSelf ? ' (usted)' : '') + '</span>' +
+              '<span class="member-row__data">Ronda ' + current.number + ': ' + M.badgeHtml(m.currentRoundStatus) + '</span>' +
+              '<span class="member-row__data">Próxima: ' + next + '</span>' +
+              '</div></li>';
+          }).join('') + '</ul>';
+      }
+
+      /* Pestaña "Turnos" antes del orden (C-09) */
+      function renderTurnsBeforeOrder() {
+        return '<div class="alert alert--info"><div class="alert__body"><p>' + esc(M.message('RN-105')) + '</p></div></div>';
+      }
+
+      function render(state) {
+        ctx = context(state);
+        const j = ctx.junta;
+        const beforeOrder = j.status === 'open' || j.status === 'full';
+        document.title = j.name + ' · Mi Junta';
+        document.querySelectorAll('[data-nav]').forEach(function (a) { a.href = linkFor(a.getAttribute('data-nav')); });
+
+        $('titulo-junta').textContent = j.name;
+        $('subtitulo-junta').innerHTML = M.badgeHtml(j.status) + ' · Organiza: ' + esc(M.displayName(j.organizerId)) +
+          (beforeOrder ? ' · ' + M.getOccupiedSlots(j.id) + ' de ' + j.participantCount + ' cupos' : '');
+
+        // Pestañas: enlaces de navegación con aria-current
+        const effectiveView = state === 'vacio' ? 'resumen' : view;
+        $('tab-resumen').href = 'P-010-junta-participante.html' + ctx.q;
+        $('tab-miembros').href = 'P-010-junta-participante.html' + ctx.q + '&vista=miembros';
+        const tl = turnsLink();
+        $('tab-turnos').href = tl ? tl.href : 'P-010-junta-participante.html' + ctx.q + '&vista=turnos';
+        ['resumen', 'miembros', 'turnos'].forEach(function (v) {
+          const tab = $('tab-' + v);
+          if (v === effectiveView) tab.setAttribute('aria-current', 'page');
+          else tab.removeAttribute('aria-current');
+        });
+
+        $('panel').innerHTML = effectiveView === 'miembros' ? renderMembers()
+          : effectiveView === 'turnos' && beforeOrder ? renderTurnsBeforeOrder()
+          : renderSummary();
+
+        // Salir: no en una junta terminada; sin conexión como C-04
+        $('bloque-salir').hidden = j.status === 'finished' || effectiveView !== 'resumen';
+        $('error-salir').hidden = true;
+        $('motivo-salir').hidden = !offline;
+        $('motivo-salir').textContent = M.message('RN-170');
+        const btn = $('btn-salir');
+        if (offline) { btn.setAttribute('aria-disabled', 'true'); btn.setAttribute('aria-describedby', 'motivo-salir'); }
+        else { btn.removeAttribute('aria-disabled'); btn.removeAttribute('aria-describedby'); }
+
+        $('nota-vista').textContent = 'Está viendo la ' + j.name + ' como ' + ctx.user.name + '. Hoy es ' + M.formatDate(data.meta.today) + '.';
+      }
+
+      /* Salir de la junta (RN-111, RN-113, RN-114) */
+      const dialog = $('dialogo-salir');
+      $('btn-salir').addEventListener('click', function () {
+        const j = ctx.junta;
+        if (offline) { $('motivo-salir').focus(); return; }                    // C-04
+        if (j.status === 'in_progress' || j.status === 'finished') {          // RN-114, sin diálogo
+          $('error-salir').textContent = M.message('RN-114-leave');
+          $('error-salir').hidden = false;
+          $('error-salir').focus();
+          return;
+        }
+        $('dialogo-salir-titulo').textContent = '¿Salir de la ' + j.name + '?';
+        dialog.showModal();
+        $('dialogo-salir-titulo').focus();
+      });
+      $('dialogo-cancelar').addEventListener('click', function () { dialog.close(); });
+      dialog.addEventListener('close', function () { $('btn-salir').focus(); });
+      $('dialogo-confirmar').addEventListener('click', function () {
+        const b = this;
+        b.disabled = true;
+        b.setAttribute('aria-busy', 'true');
+        // API-014 204: abre P-007; P-007 muestra "Salió de la {junta}."
+        setTimeout(function () {
+          location.href = 'P-007-mis-juntas.html?usuario=' + ctx.user.id + '&aviso=salio&junta=' + ctx.junta.id;
+        }, 700);
+      });
+
+      $('btn-reintentar').addEventListener('click', function () {
+        states.set('loading');
+        setTimeout(function () { states.set('con-datos'); }, 900);
+      });
+
+      /* Otras vistas del prototipo */
+      $('nota-otras').innerHTML = 'Ver también: ' + [
+        ['junta_oficina', 'user_789', '', 'Lucía en la Junta Oficina'],
+        ['junta_oficina', 'user_789', '&vista=miembros', 'pestaña Miembros'],
+        ['junta_ventas', 'user_610', '', 'Marta en la Junta Ventas (orden asignado)'],
+        ['junta_ventas', 'user_610', '&vista=miembros', 'Miembros con el organizador que no participa'],
+        ['junta_amigas', 'user_610', '&vista=miembros', 'junta terminada con un participante eliminado'],
+        ['junta_familia', 'user_124', '', 'Junta Familia antes del orden'],
+      ].map(function (v) {
+        return '<a href="P-010-junta-participante.html?junta=' + v[0] + '&amp;usuario=' + v[1] + v[2] + '">' + v[3] + '</a>';
+      }).join(', ') + '.';
+
+      // Enlaces con el usuario de la sesión también en los estados sin contenido
+      ctx = context('con-datos');
+      document.querySelectorAll('[data-nav]').forEach(function (a) { a.href = linkFor(a.getAttribute('data-nav')); });
+
+      const memberOk = M.isMember(urlJuntaId, urlUser.id);
+      const states = M.initStates({
+        extraStates: [
+          { id: 'sin-conexion', label: 'Sin conexión' },
+          { id: 'sin-enviar', label: 'Cambio sin enviar' },
+          { id: 'sin-permiso', label: 'Sin permiso' },
+        ],
+        initial: memberOk ? 'con-datos' : 'sin-permiso',
+        onChange: function (state) {
+          offline = state === 'sin-conexion';
+          unsentSim = state === 'sin-enviar';
+          if (['loading', 'error', 'sin-permiso'].indexOf(state) === -1) render(state);
+        },
+      });
+
+      if (joined && memberOk) toast('Se unió a la ' + M.getJunta(urlJuntaId).name + '.');
+
+      // Vuelve de P-018 después de informar un pago (sin conexión, queda "Sin enviar")
+      const reported = params.get('aviso');
+      if (memberOk && (reported === 'informado' || reported === 'informado-sin-enviar')) {
+        if (reported === 'informado-sin-enviar') states.set('sin-enviar');
+        toast('Su pago quedó por confirmar.');
+      }
+    })();
+  </script>
+</body>
+</html>

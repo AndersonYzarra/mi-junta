@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nueva contraseña · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-005 · Nueva contraseña (/password-reset/confirm?token=…). Prototipo, NO es
+    código de producción. Fuente: spec-pack/09-ui-spec.md §3 P-005 y RN-074,
+    RN-155, RN-157, RN-158 y RN-170 de spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?token=…      el enlace del correo (por defecto, uno de ejemplo)
+      ?token=usado  simula un enlace ya usado o vencido
+  -->
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" href="P-003-iniciar-sesion.html">Mi Junta</a>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <main id="contenido" class="container">
+    <div class="auth-card stack">
+      <div class="page-header">
+        <h1>Nueva contraseña</h1>
+      </div>
+
+      <!-- Enlace vencido o usado (RN-155, RN-157) -->
+      <div class="stack" data-estado="enlace-vencido">
+        <div class="alert alert--danger" role="alert">
+          <div class="alert__body"><p id="texto-vencido"></p></div>
+        </div>
+        <p><a href="P-004-recuperar-contrasena.html" class="btn btn--secondary btn--block">Pedir otro enlace</a></p>
+      </div>
+
+      <form id="form-nueva" novalidate data-estado="con-datos vacio error loading sin-conexion">
+        <div class="field">
+          <label class="field__label" for="contrasena">Nueva contraseña</label>
+          <span class="field__help" id="ayuda-contrasena">Al menos 8 caracteres.</span>
+          <div class="field__control input-with-button">
+            <input class="input" id="contrasena" name="contrasena" type="password" autocomplete="new-password" aria-describedby="ayuda-contrasena error-contrasena">
+            <button class="btn btn--icon" type="button" id="ver-contrasena" aria-label="Mostrar contraseña" aria-pressed="false" aria-controls="contrasena">
+              <span class="icon icon--eye" aria-hidden="true"></span>
+            </button>
+          </div>
+          <p class="field__error" id="error-contrasena" hidden></p>
+        </div>
+
+        <!-- RN-158 -->
+        <p class="muted">Al cambiarla, se cerrará su sesión en los demás dispositivos.</p>
+
+        <div class="section">
+          <!-- disabled mientras el campo esté vacío ("Campo con texto") -->
+          <button class="btn btn--primary btn--block" type="submit" id="btn-cambiar" disabled>Cambiar contraseña</button>
+          <span class="unavailable-reason" id="motivo-cambiar" tabindex="-1" data-estado="sin-conexion"></span>
+        </div>
+      </form>
+
+      <p><a href="P-003-iniciar-sesion.html" class="btn btn--text" style="padding-left: 0">Volver a iniciar sesión</a></p>
+
+      <aside class="proto-note" aria-label="Nota del prototipo">
+        <p class="proto-note__title">Solo en el prototipo: el correo que abrió esta pantalla (RN-155)</p>
+        <p><strong id="correo-asunto"></strong></p>
+        <p id="correo-cuerpo"></p>
+        <p>Si la contraseña es corta, el enlace sigue sirviendo: puede corregirla y volver a intentar. Con <span class="mono">?token=usado</span> en la dirección, la pantalla muestra el enlace vencido.</p>
+      </aside>
+    </div>
+  </main>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const token = params.get('token') || 'tok_recuperacion';
+      const $ = function (id) { return document.getElementById(id); };
+      const input = $('contrasena');
+      const changeBtn = $('btn-cambiar');
+      let offline = false;
+
+      // El enlace es el de Lucía Quispe, pedido hoy a las 18:50 (vale 3600 s)
+      const user = M.getUser('user_789');
+      const expires = new Date(new Date(data.meta.now).getTime() + 3600 * 1000).toISOString();
+
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+      $('motivo-cambiar').textContent = M.message('RN-170');
+      $('texto-vencido').textContent = M.message('RN-157');
+      $('correo-asunto').textContent = M.message('RN-155-subject');
+      $('correo-cuerpo').textContent = M.message('RN-155-body', {
+        nombre: user.name,
+        enlace: '/password-reset/confirm?token=' + token,
+        fecha: M.formatDate(expires),
+        hora: M.formatTime(expires),
+      });
+
+      function setError(text) {
+        const el = $('error-contrasena');
+        el.textContent = text || '';
+        el.hidden = !text;
+        if (text) input.setAttribute('aria-invalid', 'true');
+        else input.removeAttribute('aria-invalid');
+      }
+
+      function syncButton() {
+        changeBtn.disabled = !input.value || changeBtn.getAttribute('aria-busy') === 'true';
+      }
+
+      input.addEventListener('input', syncButton);
+      input.addEventListener('blur', function () { if (input.value) setError(M.validate.password(input.value)); });
+
+      $('ver-contrasena').addEventListener('click', function () {
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        this.setAttribute('aria-pressed', String(show));
+        this.setAttribute('aria-label', show ? 'Ocultar contraseña' : 'Mostrar contraseña');
+        this.querySelector('.icon').className = 'icon ' + (show ? 'icon--eye-off' : 'icon--eye');
+      });
+
+      $('form-nueva').addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (!input.value) return;
+        if (offline) { $('motivo-cambiar').focus(); return; }       // C-04
+        const err = M.validate.password(input.value);               // RN-074
+        setError(err);
+        if (err) { input.focus(); return; }                          // el enlace sigue vigente
+        changeBtn.setAttribute('aria-busy', 'true');
+        syncButton();
+        setTimeout(function () {
+          if (token === 'usado') { states.set('enlace-vencido'); return; }   // RN-157
+          // 204: se cierran las demás sesiones (RN-158) y vuelve a P-003 con el aviso
+          location.href = 'P-003-iniciar-sesion.html?aviso=contrasena';
+        }, 800);
+      });
+
+      const states = M.initStates({
+        extraStates: [
+          { id: 'enlace-vencido', label: 'Enlace vencido' },
+          { id: 'sin-conexion', label: 'Sin conexión' },
+        ],
+        initial: token === 'usado' ? 'enlace-vencido' : 'vacio',
+        onChange: function (state) {
+          offline = state === 'sin-conexion';
+          changeBtn.removeAttribute('aria-busy');
+          setError(null);
+          input.value = '';
+          if (state === 'con-datos' || state === 'sin-conexion') {
+            input.value = data.examples.demoPassword;
+          } else if (state === 'error') {
+            input.value = 'clave';
+            setError(M.message('RN-074'));
+          } else if (state === 'loading') {
+            input.value = data.examples.demoPassword;
+            changeBtn.setAttribute('aria-busy', 'true');
+          }
+          if (offline) {
+            changeBtn.setAttribute('aria-disabled', 'true');
+            changeBtn.setAttribute('aria-describedby', 'motivo-cambiar');
+          } else {
+            changeBtn.removeAttribute('aria-disabled');
+            changeBtn.removeAttribute('aria-describedby');
+          }
+          syncButton();
+        },
+      });
+    })();
+  </script>
+</body>
+</html>

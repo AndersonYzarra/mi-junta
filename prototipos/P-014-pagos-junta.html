@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pagos · Mi Junta</title>
+  <link rel="stylesheet" href="assets/estilos.css">
+  <!--
+    P-014 · Pagos de la junta (/juntas/{id}/payments?round={n}). Prototipo, NO es
+    código de producción. Fuente: spec-pack/09-ui-spec.md §3 P-014 y RN-023,
+    RN-105, RN-120, RN-130, RN-133, RN-136, RN-170 y RN-178 de
+    spec-pack/03-reglas-de-negocio.md.
+    Parámetros de la URL:
+      ?junta=junta_oficina  junta (por defecto, la Junta Oficina)
+      ?ronda=2              ronda (por defecto, la ronda actual)
+      ?usuario=user_456     usuario con sesión (por defecto, Jorge, el organizador)
+  -->
+  <style>
+    /* Tarjeta de cuota con un enlace y un botón (sin anidar controles) */
+    .payment-card > * + * { margin-top: var(--space-2); }
+    .payment-card__name { color: var(--color-text); font-weight: var(--font-weight-semibold); }
+    .round-summary { margin-top: var(--space-3); }
+    .table .btn { width: auto; }
+  </style>
+</head>
+<body class="has-bottom-nav">
+  <a class="skip-link" href="#contenido">Ir al contenido</a>
+
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="app-header__brand" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Mi Junta</a>
+      <nav class="app-header__nav" aria-label="Principal">
+        <ul>
+          <li><a class="app-header__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page">Mis juntas</a></li>
+          <li><a class="app-header__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html">Unirse</a></li>
+          <li><a class="app-header__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html">Mi cuenta</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- C-02 · Aviso sin conexión -->
+  <div class="status-bar status-bar--offline" role="status" data-estado="sin-conexion">
+    <span class="icon icon--cloud-off" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-sin-conexion"></span>
+  </div>
+
+  <!-- C-03 · Indicador de cambios sin enviar -->
+  <div class="status-bar" id="indicador-cambios" hidden>
+    <span class="icon icon--sync" aria-hidden="true"></span>
+    <span class="status-bar__text" id="texto-cambios"></span>
+    <a class="status-bar__action" data-nav="P-016-cambios-sin-enviar.html" href="P-016-cambios-sin-enviar.html">Ver</a>
+  </div>
+
+  <main id="contenido" class="container container--wide">
+    <a class="back-link" id="enlace-volver" href="P-011-junta-organizador.html"></a>
+
+    <div class="page-header">
+      <h1>Pagos</h1>
+    </div>
+
+    <!-- Cargando (C-10) -->
+    <div class="stack" data-estado="loading" aria-hidden="true">
+      <span class="skeleton skeleton--button" style="max-width: 420px"></span>
+      <span class="skeleton skeleton--text" style="width: 60%"></span>
+      <span class="skeleton skeleton--row"></span>
+      <span class="skeleton skeleton--row"></span>
+      <span class="skeleton skeleton--row"></span>
+    </div>
+
+    <!-- Sin permiso: solo el organizador recibe las cuotas de la junta (RN-120) -->
+    <div class="empty-state" role="alert" data-estado="error">
+      <p>No tiene acceso a esta junta.</p>
+      <a class="btn btn--secondary" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html">Ir a Mis juntas</a>
+    </div>
+
+    <!-- Antes de fijar el orden no hay cuotas (RN-105) -->
+    <div class="empty-state" data-estado="vacio">
+      <p>Las cuotas aparecerán cuando se fije el orden de turnos.</p>
+    </div>
+
+    <!-- Con datos (también sin conexión, desde el snapshot) -->
+    <section id="bloque-datos" data-estado="con-datos sin-conexion" aria-label="Cuotas de la ronda">
+      <div class="field" style="max-width: 420px">
+        <label class="field__label" for="ronda">Ronda</label>
+        <select class="input field__control" id="ronda"></select>
+      </div>
+
+      <div class="round-summary stack-sm">
+        <p class="cluster"><span>Pozo: <span class="amount" id="pozo"></span></span><span aria-hidden="true">·</span><span>Recibe el pozo: <strong id="receptor"></strong></span></p>
+        <p id="avance"></p>
+        <progress class="progress" id="barra-avance" max="10" value="0"></progress>
+      </div>
+
+      <div class="section">
+        <div class="filters" role="group" aria-label="Filtrar por estado">
+          <button class="filter" type="button" data-filtro="all" aria-pressed="true">Todas</button>
+          <button class="filter" type="button" data-filtro="pending" aria-pressed="false">Pendiente</button>
+          <button class="filter" type="button" data-filtro="awaiting_confirmation" aria-pressed="false">Por confirmar</button>
+          <button class="filter" type="button" data-filtro="paid" aria-pressed="false">Pagada</button>
+        </div>
+        <p class="muted section" id="contador" aria-live="polite"></p>
+      </div>
+
+      <div class="empty-state section" id="filtro-vacio" hidden><p id="texto-filtro-vacio"></p></div>
+
+      <!-- Por debajo de 1024 px: tarjetas -->
+      <ul class="stack below-lg section" id="tarjetas" style="list-style: none; padding: 0"></ul>
+
+      <!-- Desde 1024 px: tabla, sin scroll horizontal -->
+      <div class="only-lg section">
+        <table class="table" id="tabla">
+          <caption id="tabla-titulo"></caption>
+          <thead>
+            <tr>
+              <th scope="col">Participante</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Fecha de pago</th>
+              <th scope="col">A tiempo</th>
+              <th scope="col">Correcciones</th>
+              <th scope="col">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-filas"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="proto-note" aria-label="Nota del prototipo">
+      <p class="proto-note__title">Solo en el prototipo</p>
+      <p id="nota-usuario"></p>
+      <p>Solo se muestran el nombre y los datos de la junta de cada participante: nunca su correo, su celular ni su DNI (RN-023, RN-178).</p>
+      <p id="nota-otras"></p>
+    </aside>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Principal">
+    <ul>
+      <li><a class="bottom-nav__link" data-nav="P-007-mis-juntas.html" href="P-007-mis-juntas.html" aria-current="page"><span class="icon icon--home" aria-hidden="true"></span>Mis juntas</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-009-unirse-junta.html" href="P-009-unirse-junta.html"><span class="icon icon--plus" aria-hidden="true"></span>Unirse</a></li>
+      <li><a class="bottom-nav__link" data-nav="P-017-mi-cuenta.html" href="P-017-mi-cuenta.html"><span class="icon icon--user" aria-hidden="true"></span>Mi cuenta</a></li>
+    </ul>
+  </nav>
+
+  <script src="assets/datos.js"></script>
+  <script src="assets/estados.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const M = MiJunta;
+      const data = M.data;
+      const params = new URLSearchParams(location.search);
+      const $ = function (id) { return document.getElementById(id); };
+      const esc = M.escapeHtml;
+
+      const user = M.getCurrentUser();
+      const userParam = 'usuario=' + user.id;
+      const junta = M.getJunta(params.get('junta')) || M.getJunta('junta_oficina');
+      const isOrganizer = M.isOrganizer(junta.id, user.id);
+      const rounds = M.getRounds(junta.id);
+      const current = M.getCurrentRound(junta.id);
+      let roundNumber = Number(params.get('ronda')) || (current ? current.number : 1);
+      if (!rounds.some(function (r) { return r.number === roundNumber; })) roundNumber = current ? current.number : 1;
+      let filter = 'all';
+
+      document.title = 'Pagos de ' + junta.name + ' · Mi Junta';
+      document.querySelectorAll('[data-nav]').forEach(function (a) { a.href = a.getAttribute('data-nav') + '?' + userParam; });
+      $('enlace-volver').href = 'P-011-junta-organizador.html?junta=' + junta.id + '&' + userParam;
+      $('enlace-volver').textContent = junta.name;
+      $('texto-sin-conexion').textContent = M.fill(M.uiTexts.offline, {
+        fecha: M.formatDate(data.meta.lastSyncAt), hora: M.formatTime(data.meta.lastSyncAt),
+      });
+
+      const sync = M.getSyncIndicator(user.id);
+      if (sync) {
+        $('indicador-cambios').classList.add(sync.kind === 'rejected' ? 'status-bar--rejected' : 'status-bar--pending');
+        $('texto-cambios').textContent = sync.text;
+      }
+
+      // Selector de ronda: cualquier ronda, también las que todavía no vencen (RN-133)
+      $('ronda').innerHTML = rounds.map(function (r) {
+        return '<option value="' + r.number + '">Ronda ' + r.number + ' · vence ' + M.formatDate(r.dueDate) + '</option>';
+      }).join('');
+
+      function detailUrl(c) {
+        return 'P-015-detalle-cuota.html?cuota=' + c.id + '&' + userParam;
+      }
+
+      function corrected(c) {
+        return M.getContributionHistory(c.id).some(function (e) { return e.type === 'payment_unmarked'; });
+      }
+
+      function nameOf(c) {
+        return esc(M.displayName(c.participantId)) + (c.participantId === user.id ? ' (usted)' : '');
+      }
+
+      function badges(c) {
+        return M.badgeHtml(c.status) + (c.unsent ? ' ' + M.unsentBadgeHtml() : '');
+      }
+
+      function paymentLine(c) {
+        if (c.status === 'paid' && c.currentPayment) {
+          return 'Pagó el ' + M.formatDate(c.currentPayment.paidOn) + ' · ' + M.timingHtml(c.currentPayment.isOnTime);
+        }
+        if (c.status === 'awaiting_confirmation' && c.reportedPayment) {
+          return 'Informó que pagó el ' + M.formatDate(c.reportedPayment.reportedPaidOn);
+        }
+        return '';
+      }
+
+      // Acción según el estado: registrar solo una cuota "Pendiente" (RN-130).
+      // El organizador registra también su propia cuota aquí (RN-136).
+      function actionHtml(c) {
+        if (c.status === 'pending') return '<a class="btn btn--secondary" href="' + detailUrl(c) + '">Registrar pago</a>';
+        if (c.status === 'awaiting_confirmation') return '<a class="btn btn--secondary" href="' + detailUrl(c) + '">Revisar</a>';
+        return '';
+      }
+
+      function cardHtml(c) {
+        const line = paymentLine(c);
+        const extra = (line ? '<p class="cluster">' + line + '</p>' : '') +
+          (corrected(c) ? '<p class="muted">Corregido</p>' : '');
+        if (c.status === 'paid') {
+          // Toda la fila es un enlace al detalle
+          return '<li><a class="card card--link payment-card" href="' + detailUrl(c) + '">' +
+            '<span class="split"><span class="payment-card__name">' + nameOf(c) + '</span><span class="cluster">' + badges(c) + '</span></span>' +
+            extra + '</a></li>';
+        }
+        return '<li><div class="card payment-card">' +
+          '<p class="split"><a class="payment-card__name" href="' + detailUrl(c) + '">' + nameOf(c) + '</a><span class="cluster">' + badges(c) + '</span></p>' +
+          extra + actionHtml(c) + '</div></li>';
+      }
+
+      function rowHtml(c) {
+        const paid = c.status === 'paid' && c.currentPayment;
+        return '<tr>' +
+          '<td><a href="' + detailUrl(c) + '">' + nameOf(c) + '</a></td>' +
+          '<td><span class="cluster">' + badges(c) + '</span></td>' +
+          '<td class="tabular">' + (paid ? M.formatDate(c.currentPayment.paidOn)
+            : c.status === 'awaiting_confirmation' && c.reportedPayment ? 'Informó que pagó el ' + M.formatDate(c.reportedPayment.reportedPaidOn) : '—') + '</td>' +
+          '<td>' + (paid ? M.timingHtml(c.currentPayment.isOnTime) : '—') + '</td>' +
+          '<td>' + (corrected(c) ? 'Corregido' : '—') + '</td>' +
+          '<td>' + (actionHtml(c) || '<a href="' + detailUrl(c) + '">Ver detalle</a>') + '</td>' +
+          '</tr>';
+      }
+
+      function render() {
+        const round = rounds.find(function (r) { return r.number === roundNumber; });
+        const all = M.getContributions(junta.id, { roundNumber: roundNumber, viewerId: user.id });
+        const paidCount = all.filter(function (c) { return c.status === 'paid'; }).length;
+        const shown = all.filter(function (c) { return filter === 'all' || c.status === filter; });
+
+        $('ronda').value = String(roundNumber);
+        $('pozo').textContent = M.formatMoney(M.getPotCents(junta));
+        $('receptor').textContent = M.displayName(round.potRecipientId);
+        $('avance').textContent = paidCount + ' de ' + all.length + ' cuotas pagadas';
+        $('barra-avance').max = all.length;
+        $('barra-avance').value = paidCount;
+        $('barra-avance').textContent = paidCount + ' de ' + all.length;
+        $('contador').textContent = shown.length === 1 ? '1 cuota' : shown.length + ' cuotas';
+        $('tabla-titulo').textContent = 'Cuotas de la ronda ' + roundNumber;
+
+        $('tarjetas').innerHTML = shown.map(cardHtml).join('');
+        $('tabla-filas').innerHTML = shown.map(rowHtml).join('');
+        const none = shown.length === 0;
+        $('filtro-vacio').hidden = !none;
+        $('texto-filtro-vacio').textContent = 'No hay cuotas con este estado en la ronda ' + roundNumber + '.';
+        $('tarjetas').hidden = none;
+        $('tabla').hidden = none;
+      }
+
+      $('ronda').addEventListener('change', function () {
+        roundNumber = Number(this.value);
+        try {
+          const url = new URL(location.href);
+          url.searchParams.set('ronda', String(roundNumber));
+          history.replaceState(null, '', url.toString());
+        } catch (e) { /* file:// sin cambio de URL */ }
+        render();
+      });
+
+      document.querySelectorAll('[data-filtro]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          filter = btn.getAttribute('data-filtro');
+          document.querySelectorAll('[data-filtro]').forEach(function (b) {
+            b.setAttribute('aria-pressed', String(b === btn));
+          });
+          render();
+        });
+      });
+
+      if (rounds.length) render();
+
+      $('nota-usuario').textContent = 'Está viendo la pantalla como ' + user.name + '. Hoy es ' + M.formatDate(data.meta.today) +
+        '. La ronda actual es la ' + (current ? current.number : '—') + '.';
+      $('nota-otras').innerHTML = 'Ver también: <a href="P-014-pagos-junta.html?junta=junta_ventas&amp;usuario=user_456">Junta Ventas</a> (Jorge no participa), ' +
+        '<a href="P-014-pagos-junta.html?junta=junta_familia&amp;usuario=user_123">Junta Familia</a> (sin orden de turnos) o ' +
+        '<a href="P-014-pagos-junta.html?junta=junta_oficina&amp;usuario=user_789">la Junta Oficina como Lucía</a> (sin permiso).';
+
+      M.initStates({
+        extraStates: [{ id: 'sin-conexion', label: 'Sin conexión' }],
+        // Sin permiso (no es el organizador) o sin cuotas (antes del orden)
+        initial: !isOrganizer ? 'error' : (rounds.length ? 'con-datos' : 'vacio'),
+        onChange: function (state) {
+          // Con datos de una junta sin orden de turnos: el texto de RN-105
+          const blocked = (state === 'con-datos' || state === 'sin-conexion') && (!isOrganizer || !rounds.length);
+          if (blocked) {
+            $('bloque-datos').hidden = true;
+            document.querySelector(!isOrganizer ? '[data-estado="error"]' : '[data-estado="vacio"]').hidden = false;
+          }
+          $('indicador-cambios').hidden = !sync || !(state === 'con-datos' || state === 'sin-conexion') || blocked;
+        },
+      });
+    })();
+  </script>
+</body>
+</html>
