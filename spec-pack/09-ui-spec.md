@@ -1,8 +1,10 @@
 # Especificación de UI de Mi Junta
 
-Versión: 1.2
+Versión: 1.0
 Fecha: 15/11/2026
-Estado: Borrador
+Estado: Aprobado
+
+La v1.0 aprueba este documento, con la aprobación del usuario del 15/11/2026, junto con los otros 10 archivos del spec-pack. No cambia su contenido: solo cambia la cabecera y las fuentes, que ahora citan la v1.0 de cada archivo. Esta aprobación reinicia la numeración en 1.0. Las notas de historia de este y de los demás archivos que citan 09-ui-spec.md v1.0, v1.1 o v1.2 se refieren a los borradores anteriores a esta aprobación.
 
 La v1.2 aplica las decisiones del 15/11/2026 sobre auditorias/spec-finalizer.md, con la autorización del usuario:
 - Los textos [TEXTO UI] rigen para la implementación (SF-06).
@@ -12,7 +14,7 @@ La v1.2 aplica las decisiones del 15/11/2026 sobre auditorias/spec-finalizer.md,
 - Se agregan los textos que esperaban T-029 y T-030 y el aviso tras activar o desactivar el segundo factor.
 - PREG-069 a PREG-072 quedan registradas en 05-preguntas-abiertas.md v0.5.
 
-Fuente: 00-constitucion.md v0.4, 02-alcance.md v0.4, 06-user-stories.md v0.4 y 07-architecture.md v0.4. Los textos de rechazo y de estado vienen del catálogo §2.9 de 03-reglas-de-negocio.md v0.4, y los nombres de los estados vienen de 04-glosario.md v0.4. La redactó el Agente UI Designer (prompts/clase3/01-ui-designer.xml).
+Fuente: 00-constitucion.md v1.0, 02-alcance.md v1.0, 06-user-stories.md v1.0 y 07-architecture.md v1.0. Los textos de rechazo y de estado vienen del catálogo §2.9 de 03-reglas-de-negocio.md v1.0, y los nombres de los estados vienen de 04-glosario.md v1.0. La redactó el Agente UI Designer (prompts/clase3/01-ui-designer.xml).
 
 La v1.1 aplica las observaciones ✅ APLICADA de 10-validation-log.md v1.0, con la autorización del usuario del 15/11/2026: C-03 muestra a la vez el rechazo y el contador (fila 1), y P-012 agrega el aviso no bloqueante de la ronda 1 vencida (fila 10) y la nota sobre RN-007 (fila 19). No cambia ninguna RN ni ningún texto del catálogo.
 

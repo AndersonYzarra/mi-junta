@@ -1,10 +1,12 @@
 # Reglas de negocio de Mi Junta
 
-Versión: 0.5
+Versión: 1.0
 Fecha: 2026-11-15
-Estado: Revisado
+Estado: Aprobado
 
-Fuente: 00-constitucion.md v0.4, 01-project-brief.md v0.4, 02-alcance.md v0.4 y las decisiones del Product Owner del 2026-11-14 (sección 1.1, sección 1.2 sobre auditorias/qa-clase1.md, sección 1.3 sobre la alineación de pendientes y sección 1.4 sobre auditorias/qa-clase2.md). Este catálogo cubre las funcionalidades Must (F-01 a F-06) y Should (F-07 a F-11 y F-16 a F-18) de 02-alcance.md. Las funcionalidades Could (F-12 a F-15) quedan para una versión posterior.
+La v1.0 aprueba este documento, con la aprobación del usuario del 2026-11-15, junto con los otros 10 archivos del spec-pack. No cambia su contenido: solo cambia la cabecera y las fuentes, que ahora citan la v1.0 de cada archivo.
+
+Fuente: 00-constitucion.md v1.0, 01-project-brief.md v1.0, 02-alcance.md v1.0 y las decisiones del Product Owner del 2026-11-14 (sección 1.1, sección 1.2 sobre auditorias/qa-clase1.md, sección 1.3 sobre la alineación de pendientes y sección 1.4 sobre auditorias/qa-clase2.md). Este catálogo cubre las funcionalidades Must (F-01 a F-06) y Should (F-07 a F-11 y F-16 a F-18) de 02-alcance.md. Las funcionalidades Could (F-12 a F-15) quedan para una versión posterior.
 
 La v0.5 incorpora las decisiones del 2026-11-15 sobre auditorias/spec-finalizer.md (sección 1.5), tomadas con la autorización del usuario: textos de los correos de recordatorio y de los avisos en §2.9, el mensaje de RN-009 y las reglas nuevas RN-213 a RN-215.
 

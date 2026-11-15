@@ -1,12 +1,14 @@
 # Arquitectura de Mi Junta
 
-Versión: 0.5
+Versión: 1.0
 Fecha: 15/11/2026
-Estado: Revisado
+Estado: Aprobado
+
+La v1.0 aprueba este documento, con la aprobación del usuario del 15/11/2026, junto con los otros 10 archivos del spec-pack. No cambia su contenido: solo cambia la cabecera y las fuentes, que ahora citan la v1.0 de cada archivo.
 
 La v0.5 incorpora las decisiones del 15/11/2026 sobre auditorias/spec-finalizer.md, tomadas con la autorización del usuario: cerrar sesión exige conexión (SF-04), el código `ROUND1_BEFORE_CREATION` de RN-009 (SF-05), RN-213 en API-001, RN-214 y RN-215 en API-034, el código `NOT_A_MEMBER` y el `404` en §4.1, la ruta del código de desactivación en API-030 y correcciones menores en los ejemplos, el diagrama ER y ADR-002.
 
-Fuente: 00-constitucion.md v0.4, 01-project-brief.md v0.4, 02-alcance.md v0.4, 03-reglas-de-negocio.md v0.4, 04-glosario.md v0.4, 05-preguntas-abiertas.md v0.4 y 06-user-stories.md v0.4. Lo redactó el Agente Architect (prompts/clase2/03-architect.xml). La v0.4 incorpora las decisiones del Product Owner del 14/11/2026: servidor dedicado en la nube bajo control de la empresa, correo por SMTP, ADR aceptadas y dependencias aprobadas. También incorpora la segunda ronda (PREG-049 a PREG-054): servidor en Perú, contenedores Docker, claves en variables de entorno y correo con `nodemailer` por `smtp.office365.com`. Además resuelve los hallazgos críticos y mayores de auditorias/qa-clase2.md, con autorización del Product Owner del 14/11/2026: componente `proxy` para TLS, herramientas del pipeline, convención Gherkin (PREG-055), RN-212, RN-117 aclarada, reparto del pozo en el sorteo, HU-019 en la trazabilidad y correcciones de trazabilidad.
+Fuente: 00-constitucion.md v1.0, 01-project-brief.md v1.0, 02-alcance.md v1.0, 03-reglas-de-negocio.md v1.0, 04-glosario.md v1.0, 05-preguntas-abiertas.md v1.0 y 06-user-stories.md v1.0. Lo redactó el Agente Architect (prompts/clase2/03-architect.xml). La v0.4 incorpora las decisiones del Product Owner del 14/11/2026: servidor dedicado en la nube bajo control de la empresa, correo por SMTP, ADR aceptadas y dependencias aprobadas. También incorpora la segunda ronda (PREG-049 a PREG-054): servidor en Perú, contenedores Docker, claves en variables de entorno y correo con `nodemailer` por `smtp.office365.com`. Además resuelve los hallazgos críticos y mayores de auditorias/qa-clase2.md, con autorización del Product Owner del 14/11/2026: componente `proxy` para TLS, herramientas del pipeline, convención Gherkin (PREG-055), RN-212, RN-117 aclarada, reparto del pozo en el sorteo, HU-019 en la trazabilidad y correcciones de trazabilidad.
 
 **Cómo leer este documento:**
 - Las versiones exactas se fijan el día en que empieza el desarrollo (PRINCIPIO-009). Las dependencias de la sección 6.3 quedaron aprobadas el 14/11/2026, salvo las que esa tabla marca como pendientes; cualquier otra necesita aprobación humana (PRINCIPIO-012 e y h).

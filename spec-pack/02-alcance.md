@@ -1,12 +1,14 @@
 # Alcance de Mi Junta
 
-Versión: 0.4
-Fecha: 14/11/2026
-Estado: Revisado
+Versión: 1.0
+Fecha: 15/11/2026
+Estado: Aprobado
+
+La v1.0 aprueba este documento, con la aprobación del usuario del 15/11/2026, junto con los otros 10 archivos del spec-pack. No cambia su contenido: solo cambia la cabecera y las fuentes, que ahora citan la v1.0 de cada archivo.
 
 La v0.4 también incorpora las decisiones del 14/11/2026 sobre la auditoría QA del backlog (auditorias/qa-clase2.md), tomadas con autorización del Product Owner: F-18 sale junto con el MVP, y se aprobaron las herramientas del pipeline y el `proxy` de TLS (sección 6).
 
-Fuente: 01-project-brief.md v0.4, 00-constitucion.md v0.4, 03-reglas-de-negocio.md v0.4, las decisiones del Product Owner del 14/11/2026 (sección 7) y las decisiones del Product Owner del 14/11/2026 sobre la auditoría QA (auditorias/qa-clase1.md) y sobre la alineación de pendientes (sección 7 y 03-reglas-de-negocio.md v0.4 §1.3). El rol que crea y gestiona la junta se llama "organizador" (PREG-010, resuelta).
+Fuente: 01-project-brief.md v1.0, 00-constitucion.md v1.0, 03-reglas-de-negocio.md v1.0, las decisiones del Product Owner del 14/11/2026 (sección 7) y las decisiones del Product Owner del 14/11/2026 sobre la auditoría QA (auditorias/qa-clase1.md) y sobre la alineación de pendientes (sección 7 y 03-reglas-de-negocio.md v1.0 §1.3). El rol que crea y gestiona la junta se llama "organizador" (PREG-010, resuelta).
 
 **IDs de este documento:** `F-NN` identifica una funcionalidad dentro del alcance y `NO-NN` una funcionalidad fuera del alcance. Los supuestos siguen la serie `S-NN` de 01-project-brief.md.
 

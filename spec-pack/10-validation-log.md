@@ -1,10 +1,12 @@
 # Validation log de Mi Junta
 
-Versión: 1.2
+Versión: 1.0
 Fecha: 15/11/2026
-Estado: Borrador. Lo redactó el Agente Consolidador de Validación (prompts/clase3/04-consolidador.xml). Falta la revisión del Product Owner.
+Estado: Aprobado
 
-Fuente: auditorias/prototype-review.md v0.2 (reporte del Agente Prototype Reviewer, con la iteración 1 del prototipo), 00-constitucion.md v0.4, 03-reglas-de-negocio.md v0.4, 04-glosario.md v0.4, 08-backlog.md v0.4 y 09-ui-spec.md v1.0.
+La v1.0 aprueba este documento, con la aprobación del usuario del 15/11/2026, junto con los otros 10 archivos del spec-pack. No cambia su contenido: solo cambia la cabecera y las fuentes, que ahora citan la v1.0 de cada archivo. Esta aprobación reinicia la numeración en 1.0. Las notas de historia de este y de los demás archivos que citan 10-validation-log.md v1.0, v1.1 o v1.2 se refieren a los borradores anteriores a esta aprobación.
+
+Fuente: auditorias/prototype-review.md v0.2 (reporte del Agente Prototype Reviewer, con la iteración 1 del prototipo), 00-constitucion.md v1.0, 03-reglas-de-negocio.md v1.0, 04-glosario.md v1.0, 08-backlog.md v1.0 y 09-ui-spec.md v1.0. Lo redactó el Agente Consolidador de Validación (prompts/clase3/04-consolidador.xml).
 
 La v1.1 cierra el estado de cada observación y registra lo que se aplicó al consolidar, con la autorización del usuario del 15/11/2026: las filas 1, 10, 19 y 34 a 36, en prototipos/ y en 09-ui-spec.md v1.1, y las tareas ⏳ BACKLOG T-028 a T-030 en 08-backlog.md v0.5.
 

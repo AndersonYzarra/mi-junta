@@ -1,8 +1,10 @@
 # Preguntas abiertas
 
-Versión: 0.5
+Versión: 1.0
 Fecha: 15/11/2026
-Estado: Revisado
+Estado: Aprobado
+
+La v1.0 aprueba este documento, con la aprobación del usuario del 15/11/2026, junto con los otros 10 archivos del spec-pack. No cambia su contenido: solo cambia la cabecera.
 
 La v0.5 registra las preguntas que 09-ui-spec.md §7.1 (PREG-069 a PREG-072) y 10-validation-log.md §2 (PREG-073 a PREG-077) citaban sin que existieran aquí, con la decisión que tomó el Agente Spec Finalizer el 15/11/2026 con la autorización del usuario para decidir por su cuenta (auditorias/spec-finalizer.md, "Decisiones del equipo"). También abre PREG-078 a PREG-083, una por cada hallazgo mayor de esa auditoría, que siguen abiertas.
 

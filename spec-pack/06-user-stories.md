@@ -1,12 +1,14 @@
 # Historias de usuario de Mi Junta
 
-Versión: 0.5
+Versión: 1.0
 Fecha: 15/11/2026
-Estado: Revisado
+Estado: Aprobado
+
+La v1.0 aprueba este documento, con la aprobación del usuario del 15/11/2026, junto con los otros 10 archivos del spec-pack. No cambia su contenido: solo cambia la cabecera y las fuentes, que ahora citan la v1.0 de cada archivo.
 
 La v0.5 incorpora las decisiones del 15/11/2026 sobre auditorias/spec-finalizer.md (03-reglas-de-negocio.md v0.5 §1.5), tomadas con la autorización del usuario. Los criterios nuevos llevan la marca **[SF]**, con su tipo. Cubren RN-213 a RN-215, RN-188 en HU-003, RN-009 al editar la junta y el cierre de sesión sin conexión. El criterio de RN-009 de HU-004 cambió su mensaje (ver su Revisión QA), y HU-018 tiene su revisión QA.
 
-Fuente: 01-project-brief.md v0.4 (PRD), 02-alcance.md v0.4, 03-reglas-de-negocio.md v0.4, 04-glosario.md v0.4 y 00-constitucion.md v0.4. Las redactó el Agente PO (prompts/clase2/01-product-owner.xml) y las enriqueció el Agente QA Funcional (prompts/clase2/02-qa-funcional.xml). La v0.4 incorpora las decisiones del Product Owner del 14/11/2026 sobre los pendientes (03-reglas-de-negocio.md v0.4 §1.3).
+Fuente: 01-project-brief.md v1.0 (PRD), 02-alcance.md v1.0, 03-reglas-de-negocio.md v1.0, 04-glosario.md v1.0 y 00-constitucion.md v1.0. Las redactó el Agente PO (prompts/clase2/01-product-owner.xml) y las enriqueció el Agente QA Funcional (prompts/clase2/02-qa-funcional.xml). La v0.4 incorpora las decisiones del Product Owner del 14/11/2026 sobre los pendientes (03-reglas-de-negocio.md v0.4 §1.3).
 
 **Cómo leer este documento:**
 - Cada HU traza a una funcionalidad `F-NN` de 02-alcance.md y a las reglas `RN-NNN` de 03-reglas-de-negocio.md. Cada criterio de aceptación cita entre paréntesis las RN que verifica.

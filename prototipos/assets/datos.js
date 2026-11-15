@@ -4,8 +4,8 @@
  * Prototipo para validar con stakeholders. NO es código de producción.
  * Todas las pantallas usan este mismo set de datos, para que no se contradigan.
  *
- * Fuentes: spec-pack/03-reglas-de-negocio.md v0.4 ("Datos de ejemplo" y
- * catálogo §2.9), spec-pack/07-architecture.md v0.4 §3.2 (nombres del modelo de
+ * Fuentes: spec-pack/03-reglas-de-negocio.md v1.0 ("Datos de ejemplo" y
+ * catálogo §2.9), spec-pack/07-architecture.md v1.0 §3.2 (nombres del modelo de
  * datos) y los wireframes de spec-pack/09-ui-spec.md v1.0.
  *
  * Convenciones (00-constitucion.md):

@@ -1,10 +1,10 @@
 # Backlog de Mi Junta
 
-Versión: 0.6
+Versión: 1.0
 Fecha: 15/11/2026
-Estado: Borrador
+Estado: Aprobado
 
-Fuente: 07-architecture.md v0.4, 06-user-stories.md v0.4, 03-reglas-de-negocio.md v0.4, 02-alcance.md v0.4 y 00-constitucion.md v0.4. Lo redactó el Agente Backlog Builder (prompts/clase2/04-backlog-builder.xml). La v0.4 resuelve los hallazgos críticos y mayores de auditorias/qa-clase2.md, con autorización del Product Owner del 14/11/2026: herramientas aprobadas para T-001, textos de los correos de cuenta, reparto del pozo en T-014, criterios que faltaban, dependencias corregidas y las tareas nuevas T-026 y T-027.
+Fuente: 07-architecture.md v1.0, 06-user-stories.md v1.0, 03-reglas-de-negocio.md v1.0, 02-alcance.md v1.0 y 00-constitucion.md v1.0. Lo redactó el Agente Backlog Builder (prompts/clase2/04-backlog-builder.xml). La v0.4 resuelve los hallazgos críticos y mayores de auditorias/qa-clase2.md, con autorización del Product Owner del 14/11/2026: herramientas aprobadas para T-001, textos de los correos de cuenta, reparto del pozo en T-014, criterios que faltaban, dependencias corregidas y las tareas nuevas T-026 y T-027.
 
 La v0.5 agrega las tareas T-028 a T-030, que salen de las observaciones ⏳ BACKLOG de 10-validation-log.md v1.0, y suma al criterio de T-011 el caso de RN-007 en API-010 (fila 19 del log). Lo autorizó el usuario el 15/11/2026. Las tres tareas nuevas usaban textos que todavía no estaban aprobados y los marcaban [REQUIERE DECISIÓN].
 
@@ -14,6 +14,8 @@ La v0.6 aplica las decisiones del 15/11/2026 sobre auditorias/spec-finalizer.md,
 - Se agregan T-031 (base de UI) y T-032 y T-033 (HU-018, que el MVP necesita para salir al mercado).
 - "Cerrar sesión" exige conexión (T-021), y T-011 prueba RN-009 en la edición.
 - Las demás HU Should se descomponen desde T-034.
+
+La v1.0 aprueba este documento, con la aprobación del usuario del 15/11/2026, junto con los otros 10 archivos del spec-pack. No cambia su contenido: solo cambia la cabecera y las fuentes, que ahora citan la v1.0 de cada archivo.
 
 **Cómo leer este documento:**
 - Cada tarea `T-NNN` la completa un agente de desarrollo de IA en menos de 2 horas. Tamaños: **S** (< 30 min), **M** (30 min - 1 h), **L** (1-2 h).

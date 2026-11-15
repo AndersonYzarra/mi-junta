@@ -1,8 +1,10 @@
 # Project Brief de Mi Junta
 
-Versión: 0.4
-Fecha: 14/11/2026
-Estado: Revisado
+Versión: 1.0
+Fecha: 15/11/2026
+Estado: Aprobado
+
+La v1.0 aprueba este documento, con la aprobación del usuario del 15/11/2026, junto con los otros 10 archivos del spec-pack. No cambia su contenido: solo cambia la cabecera.
 
 Fuente: entrevista de descubrimiento con el Product Owner (Agente Analyst, 4 rondas). Las cifras de este documento vienen de la experiencia del Product Owner en su entorno (juntas de familia y de trabajo). No se han validado con una muestra más amplia, y por eso los supuestos están en la sección 6. La v0.3 incorpora las decisiones del Product Owner del 14/11/2026 sobre las preguntas abiertas (PREG-012, PREG-015, PREG-021, PREG-047 y el alojamiento en un servidor propio; 03-reglas-de-negocio.md §1.3). La v0.4 agrega el envío de correos por Microsoft 365 (PREG-052) y su riesgo R-15.
 
