@@ -1,6 +1,6 @@
 # Preguntas abiertas
 
-Versión: 1.5
+Versión: 1.6
 
 Decisiones pendientes detectadas al redactar la constitución, el Project Brief y el alcance. Mientras una pregunta siga abierta, todo lo que dependa de ella se marca [REQUIERE DECISIÓN]. Una pregunta resuelta conserva su ID y lleva la línea "Estado: Resuelta" con la fecha y la decisión. Una pregunta con "Estado: Propuesta" tiene una respuesta redactada por un agente que no rige hasta que el Product Owner la apruebe (PRINCIPIO-012). Al aprobarla, "Propuesta" se cambia por "Resuelta".
 
@@ -315,3 +315,21 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - A quién preguntar: Product Owner, con visto bueno del asesor legal (relacionada con PREG-001).
 - Bloquea: RN-085, RN-148 y RN-151 de 03-reglas-de-negocio.md, y PRINCIPIO-003 si se acepta otro documento.
 - Plan de resolución: decidir antes de redactar las HU de registro. Las opciones son mantener solo el DNI, o aceptar también el carné de extranjería con su propio formato, lo que requiere cambiar PRINCIPIO-003 con aprobación humana (PRINCIPIO-012).
+
+### PREG-046: ¿Qué pasa con una junta en la que una cuota queda "Pendiente" sin plazo, por ejemplo cuando un participante que ya recibió el pozo deja de pagar?
+- Contexto: después del 5.º recordatorio posterior al vencimiento, el sistema no envía más (RN-071) y no hay ninguna otra acción definida, así que la cuota sigue "Pendiente" sin límite. Nadie puede salir de la junta ni ser reemplazado después de fijar el orden de turnos (RN-114, NO-13), y la junta no pasa a "Terminada" mientras quede una cuota sin pagar (RN-103). Por eso esa junta queda "En curso" para siempre y cuenta en contra de KPI-06. Tampoco está definido qué muestra la app sobre el pozo de una ronda que tiene cuotas pendientes. El brief no reporta casos de alguien que cobra su turno y deja de pagar (01-project-brief.md §1), pero no hay ninguna regla para ese caso. Cubrir la diferencia con multas o préstamos está fuera del alcance (NO-06, NO-10), y un agente no puede decidirlo sin una regla escrita (PRINCIPIO-012 g). Detectada en la prueba de fuego (auditorias/prueba-de-fuego.md, pregunta 2).
+- A quién preguntar: Product Owner.
+- Bloquea: RN-103, KPI-06, F-15 y las HU de seguimiento de pagos (F-04 y F-05).
+- Plan de resolución: decidir antes de redactar las HU de F-04 y F-05. Las opciones son dejar la junta "En curso" sin plazo, permitir que el organizador cierre la junta con cuotas pendientes (relacionada con F-15), o agregar un estado de cuota para las que el grupo da por perdidas.
+
+### PREG-047: ¿El organizador recibe un aviso cuando una cuota vence sin pagarse?
+- Contexto: los recordatorios solo llegan al participante de la cuota (RN-068 a RN-070), y el organizador solo recibe un aviso cuando un participante informa un pago (RN-139). Para saber quién no pagó, el organizador tiene que abrir la app y revisar las cuotas (RN-120). El problema más grave del organizador es el tiempo que dedica a cobrar y recordar (01-project-brief.md §1, KPI-05). Ninguna funcionalidad de 02-alcance.md lo incluye ni lo excluye. Propuesta en la prueba de fuego (auditorias/prueba-de-fuego.md, preguntas 2 y 5).
+- A quién preguntar: Product Owner.
+- Bloquea: F-06, F-07 y la medición de KPI-05, si se aprueba.
+- Plan de resolución: decidir antes de redactar las HU de F-06. Las opciones son no enviar ningún aviso, enviar un aviso por cada cuota vencida, o enviar un resumen por junta. Si se aprueba, también hay que decidir cuándo y cada cuánto se envía, y si cuenta para el máximo de RN-071. Las RN nuevas toman el siguiente número libre.
+
+### PREG-048: ¿Quién del equipo de Mi Junta puede acceder a los datos de las juntas y de los usuarios, y cómo se registra ese acceso?
+- Contexto: PRINCIPIO-006 define qué recibe cada usuario según su rol, y RN-024 rechaza a quien no es miembro de la junta. Pero ninguna regla dice si alguien del equipo de la empresa (soporte, operación o acceso directo a la base de datos) puede ver juntas, cuotas o datos personales, ni si ese acceso queda registrado. La Ley N.° 29733 podría exigir controles sobre ese acceso (PREG-001). Detectada en la prueba de fuego (auditorias/prueba-de-fuego.md, pregunta 4).
+- A quién preguntar: Product Owner, responsable de seguridad y asesor legal (relacionada con PREG-001). Toca los permisos, así que requiere aprobación humana (PRINCIPIO-012).
+- Bloquea: PRINCIPIO-005, PRINCIPIO-006 y el diseño de arquitectura.
+- Plan de resolución: resolver junto con PREG-001 y PREG-008 antes del diseño de arquitectura.
