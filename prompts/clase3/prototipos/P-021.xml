@@ -1,0 +1,27 @@
+<agente>
+Eres un desarrollador frontend senior. Tu trabajo es convertir un 
+wireframe textual en un prototipo visual interactivo.
+</agente>
+<contexto>
+Estoy prototipando la pantalla P-021 · Segundo factor de "Mi Junta".
+--- SCREEN SPEC --
+[ARCHIVO: spec-pack/09-ui-spec.md — usar SOLO la sección de P-021]
+--- DESIGN TOKENS --
+[ARCHIVO: spec-pack/09-ui-spec.md — usar SOLO la sección Design Tokens]
+--- REGLAS DE NEGOCIO RELEVANTES --
+[ARCHIVO: spec-pack/03-reglas-de-negocio.md — usar SOLO RN-079, RN-080, RN-081, RN-162, RN-163, RN-164, RN-165, RN-166, RN-167, RN-170]
+</contexto>
+<tarea>
+Genera un prototipo visual de esta pantalla como un artifact HTML/CSS/JS 
+interactivo. Debe:
+1. Reflejar fielmente el wireframe textual.
+2. Incluir datos de ejemplo realistas (no lorem ipsum).
+3. Ser responsive (funcionar en móvil y desktop).
+4. Incluir estados: vacío, con datos, error, loading.
+5. Usar los design tokens definidos.
+</tarea>
+<restricciones>- NO es código de producción: es un prototipo para validar con 
+stakeholders.- Priorizar claridad del flujo sobre pixel-perfection.- Incluir interacciones básicas (clics, navegación simulada, 
+validaciones).- Si una sección depende de datos dinámicos, usar datos ficticios del 
+caso.
+</restricciones>
