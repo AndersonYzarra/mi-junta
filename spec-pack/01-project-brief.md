@@ -1,10 +1,10 @@
 # Project Brief de Mi Junta
 
-Versión: 0.2
+Versión: 0.4
 Fecha: 14/11/2026
 Estado: Revisado
 
-Fuente: entrevista de descubrimiento con el Product Owner (Agente Analyst, 4 rondas). Las cifras de este documento vienen de la experiencia del Product Owner en su entorno (juntas de familia y de trabajo). No se han validado con una muestra más amplia, y por eso los supuestos están en la sección 6.
+Fuente: entrevista de descubrimiento con el Product Owner (Agente Analyst, 4 rondas). Las cifras de este documento vienen de la experiencia del Product Owner en su entorno (juntas de familia y de trabajo). No se han validado con una muestra más amplia, y por eso los supuestos están en la sección 6. La v0.3 incorpora las decisiones del Product Owner del 14/11/2026 sobre las preguntas abiertas (PREG-012, PREG-015, PREG-021, PREG-047 y el alojamiento en un servidor propio; 03-reglas-de-negocio.md §1.3). La v0.4 agrega el envío de correos por Microsoft 365 (PREG-052) y su riesgo R-15.
 
 El rol que crea y gestiona la junta se llama "organizador" (PREG-010, resuelta). En las entrevistas también se le decía "administrador de la junta", término que ya no se usa.
 
@@ -76,8 +76,9 @@ Se dejan aquí para que el Product Manager decida cómo atenderlas:
 - Un participante quiere poder informar su propio pago, y el organizador quiere confirmarlo antes de darlo por válido (PREG-017).
 - El organizador quiere dejar definidas las reglas de la junta (multas, atrasos, retiros) al crearla, para no resolverlas sobre la marcha (PREG-016).
 - A veces el orden de turnos se decide según la necesidad de los participantes y no por sorteo (PREG-018).
+- El organizador quiere saber, sin revisar la app, quién no pagó cuando vence una ronda (PREG-047).
 
-**Cómo las atiende el alcance:** 02-alcance.md las incluye como funcionalidades Should, después del MVP. Son F-08 (el participante informa su pago), F-09 (reglas escritas, solo como texto que la app no aplica) y F-10 (orden de turnos sin sorteo).
+**Cómo las atiende el alcance:** 02-alcance.md las incluye como funcionalidades Should, después del MVP. Son F-08 (el participante informa su pago), F-09 (reglas escritas, solo como texto que la app no aplica) y F-10 (orden de turnos sin sorteo). La alineación del 14/11/2026 agregó F-16 (aviso de cuotas vencidas al organizador), también Should.
 
 ### Segmentos
 
@@ -138,10 +139,10 @@ El **mes 1** es el primer mes calendario después del lanzamiento. La fecha de l
 | ID | KPI | Cómo se calcula | Meta | Cuándo se mide | Fuente |
 |---|---|---|---|---|---|
 | KPI-01 | Juntas activas | Cantidad de juntas activas al cierre del mes | 10 en el mes 1, 20 en el mes 3 y 40 en el mes 6 | Al cierre de los meses 1, 3 y 6 | Datos de la app |
-| KPI-02 | Usuarios registrados | Cantidad de cuentas creadas al cierre del mes | [REQUIERE DECISIÓN] (PREG-012) | Al cierre de los meses 1, 3 y 6 | Datos de la app |
+| KPI-02 | Usuarios registrados | Cantidad de cuentas creadas al cierre del mes | 100 en el mes 1, 200 en el mes 3 y 400 en el mes 6 (PREG-012) | Al cierre de los meses 1, 3 y 6 | Datos de la app |
 | KPI-03 | Juntas al día | (Juntas al día en el mes ÷ juntas activas en el mes) × 100 | ≥ 80 % | Cada mes | Datos de la app |
 | KPI-04 | Pagos a tiempo | (Cuotas pagadas a tiempo ÷ cuotas vencidas en el mes) × 100 | ≥ 80 % | Cada mes | Datos de la app (definición de "a tiempo" en RN-055) |
-| KPI-05 | Reducción de horas del organizador | (Horas antes − horas a los 3 meses) ÷ horas antes × 100 | ≥ 80 % (con la línea base actual de 8 a 16 horas, bajar a 1.6–3.2 horas al mes) | Encuesta al organizador al empezar a usar la app y a los 3 meses | Encuesta (PREG-021) |
+| KPI-05 | Reducción de horas del organizador | (Horas antes − horas a los 3 meses) ÷ horas antes × 100 | ≥ 80 % (con la línea base actual de 8 a 16 horas, bajar a 1.6–3.2 horas al mes) | Encuesta dentro de la app al crear la primera junta y a los 3 meses de la primera respuesta (RN-204, RN-205). Solo se calcula con al menos 10 organizadores que respondieron las dos | Encuesta de 3 preguntas (PREG-021, RN-206, F-18) |
 | KPI-06 | Juntas terminadas en la app | (Juntas terminadas ÷ juntas cuya última ronda vencía dentro del periodo) × 100 | ≥ 80 % | A los 12 meses del lanzamiento | Datos de la app |
 
 **Por qué KPI-06 se mide a los 12 meses:** una junta mensual de 10 participantes, el tamaño típico del brief, dura 10 meses, así que antes de ese plazo hay pocas juntas terminadas. Las juntas más chicas (desde 2 participantes, RN-005) y las semanales o quincenales terminan antes, y entran en el cálculo si debían terminar dentro del periodo. KPI-03 sirve como indicador temprano mientras tanto.
@@ -173,13 +174,15 @@ El **mes 1** es el primer mes calendario después del lanzamiento. La fecha de l
 | R-04 | Negocio | La línea base del problema viene de un solo entorno y no representa al mercado | Medio: metas mal calibradas | Alta | Encuesta inicial de KPI-05 |
 | R-05 | Negocio | Lanzar para todos los segmentos a la vez dispersa el esfuerzo de adquisición | Medio: KPI-01 no se cumple | Media | Revisar KPI-01 por segmento al mes 3 |
 | R-06 | Negocio | El producto no genera ingresos y depende de una línea de préstamos futura que puede requerir autorización de la SBS | Alto para la sostenibilidad del negocio | No estimada | Fuera de este proyecto. Lo asume el Product Owner |
-| R-07 | Legal | Usar después los datos de pago para evaluar créditos sin un consentimiento válido según la Ley N.° 29733 | Alto: riesgo legal | No estimada | Consentimiento aparte cuando exista esa funcionalidad (PREG-015, PREG-001) |
+| R-07 | Legal | Usar después los datos de pago para evaluar créditos sin un consentimiento válido según la Ley N.° 29733 | Alto: riesgo legal | No estimada | Consentimiento aparte cuando exista esa funcionalidad, y los pagos registrados antes de ese consentimiento nunca se usan para evaluar créditos (PREG-015, RN-203) |
 | R-08 | Recursos | Todo el producto depende de un solo líder técnico | Medio: retrasos sin plan de respaldo | No estimada | Spec-pack como fuente de verdad (PRINCIPIO-001) |
 | R-09 | Negocio | El estado de pagos visible para todos genera conflictos entre miembros | Medio | Baja | Limitar lo visible según PRINCIPIO-006 |
 | R-10 | Técnico | En iPhone, una app web solo recibe notificaciones push si el usuario la agrega a la pantalla de inicio, y solo desde iOS 16.4. Si no lo hace, solo le llegan correos | Alto: agrava R-01 y afecta KPI-04 | No estimada (depende de la proporción de usuarios con iPhone) | A definir en el diseño de arquitectura |
-| R-11 | Técnico | Los correos de recordatorio caen en spam o no se entregan | Alto: los participantes no reciben el recordatorio y afecta KPI-04 | Media | A definir en el diseño de arquitectura. Medir la tasa de entrega desde el lanzamiento |
+| R-11 | Técnico | Los correos de recordatorio caen en spam o no se entregan | Alto: los participantes no reciben el recordatorio y afecta KPI-04 | Media | Envío con `nodemailer` por `smtp.office365.com` (Microsoft 365), con el dominio configurado con SPF, DKIM y DMARC (07-architecture.md, ADR-007). Medir la tasa de entrega desde el lanzamiento |
 | R-12 | Técnico | El mismo pago se registra o cambia sin conexión desde dos dispositivos y, al sincronizar, los datos chocan (PRINCIPIO-009). En el MVP solo el organizador registra pagos (F-04 de 02-alcance.md), así que el choque ocurre cuando usa dos dispositivos. Con F-08 también puede ocurrir entre el organizador y un participante | Alto: estados de pago incorrectos que afectan KPI-03 y KPI-04 y la confianza del grupo | Media | El servidor aplica los cambios en orden y rechaza el que ya no es válido, y la app le muestra al usuario el cambio rechazado (PREG-005, RN-171 a RN-173 de 03-reglas-de-negocio.md) |
 | R-13 | Seguridad | Quien conoce el correo de otra persona puede bloquear su inicio de sesión con 5 intentos fallidos (RN-075) | Bajo: el bloqueo dura 900 s y no afecta datos | Baja | Aceptado en esta versión. Revisar si se reportan bloqueos repetidos |
+| R-14 | Recursos | La app corre en un servidor dedicado bajo control de la empresa, así que los parches, los respaldos y el monitoreo del servidor y de PostgreSQL también recaen en el único líder técnico (R-08) | Medio: caídas o pérdida de datos sin respaldo probado | No estimada | Respaldos automáticos con restauración probada y monitoreo del servidor (07-architecture.md, sección 6) |
+| R-15 | Técnico | El buzón de Microsoft 365 limita los envíos por SMTP. Según la documentación de Microsoft, el límite es de 30 mensajes por minuto y 10,000 destinatarios por día por buzón, así que en la ventana de 09:00 a 09:15 (RN-066) caben unos 450 correos. Además, Microsoft anunció el retiro de la autenticación básica para SMTP | Alto: en un día con muchos vencimientos, parte de los recordatorios no sale y afecta KPI-04 | Baja en el lanzamiento; sube con KPI-01 | Autenticar con OAuth 2.0. Medir cada día cuántos correos salen en la ventana y, si se acercan al límite, revisar con el Product Owner el canal o la ventana. Confirmar los límites vigentes con el administrador de Microsoft 365 |
 
 ---
 
@@ -209,5 +212,5 @@ El **mes 1** es el primer mes calendario después del lanzamiento. La fecha de l
 | PRINCIPIO-002 y PRINCIPIO-003 | Interfaz en español de Perú, con trato de "usted", montos en S/ y fechas en DD/MM/AAAA, zona America/Lima |
 
 **Legales:**
-- El cumplimiento de la Ley N.° 29733 está pendiente (PREG-001).
+- Mi Junta cumple la Ley N.° 29733 (PREG-001, resuelta el 14/11/2026 como decisión provisional del Product Owner). El texto de la política de privacidad lo escribe el asesor legal.
 - La actividad de préstamos puede requerir autorización de la SBS, pero queda fuera de este proyecto.

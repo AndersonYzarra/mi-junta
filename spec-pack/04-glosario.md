@@ -1,6 +1,6 @@
 # Glosario de Mi Junta
 
-Versión: 0.2
+Versión: 0.4
 Fecha: 14/11/2026
 Estado: Revisado
 
@@ -8,7 +8,7 @@ Lenguaje ubicuo del proyecto. Todo el spec-pack, las HU, las pantallas y el cód
 
 **Convención de nombres:** las tablas van en plural y en `snake_case` (`juntas`, `contributions`, `payments`, `payment_corrections`, `draws`, `turn_assignments`). Las columnas y los campos de la API van en singular y en `snake_case`.
 
-Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y 03-reglas-de-negocio.md v0.2.
+Fuente: 00-constitucion.md v0.4, 01-project-brief.md v0.3, 02-alcance.md v0.3 y 03-reglas-de-negocio.md v0.3.
 
 ---
 
@@ -21,6 +21,8 @@ Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y 
 | **Junta** | Sistema de ahorro rotativo registrado en Mi Junta. Un grupo de participantes paga una cuota en cada ronda, y en cada ronda uno de ellos recibe el pozo. | `junta` (tabla `juntas`) | — |
 | **Estado de la junta** | Etapa de la junta: "Abierta" (`open`) si tiene cupos libres y no fijó su orden de turnos; "Completa" (`full`) si no tiene cupos libres y no fijó su orden; "En curso" (`in_progress`) desde que se fija el orden de turnos; y "Terminada" (`finished`) cuando todas sus cuotas están "Pagada" (RN-099 a RN-104). | `junta_status` | "activa" como estado (ver "Junta activa"), "cerrada" |
 | **Usuario** | Persona que tiene una cuenta en Mi Junta. | `user` | "cliente" |
+| **Borrar la cuenta** | Acción con la que un usuario elimina su cuenta, posible solo si no es miembro de ninguna junta "En curso" ni organiza una junta "Abierta" o "Completa" (RN-207). Borra su nombre, correo, DNI, celular y contraseña, y conserva sus cuotas y pagos de las juntas terminadas (F-17, RN-182 a RN-186). | `account_deletion` | "darse de baja" |
+| **Participante eliminado** | Nombre con que se muestra, en una junta terminada, a quien borró su cuenta (RN-183). | `deleted_participant` | "usuario borrado" |
 | **Cuenta** | Registro de un usuario con su nombre, su correo verificado y su contraseña, y opcionalmente su DNI y su celular (RN-146 a RN-151). | `user` (tabla `users`) | "perfil" como sinónimo de cuenta |
 | **Sesión** | Periodo en que un usuario tiene iniciada su cuenta en un dispositivo. Se cierra a los 30 días sin uso (RN-159). | `session` | — |
 | **Organizador** | Usuario que crea una junta y la gestiona: comparte el código de invitación, fija el orden de turnos y registra los pagos. Puede ser también participante si así lo elige (RN-006). No puede dejar su junta (RN-115). | `organizer` | "administrador de la junta" (PREG-010, resuelta) |
@@ -59,7 +61,7 @@ Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y 
 | **Estado de la cuota** | Situación de una cuota: "Pendiente" (`pending`) si no está pagada, "Por confirmar" (`awaiting_confirmation`) si el participante informó su pago y el organizador no respondió, y "Pagada" (`paid`) si el pago quedó registrado o confirmado. | `status` | "Cancelada" como sinónimo de "Pagada", "Rechazada" (el rechazo devuelve la cuota a "Pendiente", RN-063), "estado de pago" |
 | **Próxima cuota** | Cuota de un participante en la ronda siguiente a la ronda actual. Si la ronda actual es la última, no hay próxima cuota (RN-119). | `next_due_date`, `next_status` | "próximo pago" |
 | **Pozo** | Monto que recibe el receptor del pozo en una ronda. Es igual al monto de la cuota multiplicado por la cantidad de participantes (RN-041). | `pot` | "premio", "monto de la junta" |
-| **Frecuencia** | Cada cuánto vencen las cuotas: semanal (7 días), quincenal (15 días), mensual (el mismo día de cada mes, o el último día si ese mes no lo tiene) o cada N días, con N de 2 a 60 (RN-007, RN-008, RN-049, RN-050). | `frequency` | "periodicidad" |
+| **Frecuencia** | Cada cuánto vencen las cuotas: semanal (7 días), quincenal (15 días), mensual (el mismo día de cada mes, o el último día si ese mes no lo tiene) o cada N días, con N de 2 a 60 (RN-007, RN-008, RN-049, RN-050). | `frequency`, con los valores `weekly` (semanal), `every_15_days` (quincenal), `monthly` (mensual) y `every_n_days` (cada N días, con N en `frequency_days`) | "periodicidad" |
 | **Periodo** | Cantidad de días entre el vencimiento de una ronda y el de la siguiente: 7 en semanal, 15 en quincenal, N en cada N días, y de 28 a 31 en mensual según el mes. Para validar el aviso previo, el periodo mensual se toma como 28 (RN-012). | `period_days` | — |
 | **Fecha de vencimiento** | Último día, en America/Lima, en que un participante puede pagar la cuota de una ronda y que el pago siga contando como a tiempo. | `due_date` | "fecha límite", "deadline" |
 | **Días de aviso previo** | Cuántos días antes de la fecha de vencimiento se envía el primer recordatorio. Va de 1 a 7, vale 3 por defecto y es menor que el periodo (RN-010 a RN-012, RN-098). | `reminder_lead_days` | "anticipación" |
@@ -79,6 +81,9 @@ Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y 
 |---|---|---|---|
 | **Recordatorio** | Mensaje que el sistema envía a un participante sobre una cuota en el estado "Pendiente", por correo y, si lo activó, por notificación push. Un correo y su push cuentan como un recordatorio (RN-142). Sale entre las 09:00 y las 09:15 en America/Lima (RN-066). | `reminder` | "alerta", "cobranza" |
 | **Aviso al organizador** | Mensaje que el sistema envía al organizador en el momento en que un participante informa un pago, por correo y, si lo activó, por notificación push (RN-139). | `organizer_notice` | "recordatorio" (es otro mensaje) |
+| **Aviso de pago rechazado** | Mensaje que el sistema envía al participante cuando el organizador rechaza su pago informado, por correo y, si lo activó, por notificación push (RN-194). | `rejection_notice` | "recordatorio" |
+| **Aviso de cuotas vencidas** | Correo que recibe el organizador el día siguiente al vencimiento de una ronda con cuotas "Pendiente", con el nombre de cada participante que falta pagar (F-16, RN-196). No es un recordatorio y no cuenta para el máximo de RN-071. El organizador puede desactivarlo (RN-208, RN-209). | `overdue_notice`, `overdue_notices_enabled` | "cobranza" |
+| **Recordatorios por correo desactivados** | Preferencia del participante que detiene los recordatorios por correo (RN-067, RN-187). No detiene el enlace de verificación, el de recuperación ni el código de verificación (RN-188). | `email_reminders_enabled = false` | "darse de baja" |
 
 ### Seguridad y datos
 
@@ -100,3 +105,4 @@ Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y 
 | **Junta activa** | Junta "En curso" en la que todas las cuotas de la ronda 1 están "Pagada" (01-project-brief.md §5). Es una métrica, no un estado guardado. | — | — |
 | **Junta al día en un mes** | Junta activa en la que todas las cuotas que vencían en ese mes calendario quedaron pagadas a tiempo (01-project-brief.md §5). | — | — |
 | **Junta terminada** | Junta en el estado "Terminada" (01-project-brief.md §5, KPI-06). | — | "junta finalizada" |
+| **Encuesta de KPI-05** | Encuesta de 3 preguntas que la app muestra al organizador al crear su primera junta y a los 3 meses de responderla, para medir las horas que dedica a sus juntas (F-18, RN-204 a RN-206). Se puede cerrar sin responder, y entonces esa encuesta no se vuelve a mostrar (RN-210, RN-211). | `organizer_survey` | "formulario" |

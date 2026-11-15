@@ -1,10 +1,12 @@
 # Preguntas abiertas
 
-Versión: 0.2
+Versión: 0.4
 Fecha: 14/11/2026
-Estado: Revisado
+Estado: Alineado con las decisiones del Product Owner
 
 Decisiones pendientes detectadas al redactar la constitución, el Project Brief y el alcance. Mientras una pregunta siga abierta, todo lo que dependa de ella se marca [REQUIERE DECISIÓN]. Una pregunta resuelta conserva su ID y lleva la línea "Estado: Resuelta" con la fecha y la decisión. Una pregunta con "Estado: Propuesta" tiene una respuesta redactada por un agente que no rige hasta que el Product Owner la apruebe (PRINCIPIO-012). Al aprobarla, "Propuesta" se cambia por "Resuelta".
+
+**Alineación del 14/11/2026:** el Product Owner respondió todas las preguntas abiertas (03-reglas-de-negocio.md §1.3). Quedan abiertas a propósito PREG-011, PREG-014 y PREG-022, que no bloquean esta versión, y las nuevas PREG-049 a PREG-054, que salieron de esas respuestas y se resolvieron el mismo día en una segunda ronda. Las decisiones marcadas "provisional" las tomó el Product Owner y se confirman con el asesor legal.
 
 ---
 
@@ -14,6 +16,7 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - Bloquea: PRINCIPIO-005, PRINCIPIO-007, el texto de la política de privacidad, el uso de datos reales en desarrollo, y PREG-006, PREG-007 y PREG-009.
 - Plan de resolución: consulta legal antes de redactar las HU de registro y de consentimiento. Con la respuesta se actualizan 00-constitucion.md y 03-reglas-de-negocio.md.
 - Actualización del 14/11/2026 (auditoría QA): preguntar también al asesor si se necesitan dos casillas separadas, una para la política y otra para las notificaciones (hoy es una sola, RN-082), y si se pueden seguir enviando recordatorios a un usuario que todavía no aceptó una versión nueva de la política (RN-168). La decisión de PREG-036 dejó de pedir la fecha de nacimiento y la foto (RN-149), lo que reduce los datos que cubre esta pregunta.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). Mi Junta cumple la Ley N.° 29733. Hay una sola casilla de consentimiento para la política y las notificaciones (RN-082). Los recordatorios siguen llegando aunque el usuario todavía no acepte una versión nueva de la política (RN-189). El texto de la política lo escribe el asesor legal y queda como entregable, no como pregunta: F-01 no sale al mercado sin él (02-alcance.md §5). Decisión provisional del Product Owner, a confirmar con el asesor legal.
 
 ### PREG-002: ¿Cuál es la unidad mínima de un monto (S/ 0.01 o S/ 0.10) y qué regla de redondeo se usa?
 - Contexto: se indicó "hasta céntimos válidos en Perú, por ejemplo S/ 20.80". La moneda más pequeña en circulación es S/ 0.10, pero Yape y Plin aceptan S/ 0.01. Al dividir un pozo entre participantes puede sobrar una fracción, y hace falta saber a quién se le asigna.
@@ -28,12 +31,14 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - Bloquea: PRINCIPIO-006, la pantalla de lista de miembros y el contrato de la API de miembros.
 - Plan de resolución: decidir antes de diseñar la pantalla de miembros en prototipos/. Las opciones son completo, parcialmente oculto (por ejemplo "****5678") o no visible.
 - Avance del 14/11/2026: mientras esta pregunta siga abierta, el sistema no entrega a ningún usuario el DNI de otro miembro (RN-023 de 03-reglas-de-negocio.md). Sigue abierta la decisión definitiva.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). El DNI de los demás miembros nunca se muestra (RN-023, PRINCIPIO-006).
 
 ### PREG-004: ¿La foto de un miembro es visible para los demás miembros de la junta?
 - Contexto: la foto es opcional. En la constitución quedó como privada, porque solo se mencionó el nombre y el DNI como datos visibles.
 - A quién preguntar: Product Owner.
 - Bloquea: PRINCIPIO-006 y la pantalla de lista de miembros.
 - Plan de resolución: decidir junto con PREG-003 antes de diseñar la pantalla de miembros.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). La foto no se pide ni se guarda en esta versión (RN-149, NO-14), así que no hay foto que mostrar.
 
 ### PREG-005: ¿Cómo se resuelven los conflictos de cambios hechos sin conexión, y se permite sortear sin conexión?
 - Contexto: la app debe funcionar sin red y sincronizar al reconectar (PRINCIPIO-009). Si dos personas cambian el mismo dato sin conexión, hace falta una regla para decidir cuál vale. Un sorteo hecho sin conexión podría chocar con el registro auditable (PRINCIPIO-008).
@@ -48,24 +53,28 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - A quién preguntar: asesor legal (relacionada con PREG-001) y Product Owner.
 - Bloquea: las RN de retención y borrado en 03-reglas-de-negocio.md y 02-alcance.md.
 - Plan de resolución: resolver después de PREG-001 y antes de escribir las RN de retención.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). El usuario puede borrar su cuenta si no es miembro de ninguna junta "En curso" (RN-182). En las juntas terminadas su nombre se muestra como "Participante eliminado" y sus cuotas y pagos se conservan (RN-183, RN-184). Se borran su nombre, correo, DNI, celular y contraseña (RN-185), y sale de las juntas "Abierta" o "Completa" en las que participa (RN-186). Funcionalidad F-17 (02-alcance.md). El caso del organizador sigue en PREG-049. Decisión provisional del Product Owner, a confirmar con el asesor legal.
 
 ### PREG-007: ¿Habrá una edad mínima para crear una cuenta?
 - Contexto: hoy no hay edad mínima, pero podría agregarse más adelante. La app ya guarda la fecha de nacimiento.
 - A quién preguntar: asesor legal (relacionada con PREG-001) y Product Owner.
 - Bloquea: las RN de registro en 03-reglas-de-negocio.md y PRINCIPIO-007.
 - Plan de resolución: resolver después de PREG-001 y antes de escribir las HU de registro.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). La edad mínima es 18 años, confirmada con la casilla "Soy mayor de 18 años" al crear la cuenta, sin pedir la fecha de nacimiento (RN-181, RN-149). Decisión provisional del Product Owner, a confirmar con el asesor legal.
 
 ### PREG-008: ¿Se cifra también la fecha de nacimiento, y cómo se protegen los datos personales guardados en el dispositivo para el modo sin conexión?
 - Contexto: PRINCIPIO-005 solo cifra el DNI y el celular. El modo sin conexión (PRINCIPIO-009) guarda datos en el navegador, fuera del cifrado del servidor.
 - A quién preguntar: arquitecto de software o responsable de seguridad.
 - Bloquea: PRINCIPIO-005 y PRINCIPIO-009.
 - Plan de resolución: decidir en el diseño de arquitectura, junto con PREG-005.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). La fecha de nacimiento ya no se pide ni se guarda (RN-149), así que no hay nada que cifrar. Los datos que la app guarda en el dispositivo no se cifran aparte, porque no traen datos personales de otros miembros (RN-178, RN-023), y se borran al cerrar sesión, con un aviso si quedan cambios sin enviar (RN-197, RN-198). Dónde se guardan las claves de cifrado del servidor pasó a PREG-050.
 
 ### PREG-009: ¿El usuario puede retirar después su consentimiento para recibir notificaciones?
 - Contexto: el consentimiento se acepta al crear la cuenta (PRINCIPIO-007). No se definió si se puede retirar ni qué pasa con los recordatorios de pago si se retira.
 - A quién preguntar: Product Owner y asesor legal (relacionada con PREG-001).
 - Bloquea: PRINCIPIO-007 y las RN de notificaciones en 03-reglas-de-negocio.md.
 - Plan de resolución: decidir antes de escribir las RN de recordatorios.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). El usuario puede desactivar y volver a activar los recordatorios por correo (RN-187, RN-067) y las notificaciones push (RN-073). El enlace de verificación, el de recuperación de contraseña y el código de verificación siempre se envían (RN-188). Decisión provisional del Product Owner, a confirmar con el asesor legal.
 
 ### PREG-010: ¿El rol que crea y gestiona la junta se llama "organizador" o "administrador de la junta"?
 - Contexto: el contexto del proyecto dice "organizador" y las respuestas dicen "administrador de la junta". Un solo término evita ambigüedad en las reglas, las HU y las pantallas.
@@ -80,12 +89,14 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - Bloquea: la sección 4 de 01-project-brief.md, PRINCIPIO-004 y cualquier HU del plan VIP.
 - Plan de resolución: decidir después del lanzamiento. Si se decide cobrar dentro de la app, primero se propone un cambio a PRINCIPIO-004 que requiere aprobación humana (PRINCIPIO-012).
 - Actualización del 14/11/2026: al resolver PREG-013, el lanzamiento permite varias juntas sin límite. Por eso el plan VIP ya no puede basarse en permitir más de una junta y necesita otra propuesta de valor, que también queda por decidir.
+- Avance del 14/11/2026 (alineación de pendientes): se revisa después del lanzamiento. No bloquea ninguna funcionalidad de esta versión.
 
 ### PREG-012: ¿Cuál es la meta de usuarios registrados en los meses 1, 3 y 6?
 - Contexto: el Product Owner fijó metas de juntas activas (10, 20 y 40), pero no de usuarios registrados. Con más de 10 participantes por junta, 40 juntas serían unos 400 usuarios, pero ese número es una estimación, no una meta aprobada.
 - A quién preguntar: Product Owner.
 - Bloquea: KPI-02 de 01-project-brief.md.
 - Plan de resolución: decidir antes del lanzamiento y registrar la meta en 01-project-brief.md.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). KPI-02: 100 usuarios registrados al cierre del mes 1, 200 al cierre del mes 3 y 400 al cierre del mes 6 (01-project-brief.md §5).
 
 ### PREG-013: En el lanzamiento, ¿un organizador puede gestionar varias juntas a la vez o solo una?
 - Contexto: la idea del plan VIP supone que el plan gratis permite una sola junta. Pero el plan VIP quedó para después del lanzamiento, y hoy un organizador administra 1 o 2 juntas a la vez.
@@ -99,12 +110,14 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - A quién preguntar: Product Owner.
 - Bloquea: PRINCIPIO-007 y las RN de notificaciones en 03-reglas-de-negocio.md.
 - Plan de resolución: revisar con los resultados de KPI-05 y del supuesto S-03 a los 3 meses del lanzamiento. Si se aprueba, se propone el cambio a PRINCIPIO-007 con aprobación humana (PRINCIPIO-012).
+- Avance del 14/11/2026 (alineación de pendientes): se revisa a los 3 meses del lanzamiento, como estaba previsto. No bloquea ninguna funcionalidad de esta versión.
 
 ### PREG-015: ¿Se usará el historial de pagos de Mi Junta para evaluar préstamos, y cómo se pedirá ese consentimiento?
 - Contexto: el Product Owner planea una futura línea de préstamos conectada con Mi Junta y prefiere pedir el consentimiento para ese uso cuando exista la funcionalidad. La Ley N.° 29733 exige un consentimiento por cada finalidad. Falta definir si se podrán usar los datos registrados antes de ese consentimiento.
 - A quién preguntar: asesor legal (relacionada con PREG-001) y Product Owner.
 - Bloquea: PRINCIPIO-007, el texto de la política de privacidad y el riesgo R-07 de 01-project-brief.md.
 - Plan de resolución: resolver junto con PREG-001 antes de publicar la política de privacidad del lanzamiento.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). El historial de pagos no se usa para evaluar créditos sin un consentimiento específico, y los pagos registrados antes de ese consentimiento nunca se usan para eso (RN-203). La línea de préstamos sigue fuera del alcance (NO-04). Decisión provisional del Product Owner, a confirmar con el asesor legal.
 
 ### PREG-016: ¿Qué reglas puede o debe definir el organizador al crear una junta?
 - Contexto: hoy las juntas no tienen reglas escritas. El Product Owner indicó que el organizador debe definir las reglas al crear la junta. Faltan definir cuáles son (multas por atraso, días de tolerancia, retiro de un participante, reemplazos, garantías), si son obligatorias u opcionales, y si la app solo las muestra o también las aplica. PRINCIPIO-012 g) impide decidir sobre montos o multas sin una regla escrita.
@@ -148,12 +161,14 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - A quién preguntar: Product Owner.
 - Bloquea: KPI-05 de 01-project-brief.md.
 - Plan de resolución: definir la encuesta antes del lanzamiento, para medir la línea base con las primeras 10 juntas.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). La encuesta va dentro de la app, sin servicio externo, al crear la primera junta y a los 3 meses de la primera respuesta (RN-204, RN-205). Tiene 3 preguntas: horas al mes dedicadas a gestionar las juntas, recordatorios enviados a mano al mes y si reenvía por WhatsApp los recordatorios de Mi Junta (RN-206). KPI-05 solo se calcula con al menos 10 organizadores que respondieron las dos encuestas (01-project-brief.md §5). Funcionalidad F-18 (02-alcance.md).
 
 ### PREG-022: ¿Existen apps o servicios que ya resuelvan la organización de juntas en Perú?
 - Contexto: el Product Owner no conoce competidores (supuesto S-07 de 01-project-brief.md). Si existen, la propuesta de valor debe diferenciarse de ellos.
 - A quién preguntar: Agente Analyst, con una revisión de competidores validada por el Product Owner.
 - Bloquea: la sección 3 de 01-project-brief.md.
 - Plan de resolución: revisar las tiendas de apps y las soluciones locales antes de cerrar la versión 1.0 de 01-project-brief.md.
+- Avance del 14/11/2026 (alineación de pendientes): queda como tarea de investigación del Agente Analyst. No bloquea ninguna funcionalidad de esta versión.
 
 ### PREG-023: ¿Cuántos dígitos tiene el código del segundo factor y cuánto tiempo es válido?
 - Contexto: PRINCIPIO-005 permite activar un segundo factor con un código enviado al correo, pero no fija la longitud del código, su tiempo de validez ni cuántos intentos fallidos se permiten. Sin esos valores no se puede escribir un test que verifique el principio (PRINCIPIO-011).
@@ -317,21 +332,68 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - A quién preguntar: Product Owner, con visto bueno del asesor legal (relacionada con PREG-001).
 - Bloquea: RN-085, RN-148 y RN-151 de 03-reglas-de-negocio.md, y PRINCIPIO-003 si se acepta otro documento.
 - Plan de resolución: decidir antes de redactar las HU de registro. Las opciones son mantener solo el DNI, o aceptar también el carné de extranjería con su propio formato, lo que requiere cambiar PRINCIPIO-003 con aprobación humana (PRINCIPIO-012).
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). En esta versión solo se acepta el DNI (RN-085). Como el DNI es opcional (RN-148), una persona extranjera crea su cuenta sin documento. PRINCIPIO-003 no cambia.
 
 ### PREG-046: ¿Qué pasa con una junta en la que una cuota queda "Pendiente" sin plazo, por ejemplo cuando un participante que ya recibió el pozo deja de pagar?
 - Contexto: después del 5.º recordatorio posterior al vencimiento, el sistema no envía más (RN-071) y no hay ninguna otra acción definida, así que la cuota sigue "Pendiente" sin límite. Nadie puede salir de la junta ni ser reemplazado después de fijar el orden de turnos (RN-114, NO-13), y la junta no pasa a "Terminada" mientras quede una cuota sin pagar (RN-103). Por eso esa junta queda "En curso" para siempre y cuenta en contra de KPI-06. Tampoco está definido qué muestra la app sobre el pozo de una ronda que tiene cuotas pendientes. El brief no reporta casos de alguien que cobra su turno y deja de pagar (01-project-brief.md §1), pero no hay ninguna regla para ese caso. Cubrir la diferencia con multas o préstamos está fuera del alcance (NO-06, NO-10), y un agente no puede decidirlo sin una regla escrita (PRINCIPIO-012 g). Detectada en la prueba de fuego (auditorias/prueba-de-fuego.md, pregunta 2).
 - A quién preguntar: Product Owner.
 - Bloquea: RN-103, KPI-06, F-15 y las HU de seguimiento de pagos (F-04 y F-05).
 - Plan de resolución: decidir antes de redactar las HU de F-04 y F-05. Las opciones son dejar la junta "En curso" sin plazo, permitir que el organizador cierre la junta con cuotas pendientes (relacionada con F-15), o agregar un estado de cuota para las que el grupo da por perdidas.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). Una junta con una cuota impaga sigue "En curso" sin plazo (RN-103). Se revisa cuando se trabaje F-15 (Cerrar y borrar una junta).
 
 ### PREG-047: ¿El organizador recibe un aviso cuando una cuota vence sin pagarse?
 - Contexto: los recordatorios solo llegan al participante de la cuota (RN-068 a RN-070), y el organizador solo recibe un aviso cuando un participante informa un pago (RN-139). Para saber quién no pagó, el organizador tiene que abrir la app y revisar las cuotas (RN-120). El problema más grave del organizador es el tiempo que dedica a cobrar y recordar (01-project-brief.md §1, KPI-05). Ninguna funcionalidad de 02-alcance.md lo incluye ni lo excluye. Propuesta en la prueba de fuego (auditorias/prueba-de-fuego.md, preguntas 2 y 5).
 - A quién preguntar: Product Owner.
 - Bloquea: F-06, F-07 y la medición de KPI-05, si se aprueba.
 - Plan de resolución: decidir antes de redactar las HU de F-06. Las opciones son no enviar ningún aviso, enviar un aviso por cada cuota vencida, o enviar un resumen por junta. Si se aprueba, también hay que decidir cuándo y cada cuánto se envía, y si cuenta para el máximo de RN-071. Las RN nuevas toman el siguiente número libre.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). Sí, como funcionalidad nueva F-16 (Should): el día siguiente al vencimiento de una ronda con cuotas "Pendiente", el organizador recibe un correo por junta, entre las 09:00 y las 09:15, con el nombre de cada participante que falta pagar (RN-196). No cuenta para el máximo de RN-071, porque no es un recordatorio al participante.
 
 ### PREG-048: ¿Quién del equipo de Mi Junta puede acceder a los datos de las juntas y de los usuarios, y cómo se registra ese acceso?
 - Contexto: PRINCIPIO-006 define qué recibe cada usuario según su rol, y RN-024 rechaza a quien no es miembro de la junta. Pero ninguna regla dice si alguien del equipo de la empresa (soporte, operación o acceso directo a la base de datos) puede ver juntas, cuotas o datos personales, ni si ese acceso queda registrado. La Ley N.° 29733 podría exigir controles sobre ese acceso (PREG-001). Detectada en la prueba de fuego (auditorias/prueba-de-fuego.md, pregunta 4).
 - A quién preguntar: Product Owner, responsable de seguridad y asesor legal (relacionada con PREG-001). Toca los permisos, así que requiere aprobación humana (PRINCIPIO-012).
 - Bloquea: PRINCIPIO-005, PRINCIPIO-006 y el diseño de arquitectura.
 - Plan de resolución: resolver junto con PREG-001 y PREG-008 antes del diseño de arquitectura.
+
+- Estado: Resuelta el 14/11/2026 por el Product Owner (alineación de pendientes, 03-reglas-de-negocio.md §1.3). Solo el líder técnico accede a los datos de producción, y solo para resolver un incidente (RN-200). Cada acceso se registra con quién, cuándo y el incidente (RN-201). Nadie puede descifrar a mano el DNI ni el celular (RN-202). Decisión provisional del Product Owner, a confirmar con el asesor legal.
+
+### PREG-049: ¿Qué pasa con una junta "Abierta" o "Completa" si su organizador borra su cuenta?
+- Contexto: el usuario puede borrar su cuenta si no es miembro de una junta "En curso" (RN-182). Un participante sale de sus juntas "Abierta" o "Completa" al borrarla (RN-186), pero el organizador no puede dejar su junta (RN-115) ni transferir el rol (NO-13). Detectada en la alineación de pendientes del 14/11/2026.
+- A quién preguntar: Product Owner.
+- Bloquea: F-17 (02-alcance.md) y HU-017.
+- Plan de resolución: decidir antes de implementar F-17. Las opciones son impedir que el organizador borre su cuenta mientras tenga juntas sin terminar, o borrar esas juntas avisando a sus participantes.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (segunda ronda de la alineación). El organizador de una junta "Abierta" o "Completa" no puede borrar su cuenta (RN-207), porque no puede dejar su junta (RN-115).
+
+### PREG-050: ¿Dónde se guardan las claves de cifrado en el servidor dedicado?
+- Contexto: el Product Owner decidió alojar la app en un servidor dedicado en la nube, bajo control total de la empresa (07-architecture.md). PRINCIPIO-005 exige que la clave AES no esté en la base de datos ni en el repositorio. Antes esto dependía de PREG-008, que se resolvió sobre los datos del dispositivo.
+- A quién preguntar: líder técnico, con aprobación del Product Owner (cambia el cifrado, PRINCIPIO-012).
+- Bloquea: PRINCIPIO-005, ADR-005 de 07-architecture.md y la dependencia "Gestor de secretos" de 02-alcance.md §6.
+- Plan de resolución: decidir al preparar el servidor. Las opciones son un gestor de secretos instalado en el servidor, el servicio de claves del proveedor de nube o un archivo fuera del repositorio legible solo por el proceso de la app.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (segunda ronda de la alineación). Las claves se entregan como variables de entorno a los contenedores Docker en los que corre todo, desde un archivo `.env` que solo existe en el servidor y nunca en el repositorio (PRINCIPIO-005 v0.5, ADR-005 de 07-architecture.md).
+
+### PREG-051: ¿Qué proveedor y qué región tendrá el servidor dedicado?
+- Contexto: el p95 de ≤ 500 ms de PRINCIPIO-010 se mide desde Perú. Un servidor lejos de Lima suma latencia en cada petición, sobre todo con redes móviles lentas.
+- A quién preguntar: Product Owner y líder técnico.
+- Bloquea: la dependencia "Hosting" de 02-alcance.md §6 y ADR-001 de 07-architecture.md.
+- Plan de resolución: decidir al preparar el servidor, eligiendo la región más cercana a Lima que ofrezca el proveedor.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (segunda ronda de la alineación). El servidor es dedicado, de la empresa, y está en Perú.
+
+### PREG-052: ¿El SMTP es un servidor de correo propio o un servicio externo de envío por SMTP?
+- Contexto: el Product Owner decidió enviar los correos por SMTP. Un servidor propio evita un servicio externo, pero sus correos caen en spam con más frecuencia si la dirección IP no tiene reputación (R-11). Un servicio externo de envío por SMTP requiere aprobación (PRINCIPIO-012 h).
+- A quién preguntar: Product Owner y líder técnico.
+- Bloquea: F-06, F-11, F-16 y la dependencia "Servicio de correo" de 02-alcance.md §6.
+- Plan de resolución: decidir antes de implementar F-06. En los dos casos el dominio se configura con SPF, DKIM y DMARC.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (segunda ronda de la alineación). Los correos se envían con la librería `nodemailer` por el SMTP de Microsoft 365, `smtp.office365.com`. El Product Owner aprobó la dependencia y el servicio (PRINCIPIO-012 e y h). Los límites de envío del buzón quedan como riesgo R-15 (01-project-brief.md).
+
+### PREG-053: ¿El organizador puede desactivar el aviso de cuotas vencidas?
+- Contexto: el participante puede desactivar sus recordatorios por correo (RN-187). F-16 agrega un correo al organizador el día siguiente al vencimiento de una ronda con cuotas pendientes (RN-196), pero no es un recordatorio y ninguna regla dice si se puede desactivar. Detectada al redactar HU-016 el 14/11/2026.
+- A quién preguntar: Product Owner.
+- Bloquea: HU-016.
+- Plan de resolución: decidir antes de implementar F-16. Las opciones son que se pueda desactivar con la misma preferencia de RN-187, con una preferencia propia, o que no se pueda desactivar.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (segunda ronda de la alineación). Sí. El organizador puede desactivar y volver a activar el aviso, con una preferencia propia, distinta de la de sus recordatorios (RN-208, RN-209).
+
+### PREG-054: ¿El organizador puede cerrar la encuesta de KPI-05 sin responderla?
+- Contexto: la app muestra la encuesta al crear la primera junta y a los 3 meses de responderla (RN-204, RN-205). Si el organizador la cierra sin responder, no hay fecha desde la cual contar los 3 meses, y KPI-05 pierde esa respuesta. Detectada al redactar HU-018 el 14/11/2026.
+- A quién preguntar: Product Owner.
+- Bloquea: HU-018 y la medición de KPI-05.
+- Plan de resolución: decidir antes de implementar F-18. Las opciones son que la encuesta sea obligatoria, que se pueda posponer y se vuelva a mostrar al día siguiente, o que se pueda cerrar sin volver a mostrarla.
+- Estado: Resuelta el 14/11/2026 por el Product Owner (segunda ronda de la alineación). Sí. El organizador puede cerrar la encuesta sin responderla (RN-210); esa encuesta no se le vuelve a mostrar (RN-211), y la de los 3 meses se cuenta desde que respondió o cerró la primera (RN-205).

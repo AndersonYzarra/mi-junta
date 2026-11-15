@@ -1,6 +1,6 @@
 # Constitución de Mi Junta
 
-Versión: 0.3
+Versión: 0.5
 Fecha: 14/11/2026
 Estado: Revisado
 
@@ -9,6 +9,10 @@ Estos principios son obligatorios para todo agente de IA y toda persona que trab
 La v0.2 cambió PRINCIPIO-001, 002, 003, 005, 006 y 008 a partir de la auditoría QA, con aprobación del Product Owner del 14/11/2026 (auditorias/qa-clase1.md, sección 5).
 
 La v0.3 cambió PRINCIPIO-001 para aceptar también la línea de versión con el formato `MAYOR.MENOR.PARCHE`, con aprobación del Product Owner del 14/11/2026.
+
+La v0.4 cambió PRINCIPIO-005, 006, 007 y 009 para incorporar las decisiones del Product Owner del 14/11/2026 sobre las preguntas abiertas (PREG-003, PREG-005, PREG-007, PREG-008, PREG-009 y PREG-048; 03-reglas-de-negocio.md §1.3), con su aprobación explícita.
+
+La v0.5 cambió PRINCIPIO-005 para indicar cómo llega la clave de cifrado a la app (PREG-050), con aprobación del Product Owner del 14/11/2026.
 
 ---
 
@@ -42,17 +46,18 @@ La app solo registra pagos hechos fuera de ella (por ejemplo Yape, Plin o efecti
 **Ejemplo de violación:** agregar el SDK de una pasarela de pagos, o crear el campo `bank_account_number`.
 
 ### PRINCIPIO-005: Cifrado y credenciales
-- **Datos en reposo:** el DNI y el celular se cifran en la aplicación con AES-256-GCM. La clave no se guarda en la base de datos ni en el repositorio, y ninguno de los dos datos aparece en claro en los logs.
+- **Datos en reposo:** el DNI y el celular se cifran en la aplicación con AES-256-GCM. La clave no se guarda en la base de datos ni en el repositorio, y ninguno de los dos datos aparece en claro en los logs. La clave llega a los contenedores Docker de la app como variable de entorno, desde un archivo `.env` que solo existe en el servidor (PREG-050, resuelta el 14/11/2026).
 - **Tráfico:** todo usa TLS 1.2 o superior.
 - **Contraseñas:** se guardan con Argon2id (mínimo m=19 MiB, t=2, p=1) o bcrypt con costo ≥ 12. Nunca en texto plano ni con cifrado reversible.
 - **Segundo factor:** desde que se publique F-11 de `02-alcance.md`, el usuario puede activar un código enviado a su correo. Si lo activa, no se inicia sesión sin ese código. El código tiene 6 dígitos, vale 600 segundos desde su envío y se anula después de 5 intentos fallidos (PREG-023, resuelta el 14/11/2026).
+- **Acceso del equipo:** solo el líder técnico accede a los datos de producción, y solo para resolver un incidente. Cada acceso queda registrado con quién, cuándo y el incidente, y nadie descifra a mano el DNI ni el celular (PREG-048, resuelta el 14/11/2026; RN-200 a RN-202).
 
 **Ejemplo de cumplimiento:** `SELECT dni FROM members` devuelve texto cifrado, y una petición HTTP se redirige a HTTPS.
 **Ejemplo de violación:** un DNI en claro en la base de datos o en un log, la clave AES en un `.env` subido al repositorio, o contraseñas guardadas con SHA-256 sin sal.
 
 ### PRINCIPIO-006: Datos personales privados y datos de la junta según el rol
 Los datos de una persona se dividen en dos grupos:
-- **Datos personales:** celular, correo, DNI, fecha de nacimiento y foto. Ningún usuario, ni siquiera el organizador, recibe los datos personales de otro miembro. Si en el futuro se muestra el DNI de los demás está [REQUIERE DECISIÓN] (PREG-003).
+- **Datos personales:** celular, correo, DNI, fecha de nacimiento y foto. Ningún usuario, ni siquiera el organizador, recibe los datos personales de otro miembro. El DNI de los demás nunca se muestra (PREG-003, resuelta el 14/11/2026), y esta versión no pide la fecha de nacimiento ni la foto (RN-149).
 - **Datos de la junta:** nombre, turno, cuotas, pagos, correcciones y registro del sorteo.
 
 De los otros miembros de una junta, un miembro que no es el organizador solo recibe estos cuatro datos de la junta:
@@ -69,7 +74,7 @@ El organizador recibe, de los participantes de las juntas que gestiona, todos lo
 **Ejemplo de violación:** la API devuelve `phone` y `email` de todos los miembros y la interfaz simplemente no los muestra, o un participante recibe las fechas de pago de los demás.
 
 ### PRINCIPIO-007: Consentimiento y canales de notificación
-No se crea una cuenta sin que el usuario acepte la política de privacidad y el consentimiento para recibir notificaciones. Se guardan la versión aceptada y la fecha y hora en America/Lima. Las notificaciones solo se envían por correo y por notificación push. No se usan SMS ni WhatsApp.
+No se crea una cuenta sin que el usuario acepte la política de privacidad y el consentimiento para recibir notificaciones. Se guardan la versión aceptada y la fecha y hora en America/Lima. Tampoco se crea una cuenta sin que el usuario confirme que es mayor de 18 años, sin pedirle la fecha de nacimiento (PREG-007). Las notificaciones solo se envían por correo y por notificación push. No se usan SMS ni WhatsApp. El usuario puede desactivar los recordatorios por correo y por push cuando quiera; el enlace de verificación, el de recuperación de contraseña y el código de verificación se envían siempre (PREG-009).
 
 **Ejemplo de cumplimiento:** la casilla de consentimiento aparece desmarcada, "Crear cuenta" se habilita solo al marcarla, y se guarda `policy_version = 1.0` con su fecha y hora.
 **Ejemplo de violación:** la casilla viene marcada por defecto, o se envía un recordatorio por WhatsApp.
@@ -85,9 +90,9 @@ No se crea una cuenta sin que el usuario acepte la política de privacidad y el 
 **Ejemplo de violación:** usar `Math.random()`, o cambiar el orden con un `UPDATE` sin dejar registro.
 
 ### PRINCIPIO-009: Web con Next.js y PostgreSQL, que funciona sin conexión
-La app es web, hecha con Next.js y TypeScript sobre PostgreSQL. Usa la versión estable vigente de cada uno el día en que se fijen las versiones, fijada exactamente en `package.json` y en el lockfile, sin `^` ni `~`. Las versiones exactas están [REQUIERE DECISIÓN] y se fijarán al iniciar el desarrollo.
+La app es web, hecha con Next.js y TypeScript sobre PostgreSQL. Usa la versión estable vigente de cada uno el día en que se fijen las versiones, fijada exactamente en `package.json` y en el lockfile, sin `^` ni `~`. Las versiones exactas se fijan el día en que empieza el desarrollo, con la estable vigente de ese día (decisión del 14/11/2026).
 
-Sin red, la app abre y muestra los últimos datos sincronizados junto con la fecha y hora de la última sincronización. Los cambios hechos sin red se guardan en el dispositivo y se envían al servidor, en el orden en que se hicieron, cuando vuelve la conexión. Cómo se resuelven los conflictos está [REQUIERE DECISIÓN].
+Sin red, la app abre y muestra los últimos datos sincronizados junto con la fecha y hora de la última sincronización. Los cambios hechos sin red se guardan en el dispositivo y se envían al servidor, en el orden en que se hicieron, cuando vuelve la conexión. El servidor aplica esos cambios en ese orden y rechaza el que ya no cumple las reglas, y la app le muestra al usuario qué cambio se rechazó y por qué (PREG-005, RN-171, RN-172). Al cerrar sesión, la app borra del dispositivo los datos del usuario, y antes le avisa si quedan cambios sin enviar (PREG-008, RN-197, RN-198).
 
 **Ejemplo de cumplimiento:** con el navegador en modo "Offline" se registra un pago. Al reconectar, el pago aparece en el servidor con su hora original.
 **Ejemplo de violación:** sin red la app muestra una pantalla de error del navegador, o se pierde un cambio hecho sin conexión.

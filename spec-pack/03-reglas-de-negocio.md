@@ -1,10 +1,10 @@
 # Reglas de negocio de Mi Junta
 
-Versión: 0.2
+Versión: 0.4
 Fecha: 2026-11-14
-Estado: Revisado
+Estado: Alineado con las decisiones del Product Owner
 
-Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y las decisiones del Product Owner del 2026-11-14 (sección 1.1, y sección 1.2 sobre auditorias/qa-clase1.md). Este catálogo cubre las funcionalidades Must (F-01 a F-06) y Should (F-07 a F-11) de 02-alcance.md. Las funcionalidades Could (F-12 a F-15) quedan para una versión posterior.
+Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y las decisiones del Product Owner del 2026-11-14 (sección 1.1, sección 1.2 sobre auditorias/qa-clase1.md y sección 1.3 sobre la alineación de pendientes). Este catálogo cubre las funcionalidades Must (F-01 a F-06) y Should (F-07 a F-11) de 02-alcance.md. Las funcionalidades Could (F-12 a F-15) quedan para una versión posterior.
 
 **Cómo leer este catálogo:**
 - Cada regla tiene un solo DEBE / NO DEBE / PUEDE (PRINCIPIO-001) y necesita al menos un escenario Gherkin que cite su ID (PRINCIPIO-011).
@@ -12,7 +12,7 @@ Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y 
 - Las fechas de las reglas y los ejemplos van en ISO 8601 (`2026-11-30`, `2026-11-30T09:00:00-05:00`). Cuando un ejemplo cita lo que ve el usuario en pantalla, la fecha va entre comillas en DD/MM/AAAA y la hora en HH:MM de 24 horas ("30/11/2026 22:30"). Esto incluye las fechas de las decisiones y de las fuentes (2026-11-14). Los demás archivos del spec-pack escriben esas fechas en DD/MM/AAAA (14/11/2026), y las dos formas indican el mismo día.
 - "En America/Lima" significa que esa zona se usa para mostrar el valor y para calcular fechas de calendario. Un instante se guarda como `timestamptz` y una fecha sin hora como `date` (PRINCIPIO-003).
 - **Sujeto de las reglas:** "el sistema" es el producto completo y la regla se valida en el servidor. "La app" es el comportamiento en el dispositivo del usuario (formularios y funcionamiento sin conexión).
-- **Validación pendiente:** una regla con fuente "Business Analyst" no se implementa hasta que el Product Owner la valide (PRINCIPIO-012 a).
+- **Validación:** una regla con fuente "Business Analyst" no se implementa hasta que el Product Owner la valide (PRINCIPIO-012 a). Las 7 reglas con esa fuente (RN-016, RN-021, RN-036, RN-037, RN-045, RN-061 y RN-076) quedaron validadas el 2026-11-14 (sección 1.3).
 - Los términos del dominio están definidos en 04-glosario.md. Los textos que ve el usuario cuando una regla rechaza algo están en la sección 2.9.
 
 | Patrón EARS | Plantilla |
@@ -68,7 +68,7 @@ Estas decisiones dan los valores de las reglas. Las que cierran una pregunta abi
 | Recordatorios después del vencimiento | Cada 2 días, con un máximo de 5 envíos. Todos los recordatorios salen a las 09:00 America/Lima | PREG-026 |
 | Contraseña | Mínimo 8 caracteres. Bloqueo de 900 s después de 5 intentos fallidos seguidos | — |
 | Segundo factor | Código de 6 dígitos, válido por 600 s y anulado después de 5 intentos fallidos. Se aprobó el cambio en PRINCIPIO-005 | PREG-023 |
-| DNI de los demás | No se muestra mientras PREG-003 siga abierta | PREG-003 (en parte) |
+| DNI de los demás | No se muestra (la sección 1.3 lo vuelve definitivo) | PREG-003 |
 | Nombre del rol | "Organizador" | PREG-010 |
 
 ### 1.2 Decisiones del Product Owner del 2026-11-14 sobre la auditoría QA
@@ -98,6 +98,36 @@ El Agente QA propuso estas decisiones para resolver los hallazgos de auditorias/
 | Política de privacidad | Una versión nueva se acepta antes de volver a ver las juntas | PREG-043 | QA-26 |
 | Formatos y textos | Nombre de la junta de 3 a 60 caracteres. El monto se ingresa con dígitos y punto decimal. Hora en HH:MM de 24 h. "Usted" y formatos de Perú también en correos y push. Catálogo de mensajes en la sección 2.9 | PREG-044 | QA-21, QA-22, QA-33 |
 | Reglas escritas (F-09) | Texto libre y opcional de hasta 2,000 caracteres, editable solo antes del sorteo | PREG-016 | QA-35 |
+
+
+### 1.3 Decisiones del Product Owner del 2026-11-14 sobre la alineación de pendientes
+
+El Product Owner respondió el 2026-11-14 las preguntas abiertas y los temas pendientes de 06-user-stories.md y 07-architecture.md. Estas son las decisiones que cambian reglas. Las técnicas están en 07-architecture.md.
+
+| Tema | Decisión | Pregunta | Reglas |
+|---|---|---|---|
+| Ley N.° 29733 | Aplica. Hay una sola casilla de consentimiento. Los recordatorios siguen llegando aunque el usuario no acepte todavía una versión nueva de la política. El texto de la política lo escribe el asesor legal | PREG-001 | RN-082, RN-189 |
+| DNI de los demás | Nunca se muestra | PREG-003 | RN-023 |
+| Foto | No se pide en esta versión | PREG-004 | RN-149 |
+| Edad mínima | 18 años, confirmados con la casilla "Soy mayor de 18 años", sin pedir la fecha de nacimiento | PREG-007 | RN-181 |
+| Borrar la cuenta | Se puede si el usuario no es miembro de ninguna junta "En curso". En las juntas terminadas su nombre se muestra como "Participante eliminado" y sus pagos se conservan | PREG-006 | RN-182 a RN-186 |
+| Dejar de recibir recordatorios | El usuario puede desactivar los recordatorios por correo y por push. Los correos de la cuenta siempre se envían | PREG-009 | RN-067, RN-073, RN-187, RN-188 |
+| Datos para préstamos | No se usan sin un consentimiento aparte, y nunca los registrados antes de ese consentimiento | PREG-015 | RN-203 |
+| Carné de extranjería | No se acepta en esta versión; el DNI sigue siendo opcional | PREG-045 | RN-085, RN-148 |
+| Acceso del equipo | Solo el líder técnico, solo para incidentes, con cada acceso registrado; el DNI y el celular nunca se descifran a mano | PREG-048 | RN-200 a RN-202 |
+| Datos en el dispositivo | No se cifran aparte, porque no traen datos personales de otros miembros. Se borran al cerrar sesión, con un aviso si quedan cambios sin enviar | PREG-008 | RN-197, RN-198 |
+| Cuota impaga sin plazo | La junta sigue "En curso" sin plazo. Se revisa con F-15 | PREG-046 | RN-103 |
+| Aviso de cuotas vencidas al organizador | Funcionalidad nueva F-16 (Should): un correo por junta a las 09:00 del día siguiente al vencimiento, con quiénes faltan pagar | PREG-047 | RN-196 |
+| Encuesta de KPI-05 | 3 preguntas dentro de la app, al empezar y a los 3 meses | PREG-021 | RN-204 a RN-206 |
+| Reglas "Business Analyst" | Se validan RN-016, RN-021, RN-036, RN-037, RN-045, RN-061 y RN-076 | — | — |
+| Reglas nuevas propuestas por QA | El organizador no recibe celular, correo ni DNI; reglas de la junta de hasta 2,000 caracteres; celular único; RN-132 también aplica al pago informado | — | RN-132, RN-178 a RN-180 |
+| Casos borde | Código de invitación sin distinguir mayúsculas ni espacios; correo del inicio de sesión sin distinguir mayúsculas; un código anulado no cuenta para RN-117; un pedido rechazado no cuenta para RN-164; aviso al participante cuando se rechaza su pago informado; todos ven la asignación manual; reintento del correo hasta las 09:15:00; un recordatorio cuenta si se aceptó por correo o por push; "1 cambio sin enviar." en singular | — | RN-143, RN-174, RN-190 a RN-195, RN-199 |
+| Mensajes | Textos nuevos del catálogo §2.9 | — | Sección 2.9 |
+| Organizador que borra su cuenta (segunda ronda) | No puede borrarla mientras organice una junta "Abierta" o "Completa" | PREG-049 | RN-207 |
+| Aviso de cuotas vencidas (segunda ronda) | El organizador puede desactivarlo y volver a activarlo | PREG-053 | RN-208, RN-209 |
+| Encuesta de KPI-05 (segunda ronda) | El organizador puede cerrarla sin responder | PREG-054 | RN-205, RN-210, RN-211 |
+
+**Textos y detalles derivados:** los textos de RN-180, RN-181, RN-182, RN-194, RN-196 y RN-198, el cálculo de `{n}` en el mensaje de RN-164, el contenido de RN-185 y RN-186 el momento "al empezar" de RN-204, el texto de RN-207, la preferencia propia de RN-208, RN-211 y el cambio de RN-205 (contar desde que se respondió o se cerró la primera encuesta) los redactó el Agente Architect a partir de estas decisiones, con el estilo de los textos ya aprobados. Están marcados "derivada" en su fuente y el Product Owner puede corregirlos sin cambiar las decisiones.
 
 ---
 
@@ -469,6 +499,18 @@ Mientras la junta esté en el estado "En curso" o "Terminada", el sistema NO DEB
 
 ---
 
+**RN-179** | Categoría: Juntas | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-016)
+
+Patrón EARS: Ubiquitous
+
+El sistema DEBE aceptar como reglas de la junta solo un texto de hasta 2,000 caracteres.
+
+✅ **Ejemplo:** Carmen guarda unas reglas de 2,000 caracteres y se aceptan.
+
+❌ **Contraejemplo:** se aceptan unas reglas de 2,001 caracteres.
+
+---
+
 ### 2.2 Participantes
 
 ---
@@ -485,7 +527,7 @@ Cuando se crea una junta, el sistema DEBE generarle un código de invitación de
 
 ---
 
-**RN-016** | Categoría: Participantes | Prioridad: MUST | Fuente: Business Analyst, derivada de F-02 · Modificada: Product Owner a propuesta QA (2026-11-14, PREG-038)
+**RN-016** | Categoría: Participantes | Prioridad: MUST | Fuente: Business Analyst, derivada de F-02 · Modificada: Product Owner a propuesta QA (2026-11-14, PREG-038) · Validada: Product Owner (2026-11-14)
 
 Patrón EARS: Unwanted
 
@@ -545,7 +587,7 @@ Cuando el organizador regenera el código de invitación, el sistema DEBE anular
 
 ---
 
-**RN-021** | Categoría: Participantes | Prioridad: MUST | Fuente: Business Analyst, derivada de F-02
+**RN-021** | Categoría: Participantes | Prioridad: MUST | Fuente: Business Analyst, derivada de F-02 · Validada: Product Owner (2026-11-14)
 
 Patrón EARS: Unwanted
 
@@ -569,7 +611,7 @@ El sistema DEBE entregar a un miembro que no es el organizador, de cada otro mie
 
 ---
 
-**RN-023** | Categoría: Participantes | Prioridad: MUST | Fuente: Product Owner (2026-11-14, PREG-003 sigue abierta)
+**RN-023** | Categoría: Participantes | Prioridad: MUST | Fuente: Product Owner (2026-11-14, PREG-003, resuelta: el DNI de los demás nunca se muestra)
 
 Patrón EARS: Ubiquitous
 
@@ -749,6 +791,42 @@ El sistema DEBE mostrar a cada miembro de la junta el registro del sorteo de esa
 
 ---
 
+**RN-178** | Categoría: Participantes | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PRINCIPIO-006)
+
+Patrón EARS: Ubiquitous
+
+El sistema NO DEBE entregar al organizador el celular, el correo ni el DNI de los participantes de las juntas que gestiona.
+
+✅ **Ejemplo:** Lucía registró el celular `987654321`. Jorge abre "Pagos" y pide `GET /juntas/{id}/members` de la Junta Oficina, y ninguna respuesta trae `phone`, `email` ni `dni` de Lucía.
+
+❌ **Contraejemplo:** la pantalla "Pagos" de Jorge muestra `lucia@example.com` para que él le escriba.
+
+---
+
+**RN-190** | Categoría: Participantes | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-024, PREG-038)
+
+Patrón EARS: Event-driven
+
+Cuando un usuario ingresa un código de invitación, el sistema DEBE quitarle los espacios y pasar sus letras a mayúsculas antes de validarlo.
+
+✅ **Ejemplo:** Rosa ingresa ` t9qw3hz5 ` y se valida como `T9QW3HZ5`.
+
+❌ **Contraejemplo:** Rosa ingresa `t9qw3hz5` y ve "Este código no es válido.".
+
+---
+
+**RN-192** | Categoría: Participantes | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-038)
+
+Patrón EARS: Ubiquitous
+
+El sistema NO DEBE contar un código de invitación anulado como código inválido para el límite de RN-117.
+
+✅ **Ejemplo:** Rosa ingresa 9 códigos que no existen y el código anulado `K7MP4XR2`. Su cuenta no queda bloqueada, porque solo lleva 9 códigos inválidos.
+
+❌ **Contraejemplo:** el código anulado `K7MP4XR2` cuenta como el décimo inválido y Rosa no puede unirse durante 3600 s.
+
+---
+
 ### 2.3 Sorteo
 
 ---
@@ -861,7 +939,7 @@ El sistema NO DEBE modificar un registro de sorteo ya guardado.
 
 ---
 
-**RN-036** | Categoría: Sorteo | Prioridad: MUST | Fuente: Business Analyst, derivada de PRINCIPIO-008 y F-03
+**RN-036** | Categoría: Sorteo | Prioridad: MUST | Fuente: Business Analyst, derivada de PRINCIPIO-008 y F-03 · Validada: Product Owner (2026-11-14)
 
 Patrón EARS: Ubiquitous
 
@@ -873,7 +951,7 @@ El sistema DEBE asignar a cada participante como número de turno su posición e
 
 ---
 
-**RN-037** | Categoría: Sorteo | Prioridad: MUST | Fuente: Business Analyst, derivada de 01-project-brief.md §1
+**RN-037** | Categoría: Sorteo | Prioridad: MUST | Fuente: Business Analyst, derivada de 01-project-brief.md §1 · Validada: Product Owner (2026-11-14)
 
 Patrón EARS: Ubiquitous
 
@@ -1005,6 +1083,18 @@ Cuando el organizador asigna el orden de turnos sin sorteo, el sistema DEBE anul
 
 ---
 
+**RN-195** | Categoría: Sorteo | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-018)
+
+Patrón EARS: Ubiquitous
+
+El sistema DEBE mostrar a cada miembro de la junta el registro de la asignación manual del orden, con el resultado, el usuario que lo asignó y la fecha y hora en America/Lima.
+
+✅ **Ejemplo:** Marta abre la Junta Ventas y ve que Jorge asignó el orden el "20/11/2026" a las "19:45", con ella en el turno 1.
+
+❌ **Contraejemplo:** solo Jorge puede ver quién asignó el orden y cuándo.
+
+---
+
 ### 2.4 Cuotas y Pagos
 
 ---
@@ -1069,7 +1159,7 @@ Donde el organizador eligió no participar, el sistema NO DEBE generarle cuotas.
 
 ---
 
-**RN-045** | Categoría: Cuotas y Pagos | Prioridad: MUST | Fuente: Business Analyst, derivada de F-04 · Modificada: redacción EARS (QA-36)
+**RN-045** | Categoría: Cuotas y Pagos | Prioridad: MUST | Fuente: Business Analyst, derivada de F-04 · Modificada: redacción EARS (QA-36) · Validada: Product Owner (2026-11-14)
 
 Patrón EARS: Event-driven
 
@@ -1261,7 +1351,7 @@ Cuando un participante informa el pago de una de sus cuotas, el sistema DEBE cam
 
 ---
 
-**RN-061** | Categoría: Cuotas y Pagos | Prioridad: SHOULD | Fuente: Business Analyst, derivada de F-08
+**RN-061** | Categoría: Cuotas y Pagos | Prioridad: SHOULD | Fuente: Business Analyst, derivada de F-08 · Validada: Product Owner (2026-11-14)
 
 Patrón EARS: Unwanted
 
@@ -1345,13 +1435,13 @@ Si el organizador intenta desmarcar una cuota que no está en el estado "Pagada"
 
 ---
 
-**RN-132** | Categoría: Cuotas y Pagos | Prioridad: MUST | Fuente: Product Owner a propuesta QA (2026-11-14, PREG-040)
+**RN-132** | Categoría: Cuotas y Pagos | Prioridad: MUST | Fuente: Product Owner a propuesta QA (2026-11-14, PREG-040) · Modificada: incluye el pago informado (Product Owner (2026-11-14, alineación de pendientes)
 
 Patrón EARS: Unwanted
 
-Si la fecha de pago indicada es anterior a la fecha de creación de la junta en America/Lima, entonces el sistema DEBE rechazar el pago.
+Si la fecha de pago indicada al registrar o al informar un pago es anterior a la fecha de creación de la junta en America/Lima, entonces el sistema DEBE rechazar el pago.
 
-✅ **Ejemplo:** la Junta Oficina se creó el `2026-11-14`. Jorge indica la fecha de pago `2026-11-14` y se acepta.
+✅ **Ejemplo:** la Junta Oficina se creó el `2026-11-14`. Jorge indica la fecha de pago `2026-11-14` y se acepta; Lucía informa un pago con fecha `2026-11-10` y se rechaza.
 
 ❌ **Contraejemplo:** se acepta un pago con fecha `2025-01-01` en la Junta Oficina.
 
@@ -1457,15 +1547,15 @@ El sistema DEBE enviar cada recordatorio entre las 09:00:00 y las 09:15:00 en Am
 
 ---
 
-**RN-067** | Categoría: Notificaciones | Prioridad: MUST | Fuente: Alcance (F-06), Constitución (PRINCIPIO-007)
+**RN-067** | Categoría: Notificaciones | Prioridad: MUST | Fuente: Alcance (F-06), Constitución (PRINCIPIO-007) · Modificada: Product Owner (2026-11-14, alineación de pendientes, PREG-009)
 
-Patrón EARS: Ubiquitous
+Patrón EARS: Optional
 
-El sistema DEBE enviar cada recordatorio al correo de la cuenta del participante.
+Donde el participante no desactivó los recordatorios por correo, el sistema DEBE enviar cada recordatorio al correo de su cuenta.
 
 ✅ **Ejemplo:** Lucía creó su cuenta con `lucia@example.com`, y el recordatorio del `2026-11-27` llega a `lucia@example.com`.
 
-❌ **Contraejemplo:** el recordatorio de Lucía del `2026-11-27` se envía a `jorge@example.com` para que Jorge se lo reenvíe.
+❌ **Contraejemplo:** el recordatorio de Lucía del `2026-11-27` se envía a `jorge@example.com` para que Jorge se lo reenvíe, o Pedro desactivó los recordatorios por correo y le sigue llegando uno.
 
 ---
 
@@ -1577,13 +1667,13 @@ El sistema DEBE contar como un solo recordatorio el correo y la notificación pu
 
 ---
 
-**RN-143** | Categoría: Notificaciones | Prioridad: MUST | Fuente: Product Owner a propuesta QA (2026-11-14, PREG-041)
+**RN-143** | Categoría: Notificaciones | Prioridad: MUST | Fuente: Product Owner a propuesta QA (2026-11-14, PREG-041) · Modificada: Product Owner (2026-11-14, alineación de pendientes)
 
 Patrón EARS: Ubiquitous
 
-El sistema DEBE contar un recordatorio como enviado cuando el servicio de correo acepta el mensaje, aunque después no se entregue.
+El sistema DEBE contar un recordatorio como enviado cuando el servicio de correo acepta el mensaje o el servicio push acepta la notificación, aunque después no se entregue.
 
-✅ **Ejemplo:** el correo del `2026-12-02` rebota porque el buzón de Pedro está lleno. El contador de RN-071 sube igual a 1.
+✅ **Ejemplo:** el correo del `2026-12-02` rebota porque el buzón de Pedro está lleno. El contador de RN-071 sube igual a 1. Lucía desactivó los correos y el push del `2026-12-04` se acepta: el contador también sube.
 
 ❌ **Contraejemplo:** el sistema reintenta el mismo recordatorio cada hora porque no recibió confirmación de entrega.
 
@@ -1610,6 +1700,102 @@ El sistema NO DEBE incluir en un recordatorio datos de otros miembros de la junt
 ✅ **Ejemplo:** el recordatorio de Pedro solo habla de su propia cuota.
 
 ❌ **Contraejemplo:** el recordatorio de Pedro dice "Lucía y Jorge ya pagaron, solo falta usted".
+
+---
+
+**RN-187** | Categoría: Notificaciones | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-009)
+
+Patrón EARS: Ubiquitous
+
+El sistema DEBE permitir que el participante desactive y vuelva a activar los recordatorios por correo.
+
+✅ **Ejemplo:** Lucía desactiva los recordatorios por correo el `2026-11-20` y los vuelve a activar el `2026-12-01`.
+
+❌ **Contraejemplo:** la única forma de dejar de recibir recordatorios es borrar la cuenta.
+
+---
+
+**RN-188** | Categoría: Notificaciones | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-009)
+
+Patrón EARS: Ubiquitous
+
+El sistema DEBE enviar el enlace de verificación, el enlace de recuperación de contraseña y el código de verificación aunque el usuario haya desactivado los recordatorios por correo.
+
+✅ **Ejemplo:** Lucía desactivó los recordatorios por correo y pide recuperar su contraseña: el enlace le llega.
+
+❌ **Contraejemplo:** Lucía no puede recuperar su contraseña porque desactivó los recordatorios.
+
+---
+
+**RN-189** | Categoría: Notificaciones | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-001)
+
+Patrón EARS: State-driven
+
+Mientras el usuario no haya aceptado la versión vigente de la política de privacidad, el sistema DEBE seguir enviándole los recordatorios que le correspondan.
+
+✅ **Ejemplo:** El `2027-03-01` se publica la política 1.1. Lucía todavía no la acepta y su recordatorio del `2027-03-02` le llega igual.
+
+❌ **Contraejemplo:** Lucía deja de recibir recordatorios hasta que acepte la política 1.1 y se atrasa en su cuota.
+
+---
+
+**RN-194** | Categoría: Notificaciones | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-017) · derivada por el Agente Architect
+
+Patrón EARS: Event-driven
+
+Cuando el organizador rechaza un pago informado, el sistema DEBE enviar un aviso al participante de esa cuota.
+
+✅ **Ejemplo:** Jorge rechaza el pago que Lucía informó para la ronda 3 y a Lucía le llega "Jorge rechazó el pago que usted informó para su cuota de la ronda 3 de la Junta Oficina. Revise su cuota en Mi Junta." por correo y, si lo activó, por push.
+
+❌ **Contraejemplo:** la cuota de Lucía vuelve a "Pendiente" sin que ella se entere hasta el siguiente recordatorio.
+
+---
+
+**RN-196** | Categoría: Notificaciones | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-047) · derivada por el Agente Architect
+
+Patrón EARS: Event-driven
+
+Cuando llega el día siguiente a la fecha de vencimiento de una ronda que tiene cuotas en el estado "Pendiente", el sistema DEBE enviar al organizador de la junta, entre las 09:00:00 y las 09:15:00 en America/Lima, un correo con el nombre de cada participante cuya cuota de esa ronda sigue "Pendiente".
+
+✅ **Ejemplo:** La ronda 1 de la Junta Oficina venció el `2026-11-30` y Pedro no pagó. El `2026-12-01` a las 09:00 Jorge recibe "Junta Oficina: estas cuotas de la ronda 1, que vencieron el 30/11/2026, siguen pendientes: Pedro.".
+
+❌ **Contraejemplo:** Jorge recibe un correo por cada cuota pendiente, o no recibe nada y tiene que revisar la app para saber quién falta.
+
+---
+
+**RN-199** | Categoría: Notificaciones | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-041)
+
+Patrón EARS: Unwanted
+
+Si el servicio de correo no acepta un recordatorio, entonces el sistema DEBE reintentar el envío hasta las 09:15:00 en America/Lima.
+
+✅ **Ejemplo:** El servicio de correo no responde a las 09:02 del `2026-12-02`. El sistema reintenta y el correo se acepta a las 09:06.
+
+❌ **Contraejemplo:** el sistema reintenta a las 11:00 y el recordatorio llega fuera de la ventana de RN-066, o no reintenta nunca.
+
+---
+
+**RN-208** | Categoría: Notificaciones | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, segunda ronda de la alineación, PREG-053) · preferencia propia derivada por el Agente Architect
+
+Patrón EARS: Ubiquitous
+
+El sistema DEBE permitir que el organizador desactive y vuelva a activar el aviso de cuotas vencidas.
+
+✅ **Ejemplo:** Jorge desactiva el aviso de cuotas vencidas el `2026-11-20` y lo vuelve a activar el `2026-12-05`, sin cambiar los recordatorios de sus propias cuotas.
+
+❌ **Contraejemplo:** la única forma de que Jorge deje de recibir el aviso es desactivar también los recordatorios de sus propias cuotas.
+
+---
+
+**RN-209** | Categoría: Notificaciones | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, segunda ronda de la alineación, PREG-053)
+
+Patrón EARS: Optional
+
+Donde el organizador desactivó el aviso de cuotas vencidas, el sistema NO DEBE enviárselo.
+
+✅ **Ejemplo:** Jorge desactivó el aviso. El `2026-12-01` Pedro sigue sin pagar la ronda 1 y Jorge no recibe el correo de RN-196.
+
+❌ **Contraejemplo:** Jorge recibe el aviso de cuotas vencidas aunque lo desactivó.
 
 ---
 
@@ -1641,7 +1827,7 @@ Si una cuenta acumula 5 intentos fallidos de inicio de sesión seguidos, entonce
 
 ---
 
-**RN-076** | Categoría: Seguridad | Prioridad: MUST | Fuente: Business Analyst, derivada de RN-075 · Modificada: contraejemplo (QA-23)
+**RN-076** | Categoría: Seguridad | Prioridad: MUST | Fuente: Business Analyst, derivada de RN-075 · Modificada: contraejemplo (QA-23) · Validada: Product Owner (2026-11-14)
 
 Patrón EARS: Event-driven
 
@@ -1977,6 +2163,90 @@ Si un usuario pide desactivar el segundo factor sin ingresar su contraseña y un
 
 ---
 
+**RN-180** | Categoría: Seguridad | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-036) · derivada por el Agente Architect
+
+Patrón EARS: Unwanted
+
+Si el celular ingresado ya pertenece a otra cuenta, entonces el sistema DEBE rechazarlo.
+
+✅ **Ejemplo:** Lucía registró el celular `987654321`. Otra persona intenta crear una cuenta con `987654321` y ve "Ya existe una cuenta con este celular.".
+
+❌ **Contraejemplo:** dos cuentas quedan con el celular `987654321`.
+
+---
+
+**RN-181** | Categoría: Seguridad | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-007) · derivada por el Agente Architect
+
+Patrón EARS: Unwanted
+
+Si el usuario no marcó la casilla "Soy mayor de 18 años" al crear su cuenta, entonces el sistema NO DEBE crear la cuenta.
+
+✅ **Ejemplo:** Lucía marca "Soy mayor de 18 años" y la casilla de consentimiento, y su cuenta se crea sin que se le pida la fecha de nacimiento.
+
+❌ **Contraejemplo:** la cuenta se crea con la casilla de edad desmarcada, o el formulario pide la fecha de nacimiento (RN-149).
+
+---
+
+**RN-191** | Categoría: Seguridad | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-036)
+
+Patrón EARS: Event-driven
+
+Cuando un usuario inicia sesión, el sistema DEBE comparar su correo sin distinguir mayúsculas de minúsculas.
+
+✅ **Ejemplo:** Lucía creó su cuenta con `lucia@example.com` e inicia sesión con `Lucia@Example.com`.
+
+❌ **Contraejemplo:** Lucía ve que el correo o la contraseña no son correctos porque escribió una mayúscula.
+
+---
+
+**RN-193** | Categoría: Seguridad | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-037)
+
+Patrón EARS: Ubiquitous
+
+El sistema NO DEBE contar un pedido de código de verificación rechazado por RN-164 dentro de los 5 pedidos de ese límite.
+
+✅ **Ejemplo:** Jorge pidió 5 códigos entre las 10:00 y las 10:04 y a las 10:05 se le rechaza el sexto. A las 10:15:01 pide otro y se envía.
+
+❌ **Contraejemplo:** el pedido rechazado de las 10:05 cuenta para el límite y Jorge recién puede pedir a las 10:20:01.
+
+---
+
+**RN-200** | Categoría: Seguridad | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-048)
+
+Patrón EARS: Ubiquitous
+
+El sistema NO DEBE dar acceso a los datos de producción a ninguna persona del equipo de Mi Junta distinta del líder técnico, y a él solo para resolver un incidente.
+
+✅ **Ejemplo:** El líder técnico entra a la base de datos de producción para revisar un error al registrar pagos.
+
+❌ **Contraejemplo:** una persona de soporte tiene usuario propio en la base de datos de producción.
+
+---
+
+**RN-201** | Categoría: Seguridad | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-048)
+
+Patrón EARS: Event-driven
+
+Cuando el líder técnico accede a los datos de producción, el sistema DEBE registrar quién accedió, la fecha y hora en America/Lima y el incidente que lo motivó.
+
+✅ **Ejemplo:** El acceso del `2026-12-05T10:20:00-05:00` queda registrado con el incidente que lo motivó.
+
+❌ **Contraejemplo:** el líder técnico entra a la base de datos y no queda ningún registro.
+
+---
+
+**RN-202** | Categoría: Seguridad | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-048)
+
+Patrón EARS: Ubiquitous
+
+El sistema NO DEBE ofrecer ninguna forma de descifrar a mano el DNI ni el celular de un usuario.
+
+✅ **Ejemplo:** Para revisar un incidente, el líder técnico consulta `users` y solo ve el DNI y el celular cifrados.
+
+❌ **Contraejemplo:** existe un script o una pantalla interna que muestra el DNI de un usuario en claro.
+
+---
+
 ### 2.7 Datos
 
 ---
@@ -2161,6 +2431,114 @@ Si la sesión ya se cerró cuando la app intenta enviar cambios hechos sin conex
 
 ---
 
+**RN-182** | Categoría: Datos | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-006) · derivada por el Agente Architect
+
+Patrón EARS: State-driven
+
+Mientras el usuario sea miembro de una junta "En curso", el sistema NO DEBE permitir que borre su cuenta.
+
+✅ **Ejemplo:** Pedro participa en la Junta Oficina, que está "En curso". Pide borrar su cuenta y ve "Usted es miembro de una junta en curso. Podrá borrar su cuenta cuando todas sus juntas en curso terminen.".
+
+❌ **Contraejemplo:** Pedro borra su cuenta y la Junta Oficina queda con cuotas de alguien que ya no existe.
+
+---
+
+**RN-183** | Categoría: Datos | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-006)
+
+Patrón EARS: Event-driven
+
+Cuando un usuario borra su cuenta, el sistema DEBE mostrar su nombre como "Participante eliminado" en las juntas "Terminada" de las que fue miembro.
+
+✅ **Ejemplo:** Rosa borra su cuenta. En una junta terminada en la que participó, su turno y sus pagos aparecen a nombre de "Participante eliminado".
+
+❌ **Contraejemplo:** la junta terminada sigue mostrando "Rosa".
+
+---
+
+**RN-184** | Categoría: Datos | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-006)
+
+Patrón EARS: Event-driven
+
+Cuando un usuario borra su cuenta, el sistema NO DEBE borrar las cuotas, los pagos ni las correcciones de las juntas "Terminada" de las que fue miembro.
+
+✅ **Ejemplo:** Rosa borra su cuenta y la junta terminada conserva sus 10 cuotas pagadas, con sus fechas de pago.
+
+❌ **Contraejemplo:** al borrar la cuenta de Rosa desaparecen sus pagos y la junta terminada muestra cuotas pendientes.
+
+---
+
+**RN-185** | Categoría: Datos | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-006) · derivada por el Agente Architect
+
+Patrón EARS: Event-driven
+
+Cuando un usuario borra su cuenta, el sistema DEBE borrar su nombre, su correo, su DNI, su celular y su contraseña.
+
+✅ **Ejemplo:** Rosa borra su cuenta y `users` ya no guarda su correo, su DNI cifrado, su celular cifrado ni su contraseña.
+
+❌ **Contraejemplo:** la cuenta queda marcada como borrada pero su correo y su DNI cifrado siguen en la base de datos.
+
+---
+
+**RN-186** | Categoría: Datos | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-006) · derivada por el Agente Architect
+
+Patrón EARS: Event-driven
+
+Cuando un usuario borra su cuenta, el sistema DEBE sacarlo de las juntas "Abierta" o "Completa" en las que es participante, como si saliera de ellas (RN-111, RN-113).
+
+✅ **Ejemplo:** Rosa participa en una junta "Completa" con 12 de 12 cupos. Borra su cuenta y la junta queda con 11 de 12 cupos y vuelve a "Abierta".
+
+❌ **Contraejemplo:** la junta sigue con 12 de 12 cupos y uno de ellos es de una cuenta borrada.
+
+---
+
+**RN-197** | Categoría: Datos | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-008)
+
+Patrón EARS: Event-driven
+
+Cuando el usuario cierra sesión, la app DEBE borrar del dispositivo los datos de sus juntas y sus cambios sin enviar.
+
+✅ **Ejemplo:** Jorge cierra sesión en una computadora compartida y la siguiente persona que abre la app sin conexión no ve la Junta Oficina.
+
+❌ **Contraejemplo:** después de cerrar sesión, la app sin conexión sigue mostrando las juntas de Jorge.
+
+---
+
+**RN-198** | Categoría: Datos | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-008) · derivada por el Agente Architect
+
+Patrón EARS: Unwanted
+
+Si al cerrar sesión quedan cambios sin enviar, entonces la app DEBE avisar al usuario cuántos son antes de cerrar la sesión.
+
+✅ **Ejemplo:** Jorge tiene 2 cambios sin enviar y pulsa "Cerrar sesión": ve "Hay cambios sin enviar (2). Si cierra sesión ahora, se perderán." y puede cancelar.
+
+❌ **Contraejemplo:** la sesión se cierra y los 2 pagos registrados sin conexión se pierden sin aviso.
+
+---
+
+**RN-203** | Categoría: Datos | Prioridad: MUST | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-015)
+
+Patrón EARS: Ubiquitous
+
+El sistema NO DEBE usar para evaluar créditos los datos de pagos registrados antes de que el usuario dé un consentimiento específico para ese uso.
+
+✅ **Ejemplo:** Los pagos de Lucía de 2026 nunca se entregan a la futura línea de préstamos, aunque ella acepte ese uso en 2027.
+
+❌ **Contraejemplo:** al lanzar la línea de préstamos se usa todo el historial de pagos de Lucía (NO-04, R-07).
+
+---
+
+**RN-207** | Categoría: Datos | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, segunda ronda de la alineación, PREG-049) · texto derivado por el Agente Architect
+
+Patrón EARS: State-driven
+
+Mientras el usuario sea organizador de una junta "Abierta" o "Completa", el sistema NO DEBE permitir que borre su cuenta.
+
+✅ **Ejemplo:** Carmen organiza la Junta Familia, "Abierta" con 11 de 12 cupos. Pide borrar su cuenta y ve "Usted organiza una junta que todavía no fija su orden de turnos. No puede borrar su cuenta mientras la organice.".
+
+❌ **Contraejemplo:** Carmen borra su cuenta y la Junta Familia queda sin organizador.
+
+---
+
 ### 2.8 UX
 
 ---
@@ -2273,13 +2651,74 @@ El sistema DEBE mostrar cada hora con el formato HH:MM de 24 horas.
 
 ---
 
+**RN-204** | Categoría: UX | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-021) · derivada por el Agente Architect
+
+Patrón EARS: Event-driven
+
+Cuando un organizador crea su primera junta, la app DEBE mostrarle la encuesta de KPI-05.
+
+✅ **Ejemplo:** Carmen crea la Junta Familia, su primera junta, y la app le muestra la encuesta.
+
+❌ **Contraejemplo:** la encuesta solo se muestra a los 3 meses y KPI-05 no tiene línea base.
+
+---
+
+**RN-205** | Categoría: UX | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-021) · Modificada: Product Owner (2026-11-14, PREG-054) · derivada por el Agente Architect
+
+Patrón EARS: Event-driven
+
+Cuando pasan 3 meses desde que un organizador respondió o cerró sin responder la primera encuesta de KPI-05, la app DEBE mostrarle la encuesta otra vez.
+
+✅ **Ejemplo:** Carmen respondió la encuesta el `2026-11-14` y la app se la vuelve a mostrar desde el `2027-02-14`.
+
+❌ **Contraejemplo:** la segunda encuesta se muestra a todos los organizadores el mismo día, sin importar cuándo respondieron la primera.
+
+---
+
+**RN-206** | Categoría: UX | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, alineación de pendientes, PREG-021)
+
+Patrón EARS: Ubiquitous
+
+El sistema DEBE incluir en la encuesta de KPI-05 solo estas 3 preguntas: cuántas horas al mes dedica a gestionar sus juntas, cuántos recordatorios envía a mano al mes y si reenvía por WhatsApp los recordatorios de Mi Junta.
+
+✅ **Ejemplo:** Carmen responde 10 horas, 40 recordatorios y "Sí".
+
+❌ **Contraejemplo:** la encuesta pide además el celular de Carmen o el nombre de sus familiares.
+
+---
+
+**RN-210** | Categoría: UX | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, segunda ronda de la alineación, PREG-054)
+
+Patrón EARS: Ubiquitous
+
+El sistema DEBE permitir que el organizador cierre la encuesta de KPI-05 sin responderla.
+
+✅ **Ejemplo:** Carmen cierra la encuesta sin responder y sigue usando la app.
+
+❌ **Contraejemplo:** la app no deja seguir a Carmen hasta que responda la encuesta.
+
+---
+
+**RN-211** | Categoría: UX | Prioridad: SHOULD | Fuente: Product Owner (2026-11-14, segunda ronda de la alineación, PREG-054) · derivada por el Agente Architect
+
+Patrón EARS: Unwanted
+
+Si el organizador cierra una encuesta de KPI-05 sin responderla, entonces la app NO DEBE volver a mostrarle esa misma encuesta.
+
+✅ **Ejemplo:** Carmen cierra la primera encuesta el `2026-11-14`. No la vuelve a ver, y la encuesta de los 3 meses se le muestra desde el `2027-02-14` (RN-205).
+
+❌ **Contraejemplo:** la app le muestra la primera encuesta cada vez que Carmen abre la app.
+
+---
+
 ### 2.9 Mensajes al usuario
 
-Texto exacto que ve el usuario cuando una regla rechaza algo. Siguen RN-090 a RN-093. `{n}` es un valor que calcula el sistema.
+Texto exacto que ve el usuario cuando una regla rechaza algo. Siguen RN-090 a RN-093. `{n}` y `{nombre}` son valores que calcula el sistema. En RN-164, `{n}` es la cantidad de minutos, redondeada hacia arriba, que faltan para que el pedido más antiguo de los últimos 900 segundos salga de esa ventana (derivado, sección 1.3). Los textos de RN-180, RN-181, RN-182, RN-198 y RN-207 son derivados (sección 1.3).
 
 | RN | Situación | Mensaje |
 |---|---|---|
 | RN-002 | Falta un dato al crear la junta | "Complete los campos marcados." |
+| RN-007 | Frecuencia no permitida | "Elija una frecuencia: semanal, quincenal, mensual o cada cierta cantidad de días." |
 | RN-003 | Cuota fuera de rango | "Ingrese una cuota entre S/ 10.00 y S/ 5,000.00." |
 | RN-004 | Cuota que no es múltiplo de S/ 0.10 | "La cuota debe ser múltiplo de S/ 0.10, por ejemplo S/ 20.80." |
 | RN-005 | Participantes fuera de rango | "Ingrese entre 2 y 50 participantes." |
@@ -2290,19 +2729,23 @@ Texto exacto que ve el usuario cuando una regla rechaza algo. Siguen RN-090 a RN
 | RN-017 | Código sin sesión | "Inicie sesión o cree su cuenta para unirse a la junta." |
 | RN-018 | Junta llena | "Esta junta ya no tiene cupos disponibles." |
 | RN-019, RN-020, RN-129 | Código anulado | "Este código ya no es válido." |
+| RN-027, RN-126 | Fijar el orden con cupos libres | "La junta todavía tiene cupos libres. Fije el orden de turnos cuando estén todos ocupados." |
 | RN-029 | Sorteo sin conexión | "Necesita conexión a internet para ejecutar el sorteo." |
 | RN-054 | Fecha de pago futura | "La fecha de pago no puede ser posterior a hoy." |
 | RN-074 | Contraseña corta | "Su contraseña debe tener al menos 8 caracteres." |
+| RN-075 | Correo o contraseña incorrectos | "El correo o la contraseña no son correctos." |
 | RN-075, RN-161 | Cuenta bloqueada | "Demasiados intentos fallidos. Intente de nuevo en 15 minutos." |
 | RN-080, RN-081, RN-162, RN-163 | Código de verificación inválido | "Este código ya no es válido. Pida uno nuevo." |
 | RN-085 | DNI inválido | "Ingrese un DNI de 8 dígitos." |
 | RN-086 | Celular inválido | "Ingrese un celular de 9 dígitos que empiece con 9." |
 | RN-096 | Nombre de junta inválido | "El nombre de la junta debe tener entre 3 y 60 caracteres." |
 | RN-097 | Monto mal escrito | "Ingrese el monto solo con números y un punto decimal, por ejemplo 1250.50." |
+| RN-105 | Junta sin orden de turnos (turno y cuotas todavía no existen) | "Su turno y sus cuotas aparecerán cuando se fije el orden de turnos." |
 | RN-108 | Cantidad menor que los ocupados | "La junta ya tiene {n} cupos ocupados. Ingrese al menos {n} participantes." |
 | RN-109 | Organizador sin cupo para participar | "La junta no tiene cupos libres para que usted participe." |
 | RN-110 | Edición después del sorteo | "La junta ya fijó su orden de turnos. Solo puede cambiar su nombre." |
 | RN-114 | Salida después del sorteo | "La junta ya fijó su orden de turnos. Ya no es posible salir de ella." |
+| RN-114 | Quitar a un participante después del sorteo | "La junta ya fijó su orden de turnos. Ya no es posible quitar participantes." |
 | RN-115 | Organizador intenta salir | "Usted es la persona organizadora de esta junta y no puede salir de ella." |
 | RN-116 | Código inexistente | "Este código no es válido." |
 | RN-117 | Demasiados códigos inválidos | "Demasiados códigos no válidos. Intente de nuevo en 1 hora." |
@@ -2313,31 +2756,38 @@ Texto exacto que ve el usuario cuando una regla rechaza algo. Siguen RN-090 a RN
 | RN-131 | Desmarcar sin pago | "Esta cuota no tiene un pago registrado." |
 | RN-132 | Fecha de pago antes de la junta | "La fecha de pago no puede ser anterior a la creación de la junta." |
 | RN-136 | Organizador informa su propio pago | "Registre su propio pago con la opción 'Registrar pago'." |
+| RN-146 | Falta un dato al crear la cuenta | "Complete su nombre, su correo y su contraseña." |
 | RN-147 | Nombre de usuario inválido | "Su nombre debe tener entre 2 y 80 caracteres." |
 | RN-150 | Correo repetido | "Ya existe una cuenta con este correo. Inicie sesión o recupere su contraseña." |
 | RN-151 | DNI repetido | "Ya existe una cuenta con este DNI." |
 | RN-153 | Correo sin verificar | "Verifique su correo para crear una junta o unirse a una." |
 | RN-154, RN-157 | Enlace vencido o usado | "Este enlace ya se usó o venció. Pida uno nuevo." |
 | RN-156 | Recuperación de contraseña | "Si el correo está registrado, le enviamos un enlace para recuperar su contraseña." |
-| RN-164 | Demasiados códigos pedidos | "Ya pidió varios códigos. Intente de nuevo en 15 minutos." |
+| RN-164 | Demasiados códigos pedidos | "Ya pidió varios códigos. Intente de nuevo en {n} minutos." |
+| RN-166 | Código de verificación equivocado que todavía no vence | "El código no es correcto. Revíselo e intente de nuevo." |
 | RN-170 | Acción no permitida sin conexión | "Necesita conexión a internet para hacer esto." |
 | RN-172 | Cambio rechazado al sincronizar | "No se pudo guardar un cambio hecho sin conexión: {motivo}." |
-| RN-174 | Cambios pendientes | "{n} cambios sin enviar." |
+| RN-172 | `{motivo}` de un pago ya registrado | "el pago de {nombre} de la ronda {n} ya estaba registrado" |
+| RN-172 | `{motivo}` de un pago informado sobre una cuota que ya no estaba pendiente | "su pago informado de la ronda {n} no se guardó porque la cuota ya no estaba pendiente" |
+| RN-174 | Un cambio pendiente | "1 cambio sin enviar." |
+| RN-174 | Dos o más cambios pendientes | "{n} cambios sin enviar." |
+| RN-179 | Reglas de la junta demasiado largas | "Las reglas de la junta pueden tener hasta 2,000 caracteres." |
+| RN-180 | Celular repetido | "Ya existe una cuenta con este celular." |
+| RN-181 | Falta confirmar la edad | "Confirme que es mayor de 18 años para crear su cuenta." |
+| RN-182 | Borrar la cuenta con una junta en curso | "Usted es miembro de una junta en curso. Podrá borrar su cuenta cuando todas sus juntas en curso terminen." |
+| RN-207 | Organizador que pide borrar su cuenta con una junta "Abierta" o "Completa" | "Usted organiza una junta que todavía no fija su orden de turnos. No puede borrar su cuenta mientras la organice." |
+| RN-198 | Cerrar sesión con cambios sin enviar | "Hay cambios sin enviar ({n}). Si cierra sesión ahora, se perderán." |
 
 ---
 
 ## 3. Temas pendientes
 
-Estas reglas no se escribieron, o se escribieron solo en parte, porque falta una decisión. Cuando se resuelvan, las RN nuevas toman el siguiente número libre (RN-178 en adelante).
+Las RN nuevas toman el siguiente número libre (RN-212 en adelante). Los temas que esta sección tenía en la v0.2 se resolvieron el 2026-11-14 (sección 1.3).
 
-| Tema | Qué falta decidir | Estado |
+| Tema | Qué falta | Estado |
 |---|---|---|
-| Política de privacidad | Texto y requisitos de la Ley N.° 29733. También si se necesitan dos consentimientos separados (política y notificaciones) y si se siguen enviando recordatorios mientras el usuario no acepta una versión nueva (RN-168) | [REQUIERE DECISIÓN] (PREG-001) |
-| Retiro del consentimiento | Si el usuario puede retirarlo y qué pasa con sus recordatorios | [REQUIERE DECISIÓN] (PREG-009) |
-| DNI de los demás | Decisión definitiva entre completo, parcialmente oculto o no visible. Mientras tanto aplica RN-023 | [REQUIERE DECISIÓN] (PREG-003) |
-| Foto y fecha de nacimiento | Si se piden en una versión futura. Mientras tanto aplica RN-149 | [REQUIERE DECISIÓN] (PREG-004, PREG-007) |
-| Borrado de datos y de la cuenta | Si un participante puede borrar su cuenta, y qué pasa si está en una junta "En curso" | [REQUIERE DECISIÓN] (PREG-006) |
-| Datos en el dispositivo | Cómo se protegen los datos que guarda RN-175, y si se borran al cerrar sesión | [REQUIERE DECISIÓN] (PREG-008) |
+| Texto de la política de privacidad | El texto lo escribe el asesor legal. F-01 no sale al mercado sin él (02-alcance.md §5) | Entregable del asesor legal (PREG-001, resuelta) |
+| Plan VIP y WhatsApp | Se revisan después del lanzamiento y no bloquean ninguna regla | Abiertas a propósito (PREG-011, PREG-014) |
 
 ---
 
