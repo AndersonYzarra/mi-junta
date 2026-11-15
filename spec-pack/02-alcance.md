@@ -1,8 +1,10 @@
 # Alcance de Mi Junta
 
 Versión: 0.2
+Fecha: 14/11/2026
+Estado: Revisado
 
-Fuente: 01-project-brief.md v0.3, 00-constitucion.md v1.3, 03-reglas-de-negocio.md v0.2, las decisiones del Product Owner del 14/11/2026 (sección 7) y las decisiones del Product Owner del 14/11/2026 sobre la auditoría QA (auditorias/qa-clase1.md). El rol que crea y gestiona la junta se llama "organizador" (PREG-010, resuelta).
+Fuente: 01-project-brief.md v0.2, 00-constitucion.md v0.2, 03-reglas-de-negocio.md v0.2, las decisiones del Product Owner del 14/11/2026 (sección 7) y las decisiones del Product Owner del 14/11/2026 sobre la auditoría QA (auditorias/qa-clase1.md). El rol que crea y gestiona la junta se llama "organizador" (PREG-010, resuelta).
 
 **IDs de este documento:** `F-NN` identifica una funcionalidad dentro del alcance y `NO-NN` una funcionalidad fuera del alcance. Los supuestos siguen la serie `S-NN` de 01-project-brief.md.
 
@@ -31,7 +33,7 @@ Fuente: 01-project-brief.md v0.3, 00-constitucion.md v1.3, 03-reglas-de-negocio.
 | F-08 | Pago informado por el participante | El participante informa que pagó, con su fecha de pago, y la cuota queda "Por confirmar" hasta que el organizador lo confirma o lo rechaza. El organizador recibe un aviso. | S | F-04 ya permite registrar todos los pagos. | PREG-017, PREG-020, PREG-030 |
 | F-09 | Reglas escritas de la junta | Al crear la junta, o después mientras no se fije el orden de turnos, el organizador escribe sus reglas (atrasos, multas, retiros) como un texto de hasta 2,000 caracteres que todos los miembros pueden leer, y la app no las aplica. | S | Hoy las juntas funcionan sin reglas escritas. | PREG-016, PRINCIPIO-012 g |
 | F-10 | Orden de turnos sin sorteo | En lugar del sorteo, el organizador asigna el orden de turnos a mano, por ejemplo según la necesidad, y queda un registro inmutable de quién lo decidió y cuándo. | S | El sorteo es el caso habitual. | PREG-018, PRINCIPIO-008 |
-| F-11 | Segundo factor por correo | El usuario que lo desee activa un código enviado a su correo, y desde entonces no inicia sesión sin ese código. | S | Es opcional para el usuario, así que la junta funciona sin él. PRINCIPIO-005 v1.3 lo exige desde que se publique F-11. | PRINCIPIO-005, PREG-023, PREG-037 |
+| F-11 | Segundo factor por correo | El usuario que lo desee activa un código enviado a su correo, y desde entonces no inicia sesión sin ese código. | S | Es opcional para el usuario, así que la junta funciona sin él. PRINCIPIO-005 v0.2 lo exige desde que se publique F-11. | PRINCIPIO-005, PREG-023, PREG-037 |
 
 ### Could have
 

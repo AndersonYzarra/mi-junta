@@ -1,12 +1,14 @@
 # Glosario de Mi Junta
 
 Versión: 0.2
+Fecha: 14/11/2026
+Estado: Revisado
 
 Lenguaje ubicuo del proyecto. Todo el spec-pack, las HU, las pantallas y el código usan estos términos con este significado. La columna "Identificador en código" da el nombre en inglés que se usa en variables, tablas, columnas y rutas de API (PRINCIPIO-002). La única excepción es `junta`, que se usa tal cual. La columna "No usar" lista términos que no deben aparecer en su lugar.
 
 **Convención de nombres:** las tablas van en plural y en `snake_case` (`juntas`, `contributions`, `payments`, `payment_corrections`, `draws`, `turn_assignments`). Las columnas y los campos de la API van en singular y en `snake_case`.
 
-Fuente: 00-constitucion.md v1.3, 01-project-brief.md v0.3, 02-alcance.md v0.2 y 03-reglas-de-negocio.md v0.2.
+Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y 03-reglas-de-negocio.md v0.2.
 
 ---
 

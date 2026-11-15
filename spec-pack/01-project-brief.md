@@ -1,6 +1,8 @@
 # Project Brief de Mi Junta
 
-Versión: 0.3
+Versión: 0.2
+Fecha: 14/11/2026
+Estado: Revisado
 
 Fuente: entrevista de descubrimiento con el Product Owner (Agente Analyst, 4 rondas). Las cifras de este documento vienen de la experiencia del Product Owner en su entorno (juntas de familia y de trabajo). No se han validado con una muestra más amplia, y por eso los supuestos están en la sección 6.
 

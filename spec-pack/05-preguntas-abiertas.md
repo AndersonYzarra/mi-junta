@@ -1,6 +1,8 @@
 # Preguntas abiertas
 
-Versión: 1.6
+Versión: 0.2
+Fecha: 14/11/2026
+Estado: Revisado
 
 Decisiones pendientes detectadas al redactar la constitución, el Project Brief y el alcance. Mientras una pregunta siga abierta, todo lo que dependa de ella se marca [REQUIERE DECISIÓN]. Una pregunta resuelta conserva su ID y lleva la línea "Estado: Resuelta" con la fecha y la decisión. Una pregunta con "Estado: Propuesta" tiene una respuesta redactada por un agente que no rige hasta que el Product Owner la apruebe (PRINCIPIO-012). Al aprobarla, "Propuesta" se cambia por "Resuelta".
 
@@ -158,7 +160,7 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - A quién preguntar: arquitecto de software o responsable de seguridad, con visto bueno del Product Owner.
 - Bloquea: PRINCIPIO-005 y las RN de autenticación en 03-reglas-de-negocio.md.
 - Plan de resolución: decidir antes de redactar las HU de inicio de sesión y registrar los valores en PRINCIPIO-005, con aprobación humana (PRINCIPIO-012).
-- Estado: Resuelta el 14/11/2026. El código tiene 6 dígitos, vale 600 segundos y se anula después de 5 intentos fallidos. Con aprobación humana se registró en PRINCIPIO-005 de 00-constitucion.md v1.2 (RN-079 a RN-081 de 03-reglas-de-negocio.md).
+- Estado: Resuelta el 14/11/2026. El código tiene 6 dígitos, vale 600 segundos y se anula después de 5 intentos fallidos. Con aprobación humana se registró en PRINCIPIO-005 de 00-constitucion.md v0.2 (RN-079 a RN-081 de 03-reglas-de-negocio.md).
 
 ### PREG-024: ¿Qué formato tiene el código de invitación, cuánto tiempo es válido y cuántas veces se puede usar?
 - Contexto: el Product Owner decidió que un invitado se une a la junta con un código y que para unirse necesita una cuenta (sección 7 de 02-alcance.md). No se definió la longitud ni los caracteres del código, si vence, si sirve para una sola persona o para todo el grupo, ni si el organizador puede anularlo. Sin esos valores no se puede escribir un test que lo verifique (PRINCIPIO-011).
@@ -234,10 +236,10 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). Antes de fijar el orden de turnos se edita todo con las mismas validaciones de la creación (RN-106, RN-107), sin bajar la cantidad de participantes por debajo de los cupos ocupados (RN-108) y sin que el organizador pase a participar si no hay cupo (RN-109). Después solo se edita el nombre (RN-110).
 
 ### PREG-034: ¿Qué datos de la junta recibe el organizador, y quién puede ver el registro del sorteo?
-- Contexto: PRINCIPIO-006 v1.2 limitaba también al organizador a cuatro datos de los demás, y así no podía gestionar pagos (QA-01). Tampoco se definía quién puede verificar el sorteo (QA-25).
+- Contexto: una versión anterior de PRINCIPIO-006 limitaba también al organizador a cuatro datos de los demás, y así no podía gestionar pagos (QA-01). Tampoco se definía quién puede verificar el sorteo (QA-25).
 - A quién preguntar: Product Owner. Cambia la constitución, así que requiere aprobación humana (PRINCIPIO-012).
 - Bloquea: F-04, F-05, F-08, F-14 y el contrato de la API de miembros.
-- Plan de resolución: aprobar o cambiar PRINCIPIO-006 y PRINCIPIO-008 de 00-constitucion.md v1.3.
+- Plan de resolución: aprobar o cambiar PRINCIPIO-006 y PRINCIPIO-008 de 00-constitucion.md v0.2.
 - Estado: Resuelta el 14/11/2026, con la decisión que propuso la auditoría QA y aprobó el Product Owner (auditorias/qa-clase1.md). PRINCIPIO-006 separa los datos personales, que nadie recibe de otro miembro, de los datos de la junta. El organizador recibe todas las cuotas y pagos de su junta (RN-120). Todo miembro ve el registro del sorteo para reproducirlo (RN-121).
 
 ### PREG-035: ¿Cómo se arma la lista de entrada del sorteo y qué generador se deriva de la semilla?

@@ -1,8 +1,10 @@
 # Reglas de negocio de Mi Junta
 
 Versión: 0.2
+Fecha: 2026-11-14
+Estado: Revisado
 
-Fuente: 00-constitucion.md v1.3, 01-project-brief.md v0.3, 02-alcance.md v0.2 y las decisiones del Product Owner del 2026-11-14 (sección 1.1, y sección 1.2 sobre auditorias/qa-clase1.md). Este catálogo cubre las funcionalidades Must (F-01 a F-06) y Should (F-07 a F-11) de 02-alcance.md. Las funcionalidades Could (F-12 a F-15) quedan para una versión posterior.
+Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y las decisiones del Product Owner del 2026-11-14 (sección 1.1, y sección 1.2 sobre auditorias/qa-clase1.md). Este catálogo cubre las funcionalidades Must (F-01 a F-06) y Should (F-07 a F-11) de 02-alcance.md. Las funcionalidades Could (F-12 a F-15) quedan para una versión posterior.
 
 **Cómo leer este catálogo:**
 - Cada regla tiene un solo DEBE / NO DEBE / PUEDE (PRINCIPIO-001) y necesita al menos un escenario Gherkin que cite su ID (PRINCIPIO-011).
@@ -71,7 +73,7 @@ Estas decisiones dan los valores de las reglas. Las que cierran una pregunta abi
 
 ### 1.2 Decisiones del Product Owner del 2026-11-14 sobre la auditoría QA
 
-El Agente QA propuso estas decisiones para resolver los hallazgos de auditorias/qa-clase1.md, y el Product Owner las aprobó el 2026-11-14 junto con 00-constitucion.md v1.3 (PRINCIPIO-012).
+El Agente QA propuso estas decisiones para resolver los hallazgos de auditorias/qa-clase1.md, y el Product Owner las aprobó el 2026-11-14 junto con 00-constitucion.md v0.2 (PRINCIPIO-012).
 
 | Tema | Decisión | Pregunta | Hallazgo |
 |---|---|---|---|
@@ -2259,7 +2261,7 @@ Mientras el dispositivo no tenga conexión, la app DEBE mostrar la fecha y hora 
 
 ---
 
-**RN-177** | Categoría: UX | Prioridad: MUST | Fuente: Product Owner a propuesta QA (2026-11-14, PREG-044), Constitución (PRINCIPIO-003 v1.3)
+**RN-177** | Categoría: UX | Prioridad: MUST | Fuente: Product Owner a propuesta QA (2026-11-14, PREG-044), Constitución (PRINCIPIO-003 v0.2)
 
 Patrón EARS: Ubiquitous
 
