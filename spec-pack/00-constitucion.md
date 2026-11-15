@@ -1,6 +1,6 @@
 # Constitución de Mi Junta
 
-Versión: 0.2
+Versión: 0.3
 Fecha: 14/11/2026
 Estado: Revisado
 
@@ -8,10 +8,12 @@ Estos principios son obligatorios para todo agente de IA y toda persona que trab
 
 La v0.2 cambió PRINCIPIO-001, 002, 003, 005, 006 y 008 a partir de la auditoría QA, con aprobación del Product Owner del 14/11/2026 (auditorias/qa-clase1.md, sección 5).
 
+La v0.3 cambió PRINCIPIO-001 para aceptar también la línea de versión con el formato `MAYOR.MENOR.PARCHE`, con aprobación del Product Owner del 14/11/2026.
+
 ---
 
 ### PRINCIPIO-001: El spec-pack es la única fuente de verdad
-Todo requisito, regla y valor de negocio sale de `spec-pack/`. Ahí todo se escribe en Markdown, los diagramas van en Mermaid y cada archivo empieza con un título `#` seguido de la línea `Versión: MAYOR.MENOR`. Cada regla EARS tiene un solo DEBE / NO DEBE / PUEDE. Los IDs (`PRINCIPIO-NNN`, `RN-NNN`, `HU-NNN`, `P-NNN`, `T-NNN`, `PREG-NNN`, y en el brief y el alcance `F-NN`, `NO-NN`, `S-NN`, `R-NN` y `KPI-NN`) nunca se renumeran ni se reutilizan, y un ID nuevo toma el siguiente número libre. Las palabras "rápido", "seguro", "fácil", "adecuado", "razonable" e "intuitivo" solo pueden aparecer junto a un valor medible.
+Todo requisito, regla y valor de negocio sale de `spec-pack/`. Ahí todo se escribe en Markdown, los diagramas van en Mermaid y cada archivo empieza con un título `#` seguido de la línea `Versión: MAYOR.MENOR` o `Versión: MAYOR.MENOR.PARCHE`. Cada regla EARS tiene un solo DEBE / NO DEBE / PUEDE. Los IDs (`PRINCIPIO-NNN`, `RN-NNN`, `HU-NNN`, `P-NNN`, `T-NNN`, `PREG-NNN`, y en el brief y el alcance `F-NN`, `NO-NN`, `S-NN`, `R-NN` y `KPI-NN`) nunca se renumeran ni se reutilizan, y un ID nuevo toma el siguiente número libre. Las palabras "rápido", "seguro", "fácil", "adecuado", "razonable" e "intuitivo" solo pueden aparecer junto a un valor medible.
 
 **Ejemplo de cumplimiento:** `RN-008: Cuando el organizador confirma el sorteo, el sistema DEBE guardar la semilla usada.` El ID sigue a RN-007.
 **Ejemplo de violación:** `RN-003: El sistema DEBE validar el DNI y NO DEBE aceptar duplicados.` (dos verbos modales en una regla), o un diagrama entregado como imagen PNG.
