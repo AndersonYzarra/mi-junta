@@ -1,6 +1,6 @@
 # Validation log de Mi Junta
 
-Versión: 1.1
+Versión: 1.2
 Fecha: 15/11/2026
 Estado: Borrador. Lo redactó el Agente Consolidador de Validación (prompts/clase3/04-consolidador.xml). Falta la revisión del Product Owner.
 
@@ -198,3 +198,23 @@ No se probó en un navegador (fila 18).
 | spec-pack/05-preguntas-abiertas.md | Registrar PREG-069 a PREG-072 (09 §7.1) y abrir PREG-073 a PREG-077 | 4, 9, 12, 27, 30 |
 | spec-pack/09-ui-spec.md | En §6: el aviso de cambios de otra cuenta en P-003, el rol en una junta "Terminada", la vigencia en P-002, el toast del segundo factor y el error de carga general. En P-023, el orden del diálogo, si se acepta la fila 29 | 22, 26, 28, 29, 31, 32 |
 | spec-pack/07-architecture.md | API-033 en dos pasos, solo si el PO acepta la fila 29 al descomponer HU-017 | 29 |
+
+---
+
+## 4. Seguimiento del 15/11/2026 (Agente Spec Finalizer)
+
+La v1.2 registra qué filas cerró la auditoría auditorias/spec-finalizer.md, con la autorización del usuario para decidir por su cuenta. Las decisiones están en 03-reglas-de-negocio.md v0.5 §1.5 y en 05-preguntas-abiertas.md v0.5, y el Product Owner puede revertirlas (PREG-079). Las tablas de las secciones 1 a 3 no cambian.
+
+| Fila | Estado nuevo | Cómo se cerró |
+|---|---|---|
+| 4 | ✅ CERRADA | PREG-075: asunto y cuerpo del recordatorio y texto del aviso de cuotas vencidas en 03 §2.9. T-018 los usa |
+| 9 | ✅ CERRADA | PREG-073: RN-009 compara con la creación, su mensaje y el código `ROUND1_BEFORE_CREATION` dicen lo mismo, y T-011 lo prueba |
+| 12 | ✅ CERRADA | PREG-074: los textos de RN-139 y RN-194 pasan a 03 §2.9 |
+| 15 | ✅ CERRADA | PREG-071: RN-214 y RN-215. HU-018 se descompone en T-032 y T-033 |
+| 22 | ✅ CERRADA | Texto del aviso de otra cuenta en 09 v1.2 §6. T-030 ya no está bloqueada |
+| 26, 28, 32 | ✅ CERRADAS | Textos del rol en una junta "Terminada", de la vigencia del enlace y del error de carga en 09 v1.2 §6. T-029 ya no está bloqueada |
+| 27 | ✅ CERRADA | PREG-076: RN-213 con su mensaje. T-028 ya no está bloqueada |
+| 30 | ✅ CERRADA | PREG-077: el mensaje queda atado a RN-078 y RN-166, sin RN nueva |
+| 31 | ✅ CERRADA | Toasts "Segundo factor activado." y "Segundo factor desactivado." en 09 v1.2 §6 |
+| 18 | ⏳ PENDIENTE | La prueba en el navegador sigue a cargo del usuario (PREG-083) |
+| 29 | ⏳ BACKLOG | Se decide al descomponer HU-017, desde T-034 |

@@ -1,10 +1,12 @@
 # Reglas de negocio de Mi Junta
 
-Versión: 0.4
-Fecha: 2026-11-14
+Versión: 0.5
+Fecha: 2026-11-15
 Estado: Revisado
 
-Fuente: 00-constitucion.md v0.4, 01-project-brief.md v0.4, 02-alcance.md v0.4 y las decisiones del Product Owner del 2026-11-14 (sección 1.1, sección 1.2 sobre auditorias/qa-clase1.md, sección 1.3 sobre la alineación de pendientes y sección 1.4 sobre auditorias/qa-clase2.md). Este catálogo cubre las funcionalidades Must (F-01 a F-06) y Should (F-07 a F-11) de 02-alcance.md. Las funcionalidades Could (F-12 a F-15) quedan para una versión posterior.
+Fuente: 00-constitucion.md v0.4, 01-project-brief.md v0.4, 02-alcance.md v0.4 y las decisiones del Product Owner del 2026-11-14 (sección 1.1, sección 1.2 sobre auditorias/qa-clase1.md, sección 1.3 sobre la alineación de pendientes y sección 1.4 sobre auditorias/qa-clase2.md). Este catálogo cubre las funcionalidades Must (F-01 a F-06) y Should (F-07 a F-11 y F-16 a F-18) de 02-alcance.md. Las funcionalidades Could (F-12 a F-15) quedan para una versión posterior.
+
+La v0.5 incorpora las decisiones del 2026-11-15 sobre auditorias/spec-finalizer.md (sección 1.5), tomadas con la autorización del usuario: textos de los correos de recordatorio y de los avisos en §2.9, el mensaje de RN-009 y las reglas nuevas RN-213 a RN-215.
 
 **Cómo leer este catálogo:**
 - Cada regla tiene un solo DEBE / NO DEBE / PUEDE (PRINCIPIO-001) y necesita al menos un escenario Gherkin que cite su ID (PRINCIPIO-011).
@@ -140,6 +142,20 @@ El Agente QA de backlog redactó estas decisiones para resolver los hallazgos cr
 | Bloqueo por códigos inválidos | RN-117 se aplica como está escrita: el bloqueo dura 3600 s desde el décimo código inválido. Los intentos rechazados durante el bloqueo no se validan y no cuentan como inválidos | PREG-057 | RN-117 (aclarada) | M-05 |
 | Desmarcar sin conexión | Texto del `{motivo}` cuando se desmarca sin conexión un pago que ya no estaba registrado | — | Sección 2.9 (RN-172) | M-03 |
 | Prioridad de RN-142 | Pasa de MUST a SHOULD, porque solo aplica cuando existe el push (F-07, Should). Su significado no cambia | — | RN-142 | M-11 |
+
+### 1.5 Decisiones del 2026-11-15 sobre la auditoría Spec Finalizer
+
+El Agente Spec Finalizer tomó estas decisiones para cerrar los hallazgos críticos de auditorias/spec-finalizer.md, con la autorización explícita del usuario del 2026-11-15 para decidir por su cuenta (PRINCIPIO-012). Son derivadas: el Product Owner puede revertirlas. Ninguna cambia el significado de una regla existente ni agrega montos, plazos o porcentajes.
+
+| Tema | Decisión | Pregunta | Reglas | Hallazgo |
+|---|---|---|---|---|
+| Correo de recordatorio | Asunto y cuerpo en §2.9. El asunto es el del ejemplo de RN-144 y también es el texto del push (RN-073). Antes del vencimiento y ese día dice "vence"; después, "venció" | PREG-075 | §2.9 (RN-144, RN-073) | SF-01 |
+| Aviso de cuotas vencidas | El cuerpo es el texto del ejemplo de RN-196, con un asunto propio | PREG-075 | §2.9 (RN-196) | SF-01 |
+| Avisos del pago informado | Se adoptan como texto los ejemplos de RN-139 y RN-194, con un asunto propio. El push lleva el mismo cuerpo | PREG-074 | §2.9 (RN-139, RN-194) | SF-02 |
+| Mensaje de RN-009 | La regla sigue comparando con la fecha de creación de la junta. El mensaje pasa a decir lo mismo que la regla. Al editar, una ronda 1 entre la creación y hoy se guarda, y RN-122 impide fijar el orden hasta que se cambie | PREG-073 | RN-009 (mensaje) | SF-05 |
+| Formato del correo | Regla nueva RN-213 con su mensaje | PREG-076 | RN-213 | SF-02 |
+| Respuestas de la encuesta de KPI-05 | Las 2 respuestas numéricas son enteros desde 0, sin máximo, y las 3 respuestas son obligatorias para enviar la encuesta. Cerrarla sin responder sigue disponible (RN-210) | PREG-071 | RN-214, RN-215 | SF-03 |
+| Código equivocado al iniciar sesión | Usa el mensaje de RN-166, atado también a RN-078. No hace falta una regla nueva | PREG-077 | §2.9 (RN-078) | SF-02 |
 
 ---
 
@@ -2147,7 +2163,7 @@ Patrón EARS: Unwanted
 
 Si un usuario pidió 5 códigos de verificación en los últimos 900 segundos, entonces el sistema DEBE rechazar el envío de otro código.
 
-✅ **Ejemplo:** Jorge pidió 5 códigos entre las `10:00` y las `10:04`. A las `10:05` pide el sexto y ve "Ya pidió varios códigos. Intente de nuevo en 15 minutos".
+✅ **Ejemplo:** Jorge pidió 5 códigos entre las `10:00` y las `10:04`. A las `10:05` pide el sexto y ve "Ya pidió varios códigos. Intente de nuevo en 11 minutos" (`{n}` de §2.9).
 
 ❌ **Contraejemplo:** un script hace que el sistema envíe 1,000 correos a Jorge en una hora.
 
@@ -2270,6 +2286,18 @@ El sistema NO DEBE ofrecer ninguna forma de descifrar a mano el DNI ni el celula
 ✅ **Ejemplo:** Para revisar un incidente, el líder técnico consulta `users` y solo ve el DNI y el celular cifrados.
 
 ❌ **Contraejemplo:** existe un script o una pantalla interna que muestra el DNI de un usuario en claro.
+
+---
+
+**RN-213** | Categoría: Seguridad | Prioridad: MUST | Fuente: decisión del 2026-11-15 sobre auditorias/spec-finalizer.md (PREG-076, 10-validation-log.md fila 27), derivada por el Agente Spec Finalizer con autorización del usuario
+
+Patrón EARS: Unwanted
+
+Si el correo ingresado al crear una cuenta no cumple el patrón `^[^\s@]+@[^\s@]+\.[^\s@]+$`, entonces el sistema DEBE rechazarlo.
+
+✅ **Ejemplo:** `lucia@example.com` y `Lucia@Example.com` se aceptan. `lucia.example.com` (sin `@`) se rechaza con "Ingrese un correo válido, por ejemplo lucia@example.com." antes de comprobar si el correo ya existe (RN-150).
+
+❌ **Contraejemplo:** se crea una cuenta con `lucia.example.com` y el enlace de verificación nunca llega.
 
 ---
 
@@ -2737,9 +2765,33 @@ Si el organizador cierra una encuesta de KPI-05 sin responderla, entonces la app
 
 ---
 
+**RN-214** | Categoría: UX | Prioridad: SHOULD | Fuente: decisión del 2026-11-15 sobre auditorias/spec-finalizer.md (PREG-071), derivada por el Agente Spec Finalizer con autorización del usuario
+
+Patrón EARS: Ubiquitous
+
+El sistema DEBE aceptar como respuesta a cada una de las 2 preguntas numéricas de la encuesta de KPI-05 solo un número entero mayor o igual a 0.
+
+✅ **Ejemplo:** Carmen responde 10 horas y 40 recordatorios, y se acepta. Una respuesta de 0 recordatorios también se acepta.
+
+❌ **Contraejemplo:** se guarda "-3" horas o "2.5" recordatorios, y KPI-05 se calcula con esos valores.
+
+---
+
+**RN-215** | Categoría: UX | Prioridad: SHOULD | Fuente: decisión del 2026-11-15 sobre auditorias/spec-finalizer.md (PREG-071), derivada por el Agente Spec Finalizer con autorización del usuario
+
+Patrón EARS: Unwanted
+
+Si el organizador envía la encuesta de KPI-05 sin responder alguna de sus 3 preguntas, entonces el sistema DEBE rechazar el envío.
+
+✅ **Ejemplo:** Carmen responde las horas y los recordatorios, deja sin elegir la pregunta de WhatsApp y pulsa "Enviar respuestas": ve "Responda las 3 preguntas, o cierre la encuesta sin responder." y todavía puede cerrarla sin responder (RN-210).
+
+❌ **Contraejemplo:** se guarda la encuesta con `forwards_by_whatsapp = null` y KPI-05 la cuenta como respondida.
+
+---
+
 ### 2.9 Mensajes al usuario
 
-Texto exacto que ve el usuario cuando una regla rechaza algo, y texto de los correos de la cuenta. Siguen RN-090 a RN-093. `{n}`, `{nombre}`, `{enlace}`, `{fecha}` (DD/MM/AAAA) y `{hora}` (HH:MM en America/Lima) son valores que calcula el sistema. Los textos de los correos de la cuenta y el `{motivo}` de un pago que ya no estaba registrado son derivados (sección 1.4). En RN-164, `{n}` es la cantidad de minutos, redondeada hacia arriba, que faltan para que el pedido más antiguo de los últimos 900 segundos salga de esa ventana (derivado, sección 1.3). Los textos de RN-180, RN-181, RN-182, RN-198 y RN-207 son derivados (sección 1.3).
+Texto exacto que ve el usuario cuando una regla rechaza algo, y texto de los correos y notificaciones push. Siguen RN-090 a RN-093. `{n}`, `{nombre}`, `{organizador}`, `{junta}` (nombre de la junta), `{monto}` (formato `S/ 1,250.50`), `{nombres}` (nombres separados por comas), `{enlace}`, `{fecha}` (DD/MM/AAAA) y `{hora}` (HH:MM en America/Lima) son valores que calcula el sistema. Los textos de RN-009, RN-073, RN-139, RN-144, RN-194, RN-196 y RN-213 a RN-215 son derivados (sección 1.5). Los textos de los correos de la cuenta y el `{motivo}` de un pago que ya no estaba registrado son derivados (sección 1.4). En RN-164, `{n}` es la cantidad de minutos, redondeada hacia arriba, que faltan para que el pedido más antiguo de los últimos 900 segundos salga de esa ventana (derivado, sección 1.3). Los textos de RN-180, RN-181, RN-182, RN-198 y RN-207 son derivados (sección 1.3).
 
 | RN | Situación | Mensaje |
 |---|---|---|
@@ -2749,7 +2801,7 @@ Texto exacto que ve el usuario cuando una regla rechaza algo, y texto de los cor
 | RN-004 | Cuota que no es múltiplo de S/ 0.10 | "La cuota debe ser múltiplo de S/ 0.10, por ejemplo S/ 20.80." |
 | RN-005 | Participantes fuera de rango | "Ingrese entre 2 y 50 participantes." |
 | RN-008 | N fuera de rango | "Ingrese un número de días entre 2 y 60." |
-| RN-009 | Ronda 1 antes de la creación | "La fecha de vencimiento de la ronda 1 no puede ser anterior a hoy." |
+| RN-009 | Ronda 1 antes de la creación | "La fecha de vencimiento de la ronda 1 no puede ser anterior a la fecha de creación de la junta." |
 | RN-010 | Aviso fuera de rango | "Ingrese entre 1 y 7 días de aviso previo." |
 | RN-012 | Aviso no menor que el periodo | "Los días de aviso previo deben ser menos que los días entre una cuota y la siguiente." |
 | RN-017 | Código sin sesión | "Inicie sesión o cree su cuenta para unirse a la junta." |
@@ -2790,7 +2842,7 @@ Texto exacto que ve el usuario cuando una regla rechaza algo, y texto de los cor
 | RN-154, RN-157 | Enlace vencido o usado | "Este enlace ya se usó o venció. Pida uno nuevo." |
 | RN-156 | Recuperación de contraseña | "Si el correo está registrado, le enviamos un enlace para recuperar su contraseña." |
 | RN-164 | Demasiados códigos pedidos | "Ya pidió varios códigos. Intente de nuevo en {n} minutos." |
-| RN-166 | Código de verificación equivocado que todavía no vence | "El código no es correcto. Revíselo e intente de nuevo." |
+| RN-166, RN-078 | Código de verificación equivocado que todavía no vence, al activar el segundo factor o al iniciar sesión | "El código no es correcto. Revíselo e intente de nuevo." |
 | RN-170 | Acción no permitida sin conexión | "Necesita conexión a internet para hacer esto." |
 | RN-172 | Cambio rechazado al sincronizar | "No se pudo guardar un cambio hecho sin conexión: {motivo}." |
 | RN-172 | `{motivo}` de un pago ya registrado | "el pago de {nombre} de la ronda {n} ya estaba registrado" |
@@ -2808,12 +2860,25 @@ Texto exacto que ve el usuario cuando una regla rechaza algo, y texto de los cor
 | RN-182 | Borrar la cuenta con una junta en curso | "Usted es miembro de una junta en curso. Podrá borrar su cuenta cuando todas sus juntas en curso terminen." |
 | RN-207 | Organizador que pide borrar su cuenta con una junta "Abierta" o "Completa" | "Usted organiza una junta que todavía no fija su orden de turnos. No puede borrar su cuenta mientras la organice." |
 | RN-198 | Cerrar sesión con cambios sin enviar | "Hay cambios sin enviar ({n}). Si cierra sesión ahora, se perderán." |
+| RN-213 | Correo con formato inválido | "Ingrese un correo válido, por ejemplo lucia@example.com." |
+| RN-214 | Respuesta numérica inválida en la encuesta | "Ingrese un número entero desde 0, por ejemplo 10." |
+| RN-215 | Encuesta enviada con preguntas sin responder | "Responda las 3 preguntas, o cierre la encuesta sin responder." |
+| RN-144 | Recordatorio antes del vencimiento o ese día: asunto | "{junta}: su cuota de la ronda {n}, de {monto}, vence el {fecha}" |
+| RN-144 | Recordatorio después del vencimiento: asunto | "{junta}: su cuota de la ronda {n}, de {monto}, venció el {fecha}" |
+| RN-144 | Recordatorio: cuerpo | "Hola, {nombre}. Su cuota de la ronda {n} de la {junta}, de {monto}, vence el {fecha}. Pague al organizador como siempre lo hace; el organizador registrará su pago en Mi Junta. Puede ver el estado de sus cuotas aquí: {enlace}. Si no quiere recibir estos recordatorios por correo, desactívelos en "Mi cuenta"." Después del vencimiento, "vence el" pasa a "venció el" |
+| RN-073 | Recordatorio por notificación push (Should) | El mismo texto del asunto de RN-144 |
+| RN-139 | Aviso al organizador de un pago informado (Should): asunto | "Mi Junta: {nombre} informó un pago" |
+| RN-139 | Aviso al organizador de un pago informado (Should): cuerpo y push | "{nombre} informó el pago de su cuota de la ronda {n} de la {junta}. Confírmelo o recházelo en Mi Junta: {enlace}" |
+| RN-194 | Aviso de pago rechazado (Should): asunto | "Mi Junta: su pago informado fue rechazado" |
+| RN-194 | Aviso de pago rechazado (Should): cuerpo y push | "{organizador} rechazó el pago que usted informó para su cuota de la ronda {n} de la {junta}. Revise su cuota en Mi Junta: {enlace}" |
+| RN-196 | Aviso de cuotas vencidas (Should): asunto | "{junta}: cuotas pendientes de la ronda {n}" |
+| RN-196 | Aviso de cuotas vencidas (Should): cuerpo | "{junta}: estas cuotas de la ronda {n}, que vencieron el {fecha}, siguen pendientes: {nombres}." |
 
 ---
 
 ## 3. Temas pendientes
 
-Las RN nuevas toman el siguiente número libre (RN-213 en adelante). Los temas que esta sección tenía en la v0.2 se resolvieron el 2026-11-14 (sección 1.3).
+Las RN nuevas toman el siguiente número libre (RN-216 en adelante). Los temas que esta sección tenía en la v0.2 se resolvieron el 2026-11-14 (sección 1.3).
 
 | Tema | Qué falta | Estado |
 |---|---|---|

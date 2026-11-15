@@ -1,8 +1,16 @@
 # Especificación de UI de Mi Junta
 
-Versión: 1.1
+Versión: 1.2
 Fecha: 15/11/2026
 Estado: Borrador
+
+La v1.2 aplica las decisiones del 15/11/2026 sobre auditorias/spec-finalizer.md, con la autorización del usuario:
+- Los textos [TEXTO UI] rigen para la implementación (SF-06).
+- "Cerrar sesión" exige conexión (SF-04).
+- Cambia el mensaje de RN-009 (SF-05).
+- P-024 valida con RN-214 y RN-215 (SF-03).
+- Se agregan los textos que esperaban T-029 y T-030 y el aviso tras activar o desactivar el segundo factor.
+- PREG-069 a PREG-072 quedan registradas en 05-preguntas-abiertas.md v0.5.
 
 Fuente: 00-constitucion.md v0.4, 02-alcance.md v0.4, 06-user-stories.md v0.4 y 07-architecture.md v0.4. Los textos de rechazo y de estado vienen del catálogo §2.9 de 03-reglas-de-negocio.md v0.4, y los nombres de los estados vienen de 04-glosario.md v0.4. La redactó el Agente UI Designer (prompts/clase3/01-ui-designer.xml).
 
@@ -12,7 +20,7 @@ La v1.1 aplica las observaciones ✅ APLICADA de 10-validation-log.md v1.0, con 
 - `P-NNN` identifica una pantalla y `UF-NN` un flujo de usuario. Los IDs nunca se renumeran ni se reutilizan (PRINCIPIO-001).
 - Cada pantalla traza a al menos una HU de 06-user-stories.md. Las HU Should dentro de una pantalla Must se marcan con **(S)**.
 - Los textos entre comillas seguidos de una RN, por ejemplo "Esta cuota ya no está pendiente." (RN-130), son **textos del catálogo** y se copian tal cual.
-- Los textos marcados con **[TEXTO UI]** son textos de interfaz que este documento propone (títulos, ayudas, estados vacíos y diálogos). No crean reglas, montos ni plazos (PRINCIPIO-012 a). Están reunidos en la sección 6. Esta especificación los adopta, y pasarlos al catálogo §2.9 lo decide el Product Owner. Los rótulos de botones y campos cortos que no traen marca son de diseño.
+- Los textos marcados con **[TEXTO UI]** son textos de interfaz que este documento propone (títulos, ayudas, estados vacíos y diálogos). No crean reglas, montos ni plazos (PRINCIPIO-012 a). Están reunidos en la sección 6. **Rigen para la implementación** desde la v1.2: un agente los copia tal cual y no los marca [REQUIERE DECISIÓN] (08-backlog.md, "Cómo leer"). Si un texto de esta especificación contradice el catálogo §2.9 de 03-reglas-de-negocio.md, gana el catálogo. Pasarlos al catálogo §2.9 lo decide el Product Owner. Los rótulos de botones y campos cortos que no traen marca son de diseño.
 - **[REQUIERE DECISIÓN]** marca un valor que el spec-pack no define y que este agente no puede decidir. Cada uno tiene una pregunta propuesta en la sección 7.
 - Los datos de ejemplo son los de 03-reglas-de-negocio.md (Junta Familia, Junta Oficina, Junta Ventas, Carmen, Jorge, Lucía, Pedro, Marta, Rosa y Ana).
 - Todo texto que ve el usuario está en español de Perú y lo trata de "usted" (PRINCIPIO-002, RN-090). Los montos se muestran como `S/ 1,250.50` (RN-091), las fechas como DD/MM/AAAA (RN-092) y las horas como HH:MM de 24 horas (RN-177), en America/Lima (RN-093).
@@ -201,7 +209,7 @@ Cada flujo indica la pantalla, la acción del usuario y lo que pasa después. En
 | 1 | P-007 | Pulsa "Mi cuenta" en la barra de navegación | Abre P-017 |
 | 2 | P-017 | Cambia "Recordatorios por correo" [o "Aviso de cuotas vencidas" **(S)**] | API-032 |
 | 3 | P-017 | [Pulsa "Activar notificaciones push" **(S)**] | El navegador pide permiso; si lo da, API-031 |
-| 4 | P-017 | Pulsa "Cerrar sesión" | [Con cambios sin enviar: diálogo "Hay cambios sin enviar ({n}). Si cierra sesión ahora, se perderán." (RN-198)] La app borra los datos del dispositivo (RN-197) y abre P-003 |
+| 4 | P-017 | Pulsa "Cerrar sesión" | [Sin conexión: C-04 con "Necesita conexión a internet para hacer esto." (RN-170), y la sesión sigue abierta] [Con cambios sin enviar: diálogo "Hay cambios sin enviar ({n}). Si cierra sesión ahora, se perderán." (RN-198)] API-005 cierra la sesión en el servidor, la app borra los datos del dispositivo (RN-197) y abre P-003 |
 
 ### UF-13 · Salir de una junta antes del orden de turnos (familiar de Carmen) — Must
 
@@ -362,6 +370,7 @@ Los nombres de los estados son los de 04-glosario.md. No se usan "Cancelada", "R
 - La casilla de consentimiento y la de "Soy mayor de 18 años" aparecen desmarcadas (RN-088, PRINCIPIO-007).
 - No existen los campos "Fecha de nacimiento" ni "Foto" (RN-149, NO-14).
 - Nombre de 2 a 80 caracteres (RN-147), contraseña de al menos 8 (RN-074), DNI `^\d{8}$` (RN-085) y celular `^9\d{8}$` (RN-086). DNI y celular son opcionales (RN-148).
+- Correo con el patrón de RN-213, validado al salir del campo y al enviar: "Ingrese un correo válido, por ejemplo lucia@example.com." (RN-213).
 - Mensajes: "Complete su nombre, su correo y su contraseña." (RN-146), "Su nombre debe tener entre 2 y 80 caracteres." (RN-147), "Su contraseña debe tener al menos 8 caracteres." (RN-074), "Ingrese un DNI de 8 dígitos." (RN-085), "Ingrese un celular de 9 dígitos que empiece con 9." (RN-086), "Confirme que es mayor de 18 años para crear su cuenta." (RN-181), "Ya existe una cuenta con este correo. Inicie sesión o recupere su contraseña." (RN-150), "Ya existe una cuenta con este DNI." (RN-151) y "Ya existe una cuenta con este celular." (RN-180).
 - Una sola casilla cubre la política y las notificaciones (PREG-001). Su rótulo es "Acepto la política de privacidad y recibir notificaciones por correo y push." **[TEXTO UI]** (PREG-069, sección 7). El asesor legal lo revisa junto con el texto de la política.
 
@@ -472,7 +481,7 @@ Los nombres de los estados son los de 04-glosario.md. No se usan "Cancelada", "R
 └──────────────────────────────────────┘ └──────────────────────────────────────┘
 ```
 
-**Estados:** inicial, enviando (botón con carga), éxito (ícono check `--color-success`, mensaje con `role="status"`), error (`role="alert"`), sin conexión.
+**Estados:** inicial, enviando (botón con carga), éxito (ícono check `--color-success`, mensaje con `role="status"`), error (`role="alert"`, con la ayuda "Cada enlace sirve por 24 horas desde que se envió." **[TEXTO UI]**, RN-152), sin conexión.
 
 ---
 
@@ -501,7 +510,7 @@ Los nombres de los estados son los de 04-glosario.md. No se usan "Cancelada", "R
 **Reglas de negocio:**
 - El correo se compara sin distinguir mayúsculas (RN-191).
 - Errores: "El correo o la contraseña no son correctos." (RN-075) y "Demasiados intentos fallidos. Intente de nuevo en 15 minutos." (RN-075, RN-160, RN-161). El mensaje va en un resumen arriba del formulario, sin decir cuál de los dos datos falló.
-- Si quedaron cambios sin enviar porque la sesión venció, la app los conserva y los envía después de que el mismo usuario inicie sesión (RN-176). Si inicia sesión otra cuenta, no se envían con esa sesión (07-architecture.md §2.2).
+- Si quedaron cambios sin enviar porque la sesión venció, la app los conserva y los envía después de que el mismo usuario inicie sesión (RN-176). Si inicia sesión otra cuenta, no se envían con esa sesión (07-architecture.md §2.2): la app los conserva y muestra, después de iniciar sesión, "Hay cambios sin enviar de otra cuenta. Se enviarán cuando esa cuenta vuelva a iniciar sesión en este dispositivo." **[TEXTO UI]** (T-030).
 
 **Wireframe (360 px):**
 
@@ -693,7 +702,7 @@ Después de enviar (role="status"):
 └──────────────────────────────────────┘
 ```
 
-**Estados:** lectura (sin casilla ni botones, con enlace "Volver"), aceptación, enviando, error de red, sin conexión.
+**Estados:** lectura (sin casilla ni botones, con enlace "Volver"), aceptación, enviando, error de red ("No pudimos cargar estos datos. Revise su conexión e intente de nuevo." **[TEXTO UI]** y el botón "Intentar de nuevo"), sin conexión.
 
 ---
 
@@ -717,7 +726,7 @@ Después de enviar (role="status"):
 | Participante, junta "En curso" | "Su turno: {n}" (RN-025), "Ronda actual: {n}" y la etiqueta del estado de su cuota de la ronda actual |
 | Organizador que participa | "Usted organiza esta junta" **[TEXTO UI]** y los datos de participante |
 | Organizador que no participa | "Usted organiza esta junta y no participa" **[TEXTO UI]** y, en curso, "Ronda actual: {n}" |
-| Junta "Terminada" | Solo nombre, estado y rol |
+| Junta "Terminada" | Solo nombre, estado y rol: "Usted organizó esta junta" o "Usted participó en esta junta" **[TEXTO UI]** |
 
 **Acciones:**
 
@@ -763,8 +772,9 @@ Después de enviar (role="status"):
 │ │ participa · Ronda actual: 2   ›  │ │
 │ └──────────────────────────────────┘ │
 │ ┌──────────────────────────────────┐ │
-│ │ Junta Familia        [Abierta]   │ │
-│ │ 11 de 12 cupos                ›  │ │
+│ │ Junta Oficina 2027   [Abierta]   │ │
+│ │ Usted organiza esta junta        │ │
+│ │ {ocupados} de {total} cupos   ›  │ │
 │ └──────────────────────────────────┘ │
 ├──────────────────────────────────────┤
 │ [Mis juntas]  [Unirse]  [Mi cuenta]  │
@@ -802,7 +812,7 @@ Después de enviar (role="status"):
 | Cantidad de participantes | Número con botones "−" y "+" de 44 × 44 px, `inputmode="numeric"` | Vacío | 2 a 50: "Ingrese entre 2 y 50 participantes." (RN-005) |
 | Frecuencia | Grupo de opciones (`fieldset` y `legend`): "Semanal", "Quincenal", "Mensual", "Cada cierta cantidad de días" | Ninguna elegida | Obligatoria (RN-002, RN-007) |
 | Cada cuántos días | Número, solo visible con "Cada cierta cantidad de días" | Vacío | 2 a 60: "Ingrese un número de días entre 2 y 60." (RN-008) |
-| Vencimiento de la ronda 1 | Fecha (C-05) | Vacío | No anterior a hoy en America/Lima: "La fecha de vencimiento de la ronda 1 no puede ser anterior a hoy." (RN-009) |
+| Vencimiento de la ronda 1 | Fecha (C-05) | Vacío | No anterior a la fecha de creación, que al crear es hoy en America/Lima: "La fecha de vencimiento de la ronda 1 no puede ser anterior a la fecha de creación de la junta." (RN-009) |
 | Días de aviso previo | Número con "−" y "+" | 3 (RN-011) | 1 a 7: "Ingrese entre 1 y 7 días de aviso previo." (RN-010); menor que el periodo: "Los días de aviso previo deben ser menos que los días entre una cuota y la siguiente." (RN-012) |
 | ¿Usted participa? | Grupo de opciones: "Sí participo" / "No participo" | Ninguna elegida | Obligatoria (RN-002, RN-006) |
 | Reglas de la junta (opcional) **(S)** | Área de texto de 6 líneas con contador "{n} / 2,000" | Vacío | Hasta 2,000 caracteres: "Las reglas de la junta pueden tener hasta 2,000 caracteres." (RN-179) |
@@ -1083,7 +1093,7 @@ La lista va ordenada por número de turno. Desde 768 px, cada fila pone sus tres
 │ Salir de la junta (texto rojo)       │
 ```
 
-**Estados:** cargando (C-10), antes del orden, en curso, terminada (sin "Informar mi pago" ni "Salir"; todas las cuotas "Pagada"), sin conexión, cuota con cambio sin enviar (etiqueta "Sin enviar" junto a la de estado), sin permiso (`403`: "No tiene acceso a esta junta." **[TEXTO UI]** y enlace a P-007).
+**Estados:** cargando (C-10), antes del orden, en curso, terminada (sin "Informar mi pago" ni "Salir"; todas las cuotas "Pagada"), sin conexión, error de red sin snapshot ("No pudimos cargar estos datos. Revise su conexión e intente de nuevo." **[TEXTO UI]** y el botón "Intentar de nuevo"), cuota con cambio sin enviar (etiqueta "Sin enviar" junto a la de estado), sin permiso (`403` `NOT_A_MEMBER`: "No tiene acceso a esta junta." **[TEXTO UI]** y enlace a P-007).
 
 ---
 
@@ -1632,7 +1642,7 @@ Antes de fijar el orden, el wireframe es el de P-008 con los valores cargados, e
 | Prioridad | Must |
 | Ruta y título | `/account` · "Mi cuenta · Mi Junta" |
 | API | API-008 (`GET /me`), API-032, API-031 **(S)**, API-005 |
-| Sin conexión | Los datos se ven desde la última carga. Los interruptores y los enlaces a P-021 y P-023 se muestran como C-04 con "Necesita conexión a internet para hacer esto." (RN-170). "Cerrar sesión" funciona y borra los datos del dispositivo (RN-197) |
+| Sin conexión | Los datos se ven desde la última carga. Los interruptores, los enlaces a P-021 y P-023 y "Cerrar sesión" se muestran como C-04 con "Necesita conexión a internet para hacer esto." (RN-170). Cerrar sesión exige conexión porque solo el servidor invalida la cookie de sesión (API-005) |
 
 **Datos que muestra:** el nombre y el correo del propio usuario (API-008), la política aceptada ("Versión {versión}, aceptada el {fecha} a las {hora}" **[TEXTO UI]**) y el estado de cada preferencia. No muestra el DNI ni el celular: `GET /me` no los entrega.
 
@@ -1645,10 +1655,10 @@ Antes de fijar el orden, el wireframe es el de P-008 con los valores cargados, e
 | Notificaciones **(S)** | Interruptor "Aviso de cuotas vencidas" con la ayuda "Un correo por junta, el día después del vencimiento, con quién falta pagar." **[TEXTO UI]** | Solo si organiza al menos una junta (API-022) | API-032 `overdue_notices_enabled` (RN-208, RN-209) |
 | Seguridad **(S)** | Fila-enlace "Segundo factor" con el estado "Activado" o "Desactivado" **[TEXTO UI]** | Siempre | Abre P-021 |
 | Privacidad | Fila-enlace "Política de privacidad" | Siempre | Abre P-006 en modo lectura |
-| Sesión | Botón secundario "Cerrar sesión" | Siempre | Sin cambios sin enviar: API-005, borra los datos del dispositivo (RN-197) y abre P-003. Con cambios: C-07 con "Hay cambios sin enviar ({n}). Si cierra sesión ahora, se perderán." (RN-198) y los botones "Cerrar sesión" (`--color-danger`) y "Cancelar" |
+| Sesión | Botón secundario "Cerrar sesión" | Con conexión; sin conexión, C-04 (RN-170) | Sin cambios sin enviar: API-005, y con su `204` (o un `401`) borra los datos del dispositivo (RN-197) y abre P-003. Con cambios: C-07 con "Hay cambios sin enviar ({n}). Si cierra sesión ahora, se perderán." (RN-198) y los botones "Cerrar sesión" (`--color-danger`) y "Cancelar" |
 | Cuenta **(S)** | Botón de texto `--color-danger` "Borrar mi cuenta" | Siempre | Abre P-023 |
 
-**Reglas de negocio:** solo correo y push, nunca SMS ni WhatsApp (PRINCIPIO-007): no existe un interruptor para otros canales. Cerrar sesión sin conexión borra el snapshot y el outbox del dispositivo (RN-197); la sesión del servidor vence sola a los 30 días sin peticiones (RN-159).
+**Reglas de negocio:** solo correo y push, nunca SMS ni WhatsApp (PRINCIPIO-007): no existe un interruptor para otros canales. Cerrar sesión no está entre las acciones de RN-170: si la app borrara el dispositivo sin llamar a API-005, la cookie seguiría válida en el servidor hasta 30 días (RN-159), y la siguiente persona entraría con esa sesión al volver la red (auditorias/spec-finalizer.md, SF-04).
 
 **Wireframe (360 px):**
 
@@ -1694,7 +1704,7 @@ Antes de fijar el orden, el wireframe es el de P-008 con los valores cargados, e
 └──────────────────────────────────────┘
 ```
 
-**Estados:** cargando, con datos, guardando una preferencia (el interruptor muestra carga y vuelve a su valor anterior si falla, con el error debajo), sin conexión, diálogo de cerrar sesión con cambios.
+**Estados:** cargando, con datos, guardando una preferencia (el interruptor muestra carga y vuelve a su valor anterior si falla, con el error debajo), sin conexión ("Cerrar sesión" como C-04), diálogo de cerrar sesión con cambios.
 
 ---
 
@@ -1872,7 +1882,7 @@ Antes de fijar el orden, el wireframe es el de P-008 con los valores cargados, e
 | Código enviado | Pedir otro código | Botón de texto "Pedir otro código" | Anula el anterior (RN-163) |
 | Activado | Desactivar | Campos "Contraseña" y "Código de verificación", botón "Enviar código" y botón "Desactivar segundo factor" | API-030 `POST /two-factor/deactivation`. Exige los dos datos (RN-167) |
 
-**Mensajes:** "El código no es correcto. Revíselo e intente de nuevo." (RN-166), "Este código ya no es válido. Pida uno nuevo." (RN-080, RN-081, RN-162, RN-163) y "Ya pidió varios códigos. Intente de nuevo en {n} minutos." (RN-164).
+**Mensajes:** "El código no es correcto. Revíselo e intente de nuevo." (RN-166), "Este código ya no es válido. Pida uno nuevo." (RN-080, RN-081, RN-162, RN-163) y "Ya pidió varios códigos. Intente de nuevo en {n} minutos." (RN-164). Al activar o desactivar, C-08 muestra "Segundo factor activado." o "Segundo factor desactivado." **[TEXTO UI]**. El código para desactivar se pide con API-030 `POST /two-factor/deactivation/code`.
 
 **Wireframe (360 px, activando):**
 
@@ -1920,7 +1930,7 @@ Antes de fijar el orden, el wireframe es el de P-008 con los valores cargados, e
 
 **Acciones:** campo "Código de verificación" (igual que en P-021) y botón principal "Entrar"; botón de texto "Pedir otro código"; enlace "Volver a iniciar sesión" a P-003. Con `201`, sigue el mismo camino que P-003 (P-006 o P-007).
 
-**Mensajes:** los mismos de P-021.
+**Mensajes:** los mismos de P-021. El código equivocado al iniciar sesión usa "El código no es correcto. Revíselo e intente de nuevo." (RN-078, RN-166; PREG-077).
 
 **Wireframe (360 px):**
 
@@ -2030,9 +2040,11 @@ Antes de fijar el orden, el wireframe es el de P-008 con los valores cargados, e
 
 | Pregunta | Control |
 |---|---|
-| "¿Cuántas horas al mes dedica a gestionar sus juntas?" | Número entero, `inputmode="numeric"` **[REQUIERE DECISIÓN]** (rango, sección 7) |
-| "¿Cuántos recordatorios envía a mano al mes?" | Número entero, `inputmode="numeric"` **[REQUIERE DECISIÓN]** (rango, sección 7) |
-| "¿Reenvía por WhatsApp los recordatorios de Mi Junta?" | Grupo de opciones "Sí" / "No" |
+| "¿Cuántas horas al mes dedica a gestionar sus juntas?" | Número entero desde 0, sin máximo, `inputmode="numeric"`, obligatorio. Error: "Ingrese un número entero desde 0, por ejemplo 10." (RN-214) |
+| "¿Cuántos recordatorios envía a mano al mes?" | Número entero desde 0, sin máximo, `inputmode="numeric"`, obligatorio. Error: "Ingrese un número entero desde 0, por ejemplo 10." (RN-214) |
+| "¿Reenvía por WhatsApp los recordatorios de Mi Junta?" | Grupo de opciones "Sí" / "No", sin valor inicial, obligatorio |
+
+Si falta alguna respuesta al pulsar "Enviar respuestas", el resumen de errores (C-05) muestra "Responda las 3 preguntas, o cierre la encuesta sin responder." (RN-215).
 
 Los textos de las preguntas son **[TEXTO UI]** redactados a partir de RN-206. La encuesta no pide celular, correo ni datos de otros miembros (RN-206).
 
@@ -2348,7 +2360,10 @@ flowchart TD
 
     P014 -. indicador de cambios .-> P016
     P015 -. indicador de cambios .-> P016
+    P010 -. indicador de cambios .-> P016
+    P018 -. indicador de cambios .-> P016
     P016 --> P015
+    P016 --> P010
 ```
 
 ### 5.3 Reglas de navegación
@@ -2363,7 +2378,7 @@ flowchart TD
 
 ## 6. Textos de interfaz propuestos
 
-Estos textos no están en el catálogo §2.9 ni en las HU. Son textos de diseño que no agregan reglas: cada uno describe algo que ya dice una RN o un principio, o es un título, una ayuda, un estado vacío o el mensaje de un rechazo que el catálogo no cubre. HU-008 deja definir en el diseño el texto de "Pagos" sin cuotas. Esta especificación los adopta (decisión del Agente UI Designer del 14/11/2026, con autorización del usuario). Pasarlos a §2.9 de 03-reglas-de-negocio.md lo decide el Product Owner, porque es otro archivo (PRINCIPIO-012 b).
+Estos textos no están en el catálogo §2.9 ni en las HU. Son textos de diseño que no agregan reglas: cada uno describe algo que ya dice una RN o un principio, o es un título, una ayuda, un estado vacío o el mensaje de un rechazo que el catálogo no cubre. HU-008 deja definir en el diseño el texto de "Pagos" sin cuotas. Esta especificación los adopta (decisión del Agente UI Designer del 14/11/2026, con autorización del usuario), y **rigen para la implementación** desde la v1.2 (decisión del 15/11/2026, auditorias/spec-finalizer.md SF-06). El test de tuteo de T-024 también los revisa. Pasarlos a §2.9 de 03-reglas-de-negocio.md lo decide el Product Owner, porque es otro archivo (PRINCIPIO-012 b).
 
 | Pantalla | Texto | Base |
 |---|---|---|
@@ -2391,7 +2406,11 @@ Estos textos no están en el catálogo §2.9 ni en las HU. Son textos de diseño
 | P-018 | "Informe su pago solo después de pagar al organizador. Su cuota quedará Por confirmar hasta que él o ella lo revise." y "Su pago quedó por confirmar." | RN-060, RN-062 |
 | P-019 | "Elija un turno distinto para cada participante. El orden no se podrá cambiar después." y el diálogo de guardar el orden | RN-127, RN-128, RN-129 |
 | P-020 | "Este orden lo asignó el organizador, sin sorteo." y "Asignado por {nombre} el {fecha} a las {hora}" | RN-195 |
-| P-021 y P-022 | "Cada vez que inicie sesión, le enviaremos a su correo un código de 6 dígitos que vale 10 minutos.", "Le enviamos un código a {correo}." y "Le enviamos un código de 6 dígitos a su correo. Vale hasta las {hora}." | RN-079, RN-080 (600 s) |
+| P-021 y P-022 | "Cada vez que inicie sesión, le enviaremos a su correo un código de 6 dígitos que vale 10 minutos.", "Le enviamos un código a {correo}.", "Le enviamos un código de 6 dígitos a su correo. Vale hasta las {hora}.", "Segundo factor activado." y "Segundo factor desactivado." | RN-079, RN-080 (600 s), RN-166, RN-167 |
+| P-002 (v1.2, T-029) | "Cada enlace sirve por 24 horas desde que se envió." | RN-152 (86,400 s) |
+| P-007 (v1.2, T-029) | "Usted organizó esta junta" y "Usted participó en esta junta" | RN-103 |
+| P-006 y P-010 (v1.2, T-029) | "No pudimos cargar estos datos. Revise su conexión e intente de nuevo." | RN-094 |
+| P-003 (v1.2, T-030) | "Hay cambios sin enviar de otra cuenta. Se enviarán cuando esa cuenta vuelva a iniciar sesión en este dispositivo." | RN-176 |
 | P-023 | Las 4 consecuencias, el diálogo, "Su cuenta fue borrada." y "La contraseña no es correcta." | RN-182 a RN-186, RN-207, API-033, PREG-070 |
 | P-024 | "Una encuesta de 3 preguntas", "Nos ayuda a medir si Mi Junta le ahorra tiempo." y el texto de las 3 preguntas | RN-206, KPI-05 |
 
@@ -2401,7 +2420,7 @@ Estos textos no están en el catálogo §2.9 ni en las HU. Son textos de diseño
 
 ### 7.1 Preguntas de esta especificación
 
-Las preguntas toman los siguientes números libres de 05-preguntas-abiertas.md (la última era PREG-068). Este documento no modifica ese archivo (PRINCIPIO-012 b): el Product Owner decide si las agrega.
+Las preguntas toman los siguientes números libres de 05-preguntas-abiertas.md (la última era PREG-068). Desde el 15/11/2026 están registradas en 05 v0.5, con la decisión de cada una (auditorias/spec-finalizer.md). El estado que vale es el de 05.
 
 El 14/11/2026 el usuario autorizó al Agente UI Designer a resolver lo que estuviera a su alcance. Resolvió las tres preguntas que solo piden un texto de interfaz. Ninguna crea una regla, un monto, un plazo ni un porcentaje (PRINCIPIO-012 a). PREG-071 queda abierta porque define una validación que el servidor también aplicaría, y eso exige una RN nueva con aprobación humana.
 
@@ -2409,7 +2428,7 @@ El 14/11/2026 el usuario autorizó al Agente UI Designer a resolver lo que estuv
 |---|---|---|---|
 | PREG-069 | ¿Cuál es el texto exacto de la casilla de consentimiento de P-001 y de la casilla de aceptación de una versión nueva en P-006? | P-001, P-006 | **Resuelta por el Agente UI Designer el 14/11/2026.** "Acepto la política de privacidad y recibir notificaciones por correo y push." y "Acepto la política de privacidad, versión {versión}.". El asesor legal los revisa junto con el texto de la política, que ya era un pendiente (PREG-001) |
 | PREG-070 | ¿Qué mensaje ve el usuario si escribe mal su contraseña al borrar su cuenta (API-033 responde `401 INVALID_CREDENTIALS`)? El texto de RN-075 habla del correo, que esa pantalla no pide | P-023 | **Resuelta por el Agente UI Designer el 14/11/2026.** "La contraseña no es correcta." |
-| PREG-071 | ¿Qué rango aceptan las dos respuestas numéricas de la encuesta de KPI-05, y son obligatorias las 3 respuestas para enviarla? | P-024 | **Abierta [REQUIERE DECISIÓN].** Propuesta: enteros desde 0, sin máximo, y las 3 obligatorias para "Enviar respuestas"; "Cerrar sin responder" sigue disponible (RN-210). Sin respuesta, P-024 no pone rango ni hace obligatoria ninguna respuesta, y el servidor solo aplica RN-206 |
+| PREG-071 | ¿Qué rango aceptan las dos respuestas numéricas de la encuesta de KPI-05, y son obligatorias las 3 respuestas para enviarla? | P-024 | **Resuelta el 15/11/2026 con autorización del usuario** (05 v0.5). Enteros desde 0, sin máximo (RN-214), y las 3 obligatorias para "Enviar respuestas" (RN-215); "Cerrar sin responder" sigue disponible (RN-210) |
 | PREG-072 | ¿Qué mensaje ve el usuario si escribe una fecha que no existe o que no tiene el formato DD/MM/AAAA? El catálogo solo tiene el caso del campo vacío (RN-002) | P-008, P-012, P-015, P-018 | **Resuelta por el Agente UI Designer el 14/11/2026.** "Ingrese la fecha con el formato DD/MM/AAAA, por ejemplo 30/11/2026." (C-05). El formato sale de PRINCIPIO-003 |
 
 ### 7.2 Decisiones de diseño tomadas en este documento
@@ -2431,5 +2450,5 @@ Las tomó el Agente UI Designer el 14/11/2026, con autorización del usuario. No
 | Texto de la política de privacidad | Lo escribe el asesor legal; P-006 usa un texto de relleno hasta entonces | PREG-001, 02-alcance.md §5 |
 | Revisión legal de los rótulos de consentimiento (PREG-069) | Junto con el texto de la política, a cargo del asesor legal | PREG-001, PRINCIPIO-007 |
 | Pasar los textos de la sección 6 al catálogo §2.9 | Lo decide el Product Owner; requiere editar 03-reglas-de-negocio.md | PRINCIPIO-012 b |
-| PREG-071 (rango de la encuesta) | Abierta, espera la decisión del Product Owner | PRINCIPIO-012 a, RN-206 |
-| Registrar PREG-069 a PREG-072 en 05-preguntas-abiertas.md | Lo decide el Product Owner | PRINCIPIO-012 b |
+| PREG-071 (rango de la encuesta) | Resuelta el 15/11/2026 (RN-214, RN-215) | RN-206 |
+| Registrar PREG-069 a PREG-072 en 05-preguntas-abiertas.md | Registradas el 15/11/2026 en 05 v0.5. Su confirmación final por el Product Owner sigue en PREG-079 | PRINCIPIO-012 |

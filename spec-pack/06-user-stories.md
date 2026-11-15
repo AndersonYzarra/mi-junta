@@ -1,8 +1,10 @@
 # Historias de usuario de Mi Junta
 
-Versión: 0.4
-Fecha: 14/11/2026
+Versión: 0.5
+Fecha: 15/11/2026
 Estado: Revisado
+
+La v0.5 incorpora las decisiones del 15/11/2026 sobre auditorias/spec-finalizer.md (03-reglas-de-negocio.md v0.5 §1.5), tomadas con la autorización del usuario. Los criterios nuevos llevan la marca **[SF]**, con su tipo. Cubren RN-213 a RN-215, RN-188 en HU-003, RN-009 al editar la junta y el cierre de sesión sin conexión. El criterio de RN-009 de HU-004 cambió su mensaje (ver su Revisión QA), y HU-018 tiene su revisión QA.
 
 Fuente: 01-project-brief.md v0.4 (PRD), 02-alcance.md v0.4, 03-reglas-de-negocio.md v0.4, 04-glosario.md v0.4 y 00-constitucion.md v0.4. Las redactó el Agente PO (prompts/clase2/01-product-owner.xml) y las enriqueció el Agente QA Funcional (prompts/clase2/02-qa-funcional.xml). La v0.4 incorpora las decisiones del Product Owner del 14/11/2026 sobre los pendientes (03-reglas-de-negocio.md v0.4 §1.3).
 
@@ -88,8 +90,10 @@ Funcionalidades: F-01 (Must), F-11 (Should) y F-17 (Should).
 
 - [ALINEACIÓN] **Negativo.** DADO QUE Lucía completó "Lucía Quispe", `lucia@example.com` y "Junta2026" y marcó la casilla de consentimiento, CUANDO pulsa "Crear cuenta" sin marcar "Soy mayor de 18 años", ENTONCES la cuenta no se crea y ve "Confirme que es mayor de 18 años para crear su cuenta."; con las dos casillas marcadas, la cuenta se crea sin que se le pida la fecha de nacimiento. (RN-181, RN-149)
 - [ALINEACIÓN] **Negativo.** DADO QUE Lucía ya tiene una cuenta con el celular `987654321`, CUANDO otra persona intenta crear una cuenta con ese celular, ENTONCES se rechaza con "Ya existe una cuenta con este celular.". (RN-180)
+- [SF] **Negativo.** DADO QUE Lucía completó "Lucía Quispe" y "Junta2026" y marcó las dos casillas, CUANDO escribe el correo `lucia.example.com` y pulsa "Crear cuenta", ENTONCES no se crea ninguna cuenta y ve "Ingrese un correo válido, por ejemplo lucia@example.com." debajo del campo "Correo". (RN-213)
+- [SF] **Borde.** DADO QUE no existe ninguna cuenta con ese correo, CUANDO Lucía crea su cuenta con `Lucia@Example.com`, ENTONCES el correo cumple el formato y la cuenta se crea. (RN-213, RN-150)
 
-**Reglas de negocio relacionadas:** RN-074, RN-082, RN-083, RN-084, RN-085, RN-086, RN-088, RN-089, RN-146, RN-147, RN-148, RN-149, RN-150, RN-151, RN-152, RN-153, RN-154, RN-170, RN-180, RN-181
+**Reglas de negocio relacionadas:** RN-074, RN-082, RN-083, RN-084, RN-085, RN-086, RN-088, RN-089, RN-146, RN-147, RN-148, RN-149, RN-150, RN-151, RN-152, RN-153, RN-154, RN-170, RN-180, RN-181, RN-213
 
 **Notas:**
 - F-01 no puede salir al mercado sin el texto de la política de privacidad, que escribe el asesor legal (PREG-001, resuelta; 02-alcance.md §5).
@@ -165,6 +169,8 @@ Funcionalidades: F-01 (Must), F-11 (Should) y F-17 (Should).
 - [NUEVO] **Borde.** DADO QUE el código `482915` se envió a las 10:00:00 y Jorge ingresó 4 códigos equivocados, CUANDO a las 10:05:00 ingresa `482915` en su quinto intento, ENTONCES inicia sesión. (RN-081, RN-080)
 - [NUEVO] **Borde.** DADO QUE Jorge pidió un código a las 10:00, a las 10:01, a las 10:02, a las 10:03 y a las 10:04, y no pidió ningún otro, CUANDO pide uno nuevo a las 10:15:01, ENTONCES se envía, porque en los últimos 900 segundos solo pidió 4. (RN-164)
 - [ALINEACIÓN] **Borde.** DADO QUE Jorge pidió 5 códigos entre las 10:00:00 y las 10:04:00 y a las 10:05:00 se le rechazó el sexto, CUANDO pide otro a las 10:15:01, ENTONCES se envía, porque el pedido rechazado no cuenta para el límite. (RN-193, RN-164)
+- [SF] **Positivo.** DADO QUE Jorge desactivó los recordatorios por correo y tiene el segundo factor activo, CUANDO inicia sesión con su contraseña correcta, ENTONCES el código de verificación le llega igual a su correo. (RN-188, RN-079)
+- [SF] **Negativo.** DADO QUE Jorge tiene el segundo factor activo y recibió `482915` al iniciar sesión, CUANDO ingresa `111111`, ENTONCES no se abre la sesión y ve "El código no es correcto. Revíselo e intente de nuevo.". (RN-078)
 
 **Reglas de negocio relacionadas:** RN-078, RN-079, RN-080, RN-081, RN-162, RN-163, RN-164, RN-165, RN-166, RN-167, RN-170, RN-188, RN-193
 
@@ -252,7 +258,7 @@ Funcionalidades: F-02 (Must) y F-09 (Should).
 - DADO QUE Jorge ya gestiona la Junta Oficina y la Junta Ventas, CUANDO crea "Junta Oficina 2027", ENTONCES la junta se crea. (RN-001)
 - DADO QUE Carmen deja vacía la fecha de vencimiento de la ronda 1, CUANDO pulsa "Crear junta", ENTONCES la junta no se crea y ve "Complete los campos marcados.". (RN-002)
 - DADO QUE Carmen ingresa la cuota "5.00", "6000.00", "20.85" o "300,50", CUANDO pulsa "Crear junta", ENTONCES la junta no se crea y ve "Ingrese una cuota entre S/ 10.00 y S/ 5,000.00." para las dos primeras, "La cuota debe ser múltiplo de S/ 0.10, por ejemplo S/ 20.80." para la tercera e "Ingrese el monto solo con números y un punto decimal, por ejemplo 1250.50." para la cuarta; "20.80" se acepta y se guarda `2080`. (RN-003, RN-004, RN-097, RN-040)
-- DADO QUE el 14/11/2026 Carmen ingresa el nombre "J1", 1 o 51 participantes, "cada 1 días" o "cada 90 días", 0 u 8 días de aviso, o la ronda 1 el 10/11/2026, CUANDO pulsa "Crear junta", ENTONCES la junta no se crea y ve el mensaje de cada caso: "El nombre de la junta debe tener entre 3 y 60 caracteres.", "Ingrese entre 2 y 50 participantes.", "Ingrese un número de días entre 2 y 60.", "Ingrese entre 1 y 7 días de aviso previo." o "La fecha de vencimiento de la ronda 1 no puede ser anterior a hoy."; la ronda 1 el 14/11/2026 se acepta. (RN-096, RN-005, RN-008, RN-010, RN-009)
+- DADO QUE el 14/11/2026 Carmen ingresa el nombre "J1", 1 o 51 participantes, "cada 1 días" o "cada 90 días", 0 u 8 días de aviso, o la ronda 1 el 10/11/2026, CUANDO pulsa "Crear junta", ENTONCES la junta no se crea y ve el mensaje de cada caso: "El nombre de la junta debe tener entre 3 y 60 caracteres.", "Ingrese entre 2 y 50 participantes.", "Ingrese un número de días entre 2 y 60.", "Ingrese entre 1 y 7 días de aviso previo." o "La fecha de vencimiento de la ronda 1 no puede ser anterior a la fecha de creación de la junta."; la ronda 1 el 14/11/2026 se acepta. (RN-096, RN-005, RN-008, RN-010, RN-009) [SF] corrige el mensaje de RN-009.
 - DADO QUE el campo de aviso muestra 3, CUANDO Carmen elige "cada 2 días", ENTONCES el campo pasa a 1; y si después elige "cada 5 días" y escribe 5 días de aviso, se rechaza con "Los días de aviso previo deben ser menos que los días entre una cuota y la siguiente."; una junta semanal con 6 días de aviso se acepta. (RN-098, RN-012)
 - [NUEVO] **Negativo.** DADO QUE el navegador de Carmen está en modo "Offline", CUANDO completa el formulario de la Junta Familia y pulsa "Crear junta", ENTONCES ve "Necesita conexión a internet para hacer esto.", no se crea ninguna junta y no se genera ningún código. (RN-170)
 - [NUEVO] **Negativo.** DADO QUE llega una petición para crear una junta con la frecuencia "bimestral", CUANDO el servidor la procesa, ENTONCES la junta no se crea y la respuesta trae "Elija una frecuencia: semanal, quincenal, mensual o cada cierta cantidad de días.". (RN-007) [ALINEACIÓN] agrega el mensaje.
@@ -272,6 +278,7 @@ Funcionalidades: F-02 (Must) y F-09 (Should).
 - **INVEST:** cumple I, N, V, E y T. **S ❌:** con 20 criterios y 32 RN no cabía en una iteración. Corrección sugerida: dejar en HU-004 "Crear una junta" y pasar "Ajustar la junta antes de fijar el orden" (RN-106 a RN-110, RN-112, RN-113, RN-020) a una HU nueva, HU-014, porque HU-013 queda para F-09.
 - **Alineación (14/11/2026):** el Product Owner aprobó la división. Los 8 criterios de ajuste pasaron a HU-014 y esta HU queda con 12 criterios.
 - **Valores concretos:** el criterio de regenerar el código o quitar a una persona no dice cuántos cupos quedan. El primer criterio [NUEVO] lo concreta (9 → 8 de 12).
+- **Spec Finalizer (15/11/2026):** el criterio de datos inválidos cambió solo el mensaje de RN-009, que pasó a decir lo mismo que la regla (PREG-073, 03 v0.5 §1.5). Texto original del mensaje: "La fecha de vencimiento de la ronda 1 no puede ser anterior a hoy.".
 - **Constitución:** sin contradicciones. Cumple PRINCIPIO-003 (cuota en céntimos, mínimo S/ 0.10) y PRINCIPIO-006 (validación en el servidor).
 - **Cobertura:** positivo (crear, editar, quitar), negativo (datos inválidos, sin conexión, sin permisos, código repetido, quitar después del orden) y borde (mínimos y máximos de cada campo, ronda 1 hoy, bajar la cantidad exactamente a los cupos ocupados).
 
@@ -297,7 +304,9 @@ Funcionalidades: F-02 (Must) y F-09 (Should).
 - [QA2] **Borde.** DADO QUE la Junta Familia está "Completa" con 12 de 12 cupos, CUANDO Carmen sube la cantidad de participantes a 13, ENTONCES el cambio se guarda, la junta queda con 12 de 13 cupos y vuelve a `open`. (RN-106, RN-107, RN-101)
 - [QA2] **Positivo.** DADO QUE la Junta Familia está "Completa" con 12 de 12 cupos y Carmen participa, CUANDO Carmen cambia a "No participo", ENTONCES la junta queda con 11 de 12 cupos y vuelve a `open`; y cuando otro familiar ocupa ese cupo y Carmen sortea, la lista de entrada no incluye a `user_123` y ninguna cuota está a su nombre. (RN-212, RN-101, RN-030, RN-044)
 
-**Reglas de negocio relacionadas:** RN-020, RN-024, RN-030, RN-044, RN-077, RN-100, RN-101, RN-106, RN-107, RN-108, RN-109, RN-110, RN-112, RN-113, RN-114, RN-170, RN-212
+- [SF] **Borde.** DADO QUE la Junta Familia se creó el 14/11/2026 y está "Abierta", CUANDO el 20/11/2026 Carmen cambia la ronda 1 al 18/11/2026, ENTONCES el cambio se guarda, ve el aviso "La fecha de vencimiento de la ronda 1 ya pasó. Cámbiela antes de fijar el orden de turnos." y el sorteo se rechaza hasta que la cambie; y si la cambia al 10/11/2026, se rechaza con "La fecha de vencimiento de la ronda 1 no puede ser anterior a la fecha de creación de la junta.". (RN-009, RN-107, RN-122)
+
+**Reglas de negocio relacionadas:** RN-009, RN-020, RN-024, RN-030, RN-044, RN-077, RN-100, RN-101, RN-106, RN-107, RN-108, RN-109, RN-110, RN-112, RN-113, RN-114, RN-122, RN-170, RN-212
 
 **Notas:**
 - Nace de la división de HU-004 aprobada el 14/11/2026. Sus criterios vienen de HU-004 v0.3.1 sin cambios, salvo el mensaje del criterio de quitar a Pedro.
@@ -524,6 +533,7 @@ Funcionalidades: F-04 (Must) y F-08 (Should). Desde la v0.4.0, el registro sin c
 - [ALINEACIÓN] **Borde.** DADO QUE Jorge cerró sesión en la tablet, CUANDO otra persona abre la app en esa tablet en modo "Offline", ENTONCES no ve la Junta Oficina ni la Junta Ventas. (RN-197)
 - [QA2] **Positivo.** DADO QUE el 28/11/2026 el pago de Lucía de la ronda 1 está registrado y la tablet de Jorge no tiene conexión, CUANDO Jorge lo desmarca a las 18:45, ENTONCES ve "1 cambio sin enviar."; y al reconectar, el servidor guarda la corrección con `performed_at = "2026-11-28T18:45:00-05:00"`, conserva el pago original y la cuota vuelve a `pending`. (RN-170, RN-174, RN-087, RN-173, RN-057, RN-058, RN-059)
 - [QA2] **Negativo.** DADO QUE a las 18:45 Jorge desmarcó sin conexión en su tablet el pago de Lucía de la ronda 1 y a las 18:50 lo desmarcó desde su celular con conexión, CUANDO la tablet reconecta a las 19:00, ENTONCES el cambio de la tablet se rechaza, no se guarda una segunda corrección y la tablet muestra "No se pudo guardar un cambio hecho sin conexión: el pago de Lucía de la ronda 1 ya no estaba registrado.". (RN-131, RN-171, RN-172)
+- [SF] **Negativo.** DADO QUE la tablet de Jorge no tiene conexión, CUANDO pulsa "Cerrar sesión", ENTONCES ve "Necesita conexión a internet para hacer esto.", la sesión sigue abierta y los datos siguen en el dispositivo; y con conexión, al cerrar sesión, la siguiente petición con la misma cookie recibe `401`. (RN-170, RN-197)
 
 **Reglas de negocio relacionadas:** RN-057, RN-058, RN-059, RN-087, RN-131, RN-170, RN-171, RN-172, RN-173, RN-174, RN-176, RN-197, RN-198
 
@@ -531,6 +541,7 @@ Funcionalidades: F-04 (Must) y F-08 (Should). Desde la v0.4.0, el registro sin c
 - Nace de la división de HU-008 aprobada el 14/11/2026. Sus 3 primeros criterios vienen de HU-008 v0.3.1 sin cambios.
 - El funcionamiento sin conexión no es una funcionalidad aparte (02-alcance.md §1). Se verifica aquí porque registrar y desmarcar pagos son acciones que RN-170 permite sin conexión, y R-12 describe el choque entre dos dispositivos.
 - Los datos guardados en el dispositivo no se cifran aparte, porque no traen datos personales de otros miembros (PREG-008, resuelta).
+- Cerrar sesión no está entre las acciones de RN-170, así que exige conexión. Si se pudiera cerrar sin red, la app borraría el dispositivo pero la cookie de sesión seguiría válida en el servidor, y la siguiente persona entraría con la cuenta anterior al volver la red (auditorias/spec-finalizer.md, SF-04).
 
 **Revisión QA:**
 - **INVEST:** cumple N, V, E, S y T. **I ⚠️:** necesita los casos de uso de HU-008, que se reutilizan al sincronizar.
@@ -739,16 +750,24 @@ Funcionalidad: F-18 (Should).
 
 - [ALINEACIÓN] **Positivo.** DADO QUE Carmen ve la encuesta al crear la Junta Familia el 14/11/2026, CUANDO la cierra sin responder, ENTONCES sigue usando la app y no vuelve a ver esa encuesta. (RN-210, RN-211)
 - [ALINEACIÓN] **Borde.** DADO QUE Carmen cerró sin responder la primera encuesta el 14/11/2026, CUANDO abre la app el 14/02/2027, ENTONCES ve la encuesta de los 3 meses. (RN-205)
+- [SF] **Negativo.** DADO QUE Carmen ve la encuesta, CUANDO escribe "-3" o "2.5" en las horas al mes y pulsa "Enviar respuestas", ENTONCES la encuesta no se guarda y ve "Ingrese un número entero desde 0, por ejemplo 10."; con 0 horas y 0 recordatorios, la encuesta se guarda. (RN-214)
+- [SF] **Negativo.** DADO QUE Carmen respondió las horas y los recordatorios, CUANDO pulsa "Enviar respuestas" sin elegir "Sí" o "No" en la pregunta de WhatsApp, ENTONCES la encuesta no se guarda, ve "Responda las 3 preguntas, o cierre la encuesta sin responder." y todavía puede pulsar "Cerrar sin responder". (RN-215, RN-210)
+- [SF] **Negativo.** DADO QUE Carmen creó la Junta Familia, su primera junta, y su navegador pasó a modo "Offline" antes de que se abriera la encuesta, CUANDO abre "Mis juntas" sin conexión, ENTONCES no ve la encuesta; y cuando vuelve la conexión y abre "Mis juntas", la ve, porque sigue pendiente. (RN-204, RN-170)
 
-**Reglas de negocio relacionadas:** RN-204, RN-205, RN-206, RN-210, RN-211
+**Reglas de negocio relacionadas:** RN-170, RN-204, RN-205, RN-206, RN-210, RN-211, RN-214, RN-215
 
 **Notas:**
 - Funcionalidad F-18 (Should), agregada el 14/11/2026 (PREG-021). Conviene publicarla con el MVP para medir la línea base de KPI-05 con las primeras 10 juntas.
 - KPI-05 solo se calcula con al menos 10 organizadores que respondieron las dos encuestas (01-project-brief.md §5).
 - El organizador puede cerrar la encuesta sin responderla y esa encuesta no se le vuelve a mostrar (RN-210, RN-211; PREG-054 resuelta). Cada encuesta cerrada sin responder es una respuesta menos para KPI-05.
 - La encuesta va dentro de la app, sin servicio externo (PRINCIPIO-012 h).
+- Crear una junta exige conexión (RN-170), pero la encuesta se muestra en P-007 o P-011 y no se abre sin conexión (09 P-024).
 
-**Revisión QA:** pendiente. HU agregada en la alineación del 14/11/2026; el Agente QA todavía no la revisó.
+**Revisión QA** (Agente Spec Finalizer, 15/11/2026, con autorización del usuario):
+- **INVEST:** cumple I (solo depende de HU-004), N, V, E, S y T. Se implementa con T-032 y T-033 (08-backlog.md v0.6), porque el MVP no sale al mercado sin ella (02-alcance.md §3).
+- **Valores concretos:** todos los criterios tienen fechas y respuestas concretas. El rango de las respuestas viene de RN-214 y RN-215 (PREG-071).
+- **Constitución:** sin contradicciones. Cumple PRINCIPIO-006 (no pide datos personales ni de otros miembros) y PRINCIPIO-012 h (sin servicio externo).
+- **Cobertura:** positivo (primera encuesta, encuesta de los 3 meses, cerrar sin responder), negativo (segunda junta, datos personales, respuestas inválidas o incompletas, sin conexión) y borde (un día antes de los 3 meses, 3 meses desde el cierre, respuestas en 0).
 
 ---
 
@@ -775,7 +794,7 @@ Funcionalidad: F-18 (Should).
 | HU-013 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Aprobada el 14/11/2026. El límite de 2,000 caracteres tiene RN-179. |
 | HU-016 | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | Reutiliza el worker de HU-011. Revisión QA pendiente. |
 | HU-017 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | El caso del organizador quedó definido con RN-207. Revisión QA pendiente. |
-| HU-018 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Cerrar la encuesta sin responder quedó definido con RN-210 y RN-211. Revisión QA pendiente. |
+| HU-018 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Cerrar la encuesta sin responder quedó definido con RN-210 y RN-211, y la validación de las respuestas con RN-214 y RN-215. Revisada el 15/11/2026. |
 | HU-019 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Agregada en el cierre de auditorias/qa-clase2.md. Sus criterios son escenarios técnicos. |
 
 **Negociable:** ninguna HU fija pantallas, endpoints ni tecnología más allá de lo que ya exigen las RN y la constitución. **Testable:** después de las dos correcciones, cada criterio tiene valores concretos (montos, fechas, horas, cupos, códigos y mensajes exactos) y se puede escribir como escenario Gherkin que cite sus RN (PRINCIPIO-011). Las 19 HU terminan con al menos un criterio positivo, uno negativo y uno de borde.
@@ -810,7 +829,7 @@ Funcionalidad: F-18 (Should).
 
 ### Reglas de 03-reglas-de-negocio.md
 
-Las 212 reglas, de RN-001 a RN-212, están trazadas a al menos una de las 19 HU. **RN-200 a RN-203** (el acceso del equipo a producción y el uso de datos para préstamos) no tienen interacción del usuario: desde el 14/11/2026 están en HU-019, cuyos criterios se verifican con escenarios técnicos (07-architecture.md §6.1), cada uno citando su RN (PRINCIPIO-011).
+Las 215 reglas, de RN-001 a RN-215, están trazadas a al menos una de las 19 HU. **RN-200 a RN-203** (el acceso del equipo a producción y el uso de datos para préstamos) no tienen interacción del usuario: desde el 14/11/2026 están en HU-019, cuyos criterios se verifican con escenarios técnicos (07-architecture.md §6.1), cada uno citando su RN (PRINCIPIO-011).
 
 La revisión QA encontró además estas reglas que tenían HU pero ningún criterio de su tipo, y que ahora lo tienen:
 
@@ -862,4 +881,4 @@ Los temas que salieron de esas decisiones también se resolvieron el 14/11/2026,
 | Si el organizador puede cerrar la encuesta sin responderla | HU-018 | Sí, y no se le vuelve a mostrar (RN-210, RN-211, PREG-054) |
 | Tipo de SMTP | HU-011, HU-016 | `nodemailer` con `smtp.office365.com` (PREG-052) |
 
-No quedan temas abiertos en estas HU. HU-016, HU-017 y HU-018 esperan la revisión del Agente QA.
+No quedan temas abiertos en estas HU. HU-016 y HU-017 esperan la revisión del Agente QA. HU-018 se revisó el 15/11/2026.

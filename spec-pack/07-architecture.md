@@ -1,8 +1,10 @@
 # Arquitectura de Mi Junta
 
-Versión: 0.4
-Fecha: 14/11/2026
+Versión: 0.5
+Fecha: 15/11/2026
 Estado: Revisado
+
+La v0.5 incorpora las decisiones del 15/11/2026 sobre auditorias/spec-finalizer.md, tomadas con la autorización del usuario: cerrar sesión exige conexión (SF-04), el código `ROUND1_BEFORE_CREATION` de RN-009 (SF-05), RN-213 en API-001, RN-214 y RN-215 en API-034, el código `NOT_A_MEMBER` y el `404` en §4.1, la ruta del código de desactivación en API-030 y correcciones menores en los ejemplos, el diagrama ER y ADR-002.
 
 Fuente: 00-constitucion.md v0.4, 01-project-brief.md v0.4, 02-alcance.md v0.4, 03-reglas-de-negocio.md v0.4, 04-glosario.md v0.4, 05-preguntas-abiertas.md v0.4 y 06-user-stories.md v0.4. Lo redactó el Agente Architect (prompts/clase2/03-architect.xml). La v0.4 incorpora las decisiones del Product Owner del 14/11/2026: servidor dedicado en la nube bajo control de la empresa, correo por SMTP, ADR aceptadas y dependencias aprobadas. También incorpora la segunda ronda (PREG-049 a PREG-054): servidor en Perú, contenedores Docker, claves en variables de entorno y correo con `nodemailer` por `smtp.office365.com`. Además resuelve los hallazgos críticos y mayores de auditorias/qa-clase2.md, con autorización del Product Owner del 14/11/2026: componente `proxy` para TLS, herramientas del pipeline, convención Gherkin (PREG-055), RN-212, RN-117 aclarada, reparto del pozo en el sorteo, HU-019 en la trazabilidad y correcciones de trazabilidad.
 
@@ -116,10 +118,10 @@ flowchart LR
 - **App shell:** el Service Worker guarda en caché el HTML base, los estilos y el JavaScript de las pantallas de consulta, para que la app abra sin red y no muestre la pantalla de error del navegador (PRINCIPIO-009).
 - **Snapshot local:** IndexedDB guarda la última respuesta de `GET /sync/snapshot`, con todas las juntas del usuario (RN-175), y la hora `last_synced_at`. Sin conexión, la app muestra "Sin conexión. Última sincronización: 20/01/2027 18:45" (RN-094, RN-095, RN-093, RN-177).
 - **Outbox:** cada acción de RN-170 hecha sin conexión se guarda en IndexedDB con un `client_change_id` (UUID v4 generado en el dispositivo), el tipo, los datos, el `performed_at` del dispositivo y el `user_id` dueño del cambio. La app muestra "1 cambio sin enviar." o "{n} cambios sin enviar." (RN-174).
-- **Cerrar sesión:** si hay cambios sin enviar, la app muestra "Hay cambios sin enviar ({n}). Si cierra sesión ahora, se perderán." (RN-198); al confirmar, borra de IndexedDB el snapshot y el outbox (RN-197). El snapshot no se cifra aparte, porque no trae datos personales de otros miembros (PREG-008, resuelta).
+- **Cerrar sesión:** exige conexión, porque no está entre las acciones de RN-170 y porque solo el servidor puede invalidar la cookie `HttpOnly` (API-005, ADR-006). Sin red, el botón se muestra no disponible con "Necesita conexión a internet para hacer esto." (RN-170). Si se borrara el dispositivo sin llamar a API-005, la siguiente persona entraría con la sesión anterior al volver la red. Con conexión, si hay cambios sin enviar, la app muestra "Hay cambios sin enviar ({n}). Si cierra sesión ahora, se perderán." (RN-198); al confirmar, borra de IndexedDB el snapshot y el outbox (RN-197). El snapshot no se cifra aparte, porque no trae datos personales de otros miembros (PREG-008, resuelta).
 - **Envío:** al detectar conexión (evento `online`, `visibilitychange` o una petición que vuelve a responder), la app envía el outbox con `POST /sync/changes` en el orden en que se hicieron (RN-087). No se confía solo en `navigator.onLine`: una petición que falla por red se trata como "sin conexión". La API Background Sync se usa donde existe (Chrome para Android) y no se depende de ella, porque Safari no la tiene.
 - **Sesión vencida:** si el envío recibe `401`, el outbox se conserva y se envía después de que el mismo usuario vuelva a iniciar sesión (RN-176). Un cambio nunca se envía con la sesión de otro usuario.
-- **Acciones que exigen conexión:** los botones de las acciones que no están en RN-170 (crear cuenta, iniciar sesión, crear o editar la junta, regenerar el código, unirse, salir, sortear, asignar el orden, segundo factor) quedan deshabilitados sin red con "Necesita conexión a internet para hacer esto." (RN-170), y el sorteo con "Necesita conexión a internet para ejecutar el sorteo." (RN-029).
+- **Acciones que exigen conexión:** los botones de las acciones que no están en RN-170 (crear cuenta, iniciar sesión, cerrar sesión, crear o editar la junta, regenerar el código, unirse, salir, sortear, asignar el orden, segundo factor, preferencias de notificación, encuesta y borrar la cuenta) quedan deshabilitados sin red con "Necesita conexión a internet para hacer esto." (RN-170), y el sorteo con "Necesita conexión a internet para ejecutar el sorteo." (RN-029).
 - **Crear cuenta:** la casilla de consentimiento y la de mayoría de edad aparecen desmarcadas (RN-088), y "Crear cuenta" sigue deshabilitado mientras la casilla de consentimiento esté desmarcada (RN-089).
 - **Formatos:** un único módulo `format` muestra montos como `S/ 1,250.50` (RN-091), fechas como DD/MM/AAAA (RN-092) y horas como HH:MM de 24 h (RN-177), convertidas a America/Lima (RN-093).
 
@@ -234,7 +236,7 @@ erDiagram
         bytea dni_ciphertext
         bytea dni_blind_index UK
         bytea phone_ciphertext
-        bytea phone_blind_index
+        bytea phone_blind_index UK
         text encryption_key_id
         smallint failed_login_count
         timestamptz login_locked_until
@@ -432,10 +434,10 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 | Fechas | Fecha de calendario: `"YYYY-MM-DD"`. Instante: ISO 8601 con el desfase de America/Lima, por ejemplo `"2026-11-14T10:32:05-05:00"` (PRINCIPIO-003). La app los muestra en DD/MM/AAAA y HH:MM (RN-092, RN-177). |
 | Idempotencia | Las acciones que se pueden hacer sin conexión aceptan el encabezado `Idempotency-Key` con el `client_change_id`. Repetir la misma clave devuelve la misma respuesta. |
 | Errores | `{"error": {"code": "…", "rule": "RN-NNN", "message": "texto de §2.9 o null", "fields": [ … ]}}`. `fields` solo aparece en `422`. |
-| Junta ajena | Si la junta no existe o el usuario no es miembro, la respuesta es `403` en los dos casos (RN-024), para no revelar qué juntas existen. |
+| Junta ajena | Si la junta no existe o el usuario no es miembro, la respuesta es `403` con `code = "NOT_A_MEMBER"`, `rule = "RN-024"` y `message: null` en los dos casos, para no revelar qué juntas existen. La app muestra "No tiene acceso a esta junta." (09 §6). |
 | Acción de gestión | Si quien pide no es el organizador: `403` con `code = "NOT_ORGANIZER"` (RN-077). |
 
-**Códigos de estado usados:** `200` correcto, `201` creado, `202` aceptado sin resultado inmediato, `204` sin contenido, `304` sin cambios, `400` JSON mal formado, `401` sin sesión, `403` sin permiso, `405` método no permitido, `409` el estado actual impide la acción, `410` enlace o código vencido o usado, `415` tipo de contenido no aceptado, `422` dato inválido, `429` demasiados intentos (con `Retry-After`).
+**Códigos de estado usados:** `200` correcto, `201` creado, `202` aceptado sin resultado inmediato, `204` sin contenido, `304` sin cambios, `400` JSON mal formado, `401` sin sesión, `403` sin permiso, `404` recurso de una junta propia que todavía no existe (API-016, API-035), `405` método no permitido, `409` el estado actual impide la acción, `410` enlace o código vencido o usado, `415` tipo de contenido no aceptado, `422` dato inválido, `429` demasiados intentos (con `Retry-After`).
 
 **Ejemplo de error de validación:**
 
@@ -533,6 +535,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 | `422` | `CONSENT_REQUIRED` | `consent` es `false` o falta | RN-082 | `null` (la app nunca lo envía, RN-089) |
 | `422` | `AGE_CONFIRMATION_REQUIRED` | `age_confirmed` es `false` o falta | RN-181 | "Confirme que es mayor de 18 años para crear su cuenta." |
 | `422` | `VALIDATION_ERROR` → `REQUIRED` | Falta nombre, correo o contraseña | RN-146 | "Complete su nombre, su correo y su contraseña." |
+| `422` | `VALIDATION_ERROR` → `EMAIL_FORMAT` | Correo que no cumple `^[^\s@]+@[^\s@]+\.[^\s@]+$`; se valida antes de buscar duplicados | RN-213 | "Ingrese un correo válido, por ejemplo lucia@example.com." |
 | `422` | `VALIDATION_ERROR` → `NAME_LENGTH` | Nombre fuera de 2 a 80 caracteres | RN-147 | "Su nombre debe tener entre 2 y 80 caracteres." |
 | `422` | `VALIDATION_ERROR` → `PASSWORD_TOO_SHORT` | Contraseña de menos de 8 caracteres | RN-074 | "Su contraseña debe tener al menos 8 caracteres." |
 | `422` | `VALIDATION_ERROR` → `DNI_FORMAT` | DNI que no cumple `^\d{8}$` | RN-085 | "Ingrese un DNI de 8 dígitos." |
@@ -604,7 +607,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 
 #### API-005 · `DELETE /sessions/current` — Cerrar sesión
 
-- **HU:** HU-002. **Autenticación:** sesión. **Response `204`.** Marca `revoked_at` en la sesión actual.
+- **HU:** HU-002. **Autenticación:** sesión. **Response `204`.** Marca `revoked_at` en la sesión actual. **Conexión:** obligatoria. La app no ofrece cerrar sesión sin red (RN-170), y borra el dispositivo (RN-197) solo después de recibir el `204` o un `401`.
 
 #### API-006 · `POST /password-resets` — Pedir recuperación de contraseña
 
@@ -659,7 +662,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 
 - Estados: `201`; `401`; `422` `CONSENT_REQUIRED` si `consent` es `false` (RN-169); `422` `POLICY_VERSION_NOT_CURRENT`. La fila de la versión 1.0 se conserva.
 - Mientras el usuario no acepta la versión vigente, la app no le muestra sus juntas (RN-168), pero el servidor no bloquea sus rutas ni su outbox y sus recordatorios siguen saliendo (RN-189).
-- `GET /me` también entrega `email_reminders_enabled` (API-032).
+- `GET /me` también entrega `email_reminders_enabled`, `overdue_notices_enabled` y `push_enabled` (API-032), que P-017 usa para mostrar el estado de cada interruptor.
 
 ### 4.4 Juntas e invitación (HU-004, HU-014, HU-005)
 
@@ -716,7 +719,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 | `422` | `FREQUENCY_INVALID` | Valor distinto de los cuatro permitidos | RN-007 | "Elija una frecuencia: semanal, quincenal, mensual o cada cierta cantidad de días." |
 | `422` | `JUNTA_RULES_TOO_LONG` | `junta_rules` de más de 2,000 caracteres | RN-179 | "Las reglas de la junta pueden tener hasta 2,000 caracteres." |
 | `422` | `FREQUENCY_DAYS_OUT_OF_RANGE` | N fuera de 2 a 60 | RN-008 | "Ingrese un número de días entre 2 y 60." |
-| `422` | `ROUND1_BEFORE_TODAY` | Ronda 1 antes de hoy en America/Lima | RN-009 | "La fecha de vencimiento de la ronda 1 no puede ser anterior a hoy." |
+| `422` | `ROUND1_BEFORE_CREATION` | Ronda 1 antes de `created_on` (al crear, es hoy en America/Lima) | RN-009 | "La fecha de vencimiento de la ronda 1 no puede ser anterior a la fecha de creación de la junta." |
 | `422` | `LEAD_DAYS_OUT_OF_RANGE` | Aviso fuera de 1 a 7 | RN-010 | "Ingrese entre 1 y 7 días de aviso previo." |
 | `422` | `LEAD_DAYS_NOT_LESS_THAN_PERIOD` | Aviso ≥ periodo (mensual = 28) | RN-012 | "Los días de aviso previo deben ser menos que los días entre una cuota y la siguiente." |
 
@@ -740,7 +743,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 | `409` | `TURN_ORDER_FIXED` | Junta `in_progress` o `finished` y el cambio no es solo `name` | RN-110 | "La junta ya fijó su orden de turnos. Solo puede cambiar su nombre." |
 | `422` | `PARTICIPANTS_BELOW_OCCUPIED` | Cantidad menor que los cupos ocupados | RN-108 | "La junta ya tiene 9 cupos ocupados. Ingrese al menos 9 participantes." |
 | `409` | `NO_FREE_SLOT_FOR_ORGANIZER` | El organizador marca que participa y no hay cupos libres | RN-109 | "La junta no tiene cupos libres para que usted participe." |
-| `422` | (los de API-009) | Cualquier dato inválido | RN-107 | Los de API-009 |
+| `422` | (los de API-009) | Cualquier dato inválido. `ROUND1_BEFORE_CREATION` compara con el `created_on` guardado, no con hoy: una ronda 1 entre la creación y hoy se guarda, y API-015 la rechaza con `ROUND1_DUE_DATE_PASSED` (RN-122) | RN-107, RN-009 | Los de API-009 |
 
 #### API-011 · `POST /juntas/{id}/invite-code` — Regenerar el código
 
@@ -865,7 +868,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 
 **Request**
 ```json
-{ "paid_on": "2026-11-28", "performed_at": "2026-11-28T18:40:00-05:00" }
+{ "paid_on": "2026-11-25", "performed_at": "2026-11-28T18:40:00-05:00" }
 ```
 
 **Response `201`**
@@ -878,7 +881,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
     "participant_name": "Lucía",
     "due_date": "2026-11-30",
     "status": "paid",
-    "paid_on": "2026-11-28",
+    "paid_on": "2026-11-25",
     "is_on_time": true
   },
   "junta_status": "in_progress"
@@ -893,6 +896,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 | `422` | `PAID_ON_IN_FUTURE` | `paid_on` posterior a hoy en America/Lima | RN-054 | "La fecha de pago no puede ser posterior a hoy." |
 | `422` | `PAID_ON_BEFORE_JUNTA` | `paid_on` anterior a `created_on` de la junta | RN-132 | "La fecha de pago no puede ser anterior a la creación de la junta." |
 
+- El ejemplo es el primer pago de Lucía, registrado con una fecha equivocada (25/11/2026). API-018 lo desmarca y API-020 muestra el historial completo, con el pago vuelto a registrar con la fecha correcta.
 - `performed_at` es opcional en línea (se usa la hora del servidor) y se guarda tal como llega cuando el cambio se hizo sin conexión (RN-173). No decide el orden ni la validez del pago.
 - El cambio de estado usa `UPDATE contributions SET status = 'paid' … WHERE id = $1 AND status = 'pending'`; si no afecta ninguna fila, responde `409`.
 
@@ -1222,6 +1226,7 @@ Estos contratos siguen las mismas convenciones. Se implementan cuando se apruebe
 | `POST /two-factor/activation/confirm` | `{ "code": "482915" }` | `200` `{ "two_factor_enabled": true }` (RN-166) | `422` `CODE_INVALID` con "El código no es correcto. Revíselo e intente de nuevo." (RN-166); `410` `CODE_EXPIRED` con "Este código ya no es válido. Pida uno nuevo." (RN-080, RN-081, RN-162, RN-163) |
 | `POST /sessions/two-factor` | `{ "challenge_id": "ch_3f9a", "code": "482915" }` | `201` con `Set-Cookie: session=…` (RN-078) | Los mismos de la fila anterior |
 | `POST /two-factor/verification-codes` | `{ "challenge_id": "ch_3f9a" }` | `202`; anula el código anterior (RN-163) | `429` `TOO_MANY_CODES` (RN-164) |
+| `POST /two-factor/deactivation/code` | `{}` | `202` `{ "code_expires_at": "…" }`; envía el código de desactivación (`purpose = deactivate`) y anula el anterior (RN-163, RN-167) | `429` `TOO_MANY_CODES` (RN-164) |
 | `POST /two-factor/deactivation` | `{ "password": "…", "code": "730264" }` | `200` `{ "two_factor_enabled": false }` | `422` `DEACTIVATION_REQUIRES_PASSWORD_AND_CODE` (RN-167) |
 
 #### API-031 · Suscripciones push (HU-012)
@@ -1243,7 +1248,7 @@ Estos contratos siguen las mismas convenciones. Se implementan cuando se apruebe
 #### API-034 · Encuesta de KPI-05 (HU-018)
 
 - `GET /organizer-surveys/pending` → `200` `{ "wave": "initial" }` o `{ "wave": null }`. La ola `initial` está pendiente desde que el organizador crea su primera junta (RN-204), y `three_months` desde los 3 meses de responder la primera (RN-205).
-- `POST /organizer-surveys` con `{ "wave": "initial", "hours_per_month": 10, "manual_reminders_per_month": 40, "forwards_by_whatsapp": true }` → `201`. Solo acepta esas 3 respuestas (RN-206). `409` `SURVEY_ALREADY_ANSWERED` si esa ola ya se respondió.
+- `POST /organizer-surveys` con `{ "wave": "initial", "hours_per_month": 10, "manual_reminders_per_month": 40, "forwards_by_whatsapp": true }` → `201`. Solo acepta esas 3 respuestas (RN-206). `409` `SURVEY_ALREADY_ANSWERED` si esa ola ya se respondió. `422` `VALIDATION_ERROR` → `SURVEY_ANSWER_INVALID` con "Ingrese un número entero desde 0, por ejemplo 10." si `hours_per_month` o `manual_reminders_per_month` no es un entero ≥ 0 (RN-214), y `422` `SURVEY_INCOMPLETE` con "Responda las 3 preguntas, o cierre la encuesta sin responder." si falta alguna respuesta (RN-215).
 - `POST /organizer-surveys/{wave}/dismissal` → `204`: el organizador cerró la encuesta sin responder (RN-210). Esa ola no vuelve a quedar pendiente (RN-211), y si es `initial`, la ola `three_months` queda pendiente a los 3 meses del cierre (RN-205).
 
 #### API-035 · `GET /juntas/{id}/turn-assignment` — Ver la asignación manual del orden (HU-007)
@@ -1271,7 +1276,7 @@ Todas las ADR están en estado **Aceptada**: el Product Owner las aprobó el 14/
 - **Contexto:** PRINCIPIO-009 exige abrir la app sin red y enviar en orden los cambios hechos sin conexión. PREG-005 (resuelta) limita esos cambios a los pagos (RN-170) y fija que el servidor rechaza el que ya no cumple las reglas (RN-171). En Perú la conexión móvil se corta con frecuencia y muchos usuarios tienen planes de datos prepago.
 - **Decisión:** Service Worker para el app shell; IndexedDB para el snapshot completo del usuario (API-025) y para un outbox de cambios con `client_change_id`. Al reconectar, el outbox se envía en lote con API-021; el servidor aplica cada cambio con el caso de uso normal y guarda su resultado para responder igual a un reintento. No se reordena por `performed_at` entre dispositivos.
 - **Alternativas:** (a) "gana el último cambio" por `performed_at`: depende del reloj del dispositivo y puede borrar un pago real; (b) CRDT o sincronización bidireccional de la base: complejidad que no hace falta para cinco tipos de acción; (c) solo Background Sync del navegador: no existe en Safari para iPhone; (d) reenviar cada acción con su ruta individual: más peticiones en una red que se corta.
-- **Consecuencias:** el modelo de conflicto es simple y verificable (HU-008, R-12). La app necesita una pantalla para los rechazos (RN-172). El snapshot puede pesar más para un organizador con juntas grandes; si un caso real supera el presupuesto de rendimiento, se agrega una versión incremental de API-025. La protección de los datos en el dispositivo sigue abierta (PREG-008).
+- **Consecuencias:** el modelo de conflicto es simple y verificable (HU-008, R-12). La app necesita una pantalla para los rechazos (RN-172). El snapshot puede pesar más para un organizador con juntas grandes; si un caso real supera el presupuesto de rendimiento, se agrega una versión incremental de API-025. Los datos del dispositivo no se cifran aparte y se borran al cerrar sesión (PREG-008, resuelta; §3.5).
 
 ### ADR-003: Hechos auditables solo de inserción, protegidos en la base de datos
 
@@ -1313,7 +1318,7 @@ Todas las ADR están en estado **Aceptada**: el Product Owner las aprobó el 14/
 - **Contexto:** PRINCIPIO-003 prohíbe `float` y `double` para montos y distingue fechas de calendario de instantes. RN-097 exige rechazar "300,50" o "20.805", lo que se pierde si el número llega ya convertido.
 - **Decisión:** la API recibe el monto que escribe el usuario como texto y lo convierte a céntimos con una función de enteros probada al 100 %. Desde ahí todo es `integer` en céntimos: base de datos, dominio y respuestas (`*_cents`). Los vencimientos y fechas de pago son `date`; los instantes son `timestamptz` y se serializan con el desfase de America/Lima. Un único módulo `clock` calcula "hoy" en America/Lima.
 - **Alternativas:** (a) `numeric` en la base y `number` decimal en TypeScript: el cliente igual opera con `float`; (b) recibir céntimos desde la app: el servidor no podría aplicar RN-097 a una petición directa.
-- **Consecuencias:** el pozo se calcula multiplicando (RN-041) y nunca hay redondeo. Las comparaciones "anterior a hoy" (RN-009, RN-054, RN-122, RN-132) usan siempre `todayInLima()`, inyectable en los tests de las HU.
+- **Consecuencias:** el pozo se calcula multiplicando (RN-041) y nunca hay redondeo. Las comparaciones con hoy (RN-054, RN-122) usan siempre `todayInLima()`, inyectable en los tests de las HU. Las comparaciones con la creación de la junta (RN-009, RN-132) usan `juntas.created_on`, que también se calculó con `todayInLima()`.
 
 ### ADR-009 🔒: Proyección por rol con lista blanca de campos y tests de contrato
 
@@ -1372,12 +1377,12 @@ Todas las ADR están en estado **Aceptada**: el Product Owner las aprobó el 14/
 | Microsoft 365 (`smtp.office365.com`) | Entregar los correos | Servicio externo aprobado el 14/11/2026 (PREG-052, PRINCIPIO-012 h) |
 | Servidor dedicado en Perú con Docker y Docker Compose | Todo el producto | Decidido (PREG-050, PREG-051) |
 | Variables de entorno desde un `.env` en el servidor | Claves de AES, del índice ciego, de los códigos, del job y de OAuth de Microsoft 365 | Decidido (PREG-050) |
-| `drizzle-kit` | Generar y aplicar las migraciones de Drizzle | Aprobada el 14/11/2026, como parte de Drizzle (auditorias/qa-clase2.md, C-01) |
-| ESLint y `eslint-config-next` | Linter del pipeline: reglas del núcleo para `.skip` y `.only`, límites entre módulos (ADR-001) y nombres (PRINCIPIO-002), sin plugins adicionales | Aprobada el 14/11/2026 (C-01) |
-| `@vitest/coverage-v8` | Medir la cobertura de Vitest con umbrales por carpeta (PRINCIPIO-011) | Aprobada el 14/11/2026 (C-01) |
-| `@axe-core/playwright` y `@lhci/cli` | Ejecutar axe-core dentro de Playwright y Lighthouse CI en el pipeline (PRINCIPIO-010) | Aprobadas el 14/11/2026, como parte de axe-core y Lighthouse CI (C-01) |
-| gitleaks | Escanear el repositorio en busca de secretos en el pipeline (PRINCIPIO-005) | Aprobada el 14/11/2026 (C-01) |
-| GitHub (repositorio) y GitHub Actions | Alojar el repositorio, donde ya está, y ejecutar el pipeline. No reciben datos de producción ni el `.env` | Servicio externo aprobado el 14/11/2026 (C-01, PRINCIPIO-012 h) |
+| `drizzle-kit` | Generar y aplicar las migraciones de Drizzle | Aprobada el 14/11/2026, como parte de Drizzle (auditorias/qa-clase2.md, hallazgo C-01) |
+| ESLint y `eslint-config-next` | Linter del pipeline: reglas del núcleo para `.skip` y `.only`, límites entre módulos (ADR-001) y nombres (PRINCIPIO-002), sin plugins adicionales | Aprobada el 14/11/2026 (auditorias/qa-clase2.md, hallazgo C-01) |
+| `@vitest/coverage-v8` | Medir la cobertura de Vitest con umbrales por carpeta (PRINCIPIO-011) | Aprobada el 14/11/2026 (auditorias/qa-clase2.md, hallazgo C-01) |
+| `@axe-core/playwright` y `@lhci/cli` | Ejecutar axe-core dentro de Playwright y Lighthouse CI en el pipeline (PRINCIPIO-010) | Aprobadas el 14/11/2026, como parte de axe-core y Lighthouse CI (auditorias/qa-clase2.md, hallazgo C-01) |
+| gitleaks | Escanear el repositorio en busca de secretos en el pipeline (PRINCIPIO-005) | Aprobada el 14/11/2026 (auditorias/qa-clase2.md, hallazgo C-01) |
+| GitHub (repositorio) y GitHub Actions | Alojar el repositorio, donde ya está, y ejecutar el pipeline. No reciben datos de producción ni el `.env` | Servicio externo aprobado el 14/11/2026 (auditorias/qa-clase2.md, hallazgo C-01, PRINCIPIO-012 h) |
 | Caddy y Let's Encrypt | `proxy` que termina TLS ≥ 1.2, redirige HTTP a HTTPS y renueva el certificado del dominio por ACME | Aprobados el 14/11/2026 (auditorias/qa-clase2.md, M-09, PRINCIPIO-012 e y h) |
 
 `node:crypto`, Service Worker, IndexedDB y la Notifications API son parte de la plataforma y no se cuentan como dependencias nuevas. Los escenarios Gherkin no usan ejecutor propio (PREG-055). El cron que dispara el worker a las 09:00 es el del sistema operativo de la imagen del contenedor, con `TZ=America/Lima`; no se usa una librería de npm para programar tareas.

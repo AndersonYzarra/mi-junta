@@ -1,8 +1,10 @@
 # Preguntas abiertas
 
-Versión: 0.4
-Fecha: 14/11/2026
+Versión: 0.5
+Fecha: 15/11/2026
 Estado: Revisado
+
+La v0.5 registra las preguntas que 09-ui-spec.md §7.1 (PREG-069 a PREG-072) y 10-validation-log.md §2 (PREG-073 a PREG-077) citaban sin que existieran aquí, con la decisión que tomó el Agente Spec Finalizer el 15/11/2026 con la autorización del usuario para decidir por su cuenta (auditorias/spec-finalizer.md, "Decisiones del equipo"). También abre PREG-078 a PREG-083, una por cada hallazgo mayor de esa auditoría, que siguen abiertas.
 
 Decisiones pendientes detectadas al redactar la constitución, el Project Brief y el alcance. Mientras una pregunta siga abierta, todo lo que dependa de ella se marca [REQUIERE DECISIÓN]. Una pregunta resuelta conserva su ID y lleva la línea "Estado: Resuelta" con la fecha y la decisión. Una pregunta con "Estado: Propuesta" tiene una respuesta redactada por un agente que no rige hasta que el Product Owner la apruebe (PRINCIPIO-012). Al aprobarla, "Propuesta" se cambia por "Resuelta".
 
@@ -508,3 +510,102 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - Bloquea: la trazabilidad regla → HU de todas las RN Must.
 - Plan de resolución: crear una HU con esos escenarios o aceptar la excepción.
 - Estado: Resuelta el 14/11/2026 con autorización del Product Owner. Se crea HU-019 (Must, F-01 y F-04), cuyos criterios son escenarios técnicos que prueban T-004, T-024 y T-027.
+
+### PREG-069: ¿Cuál es el texto exacto de la casilla de consentimiento de P-001 y de la casilla de aceptación de una versión nueva en P-006?
+- Contexto: RN-082 y RN-168 exigen las casillas, pero ningún texto del catálogo §2.9 las rotula. Detectada en 09-ui-spec.md §7.1.
+- A quién preguntar: Product Owner, con revisión del asesor legal (relacionada con PREG-001).
+- Bloquea: P-001, P-006 y T-021.
+- Plan de resolución: adoptar los rótulos de 09 y revisarlos junto con el texto de la política.
+- Estado: Resuelta el 15/11/2026 con autorización del usuario (auditorias/spec-finalizer.md). "Acepto la política de privacidad y recibir notificaciones por correo y push." y "Acepto la política de privacidad, versión {versión}." (09 §6). El asesor legal los revisa junto con el texto de la política (PREG-001).
+
+### PREG-070: ¿Qué mensaje ve el usuario si escribe mal su contraseña al borrar su cuenta?
+- Contexto: API-033 responde `401 INVALID_CREDENTIALS`, y el texto de RN-075 habla del correo, que P-023 no pide. Detectada en 09-ui-spec.md §7.1.
+- A quién preguntar: Product Owner.
+- Bloquea: P-023 (HU-017, Should).
+- Plan de resolución: adoptar un texto de interfaz.
+- Estado: Resuelta el 15/11/2026 con autorización del usuario. "La contraseña no es correcta." (09 §6).
+
+### PREG-071: ¿Qué rango aceptan las dos respuestas numéricas de la encuesta de KPI-05, y son obligatorias las 3 respuestas?
+- Contexto: RN-206 fija las 3 preguntas, pero no su validación. HU-018 bloquea el lanzamiento del MVP (02-alcance.md §3). Detectada en 09-ui-spec.md §7.1.
+- A quién preguntar: Product Owner.
+- Bloquea: HU-018, P-024 y el lanzamiento.
+- Plan de resolución: decidir el rango y la obligatoriedad, y escribir las RN.
+- Estado: Resuelta el 15/11/2026 con autorización del usuario. Enteros desde 0, sin máximo (RN-214), y las 3 respuestas obligatorias para enviar la encuesta (RN-215). Cerrarla sin responder sigue disponible (RN-210).
+
+### PREG-072: ¿Qué mensaje ve el usuario si escribe una fecha que no existe o que no tiene el formato DD/MM/AAAA?
+- Contexto: el catálogo solo tiene el caso del campo vacío (RN-002). Detectada en 09-ui-spec.md §7.1.
+- A quién preguntar: Product Owner.
+- Bloquea: P-008, P-012, P-015 y P-018.
+- Plan de resolución: adoptar un texto de interfaz.
+- Estado: Resuelta el 15/11/2026 con autorización del usuario. "Ingrese la fecha con el formato DD/MM/AAAA, por ejemplo 30/11/2026." (09 C-05).
+
+### PREG-073: Al editar la junta, ¿la ronda 1 se compara con la fecha de creación o con hoy, y qué texto muestra RN-009?
+- Contexto: RN-009 compara con la fecha de creación, pero su mensaje decía "no puede ser anterior a hoy" y API-009 usaba el código `ROUND1_BEFORE_TODAY`. Al editar, las dos lecturas dan resultados distintos. Detectada en 10-validation-log.md fila 9 y en auditorias/spec-finalizer.md (SF-05).
+- A quién preguntar: Product Owner.
+- Bloquea: T-011, API-010 y P-012.
+- Plan de resolución: elegir una lectura y alinear la regla, el mensaje, el contrato y la tarea.
+- Estado: Resuelta el 15/11/2026 con autorización del usuario. Se mantiene RN-009: se compara con la fecha de creación. El mensaje pasa a "La fecha de vencimiento de la ronda 1 no puede ser anterior a la fecha de creación de la junta." y el código a `ROUND1_BEFORE_CREATION`. Una ronda 1 entre la creación y hoy se guarda, y RN-122 impide fijar el orden hasta cambiarla (03-reglas-de-negocio.md §1.5).
+
+### PREG-074: ¿Se adoptan como textos del catálogo §2.9 los ejemplos de RN-139 y RN-194?
+- Contexto: el aviso al organizador de un pago informado (RN-139) y el aviso de pago rechazado (RN-194) solo tenían texto en sus ejemplos. Detectada en 10-validation-log.md fila 12.
+- A quién preguntar: Product Owner.
+- Bloquea: HU-009 (Should).
+- Plan de resolución: pasar los textos al catálogo.
+- Estado: Resuelta el 15/11/2026 con autorización del usuario. Se adoptan los ejemplos como cuerpo del correo y del push, con un asunto propio (03 §2.9 y §1.5).
+
+### PREG-075: ¿Cuál es el cuerpo del correo de recordatorio (RN-144), y se adoptan como textos del catálogo el asunto de su ejemplo y el texto del ejemplo de RN-196?
+- Contexto: RN-144 solo lista los datos del recordatorio, así que T-018 (HU-011, Must) no se podía terminar sin inventar el texto (PRINCIPIO-012 a). Detectada en 10-validation-log.md fila 4 y en auditorias/spec-finalizer.md (SF-01).
+- A quién preguntar: Product Owner.
+- Bloquea: T-018, HU-011 y HU-016.
+- Plan de resolución: redactar los textos en el estilo de los correos de la cuenta y pasarlos a §2.9.
+- Estado: Resuelta el 15/11/2026 con autorización del usuario. Asunto y cuerpo del recordatorio, con "vence" o "venció" según el momento; el asunto también es el texto del push. El aviso de cuotas vencidas usa el texto del ejemplo de RN-196, con un asunto propio (03 §2.9 y §1.5).
+
+### PREG-076: ¿Se valida el formato del correo en "Crear cuenta", con qué regla y con qué mensaje?
+- Contexto: P-001 no validaba el formato del correo, y §2.9 no tenía un mensaje para eso. T-028 esperaba esta decisión. Detectada en 10-validation-log.md fila 27.
+- A quién preguntar: Product Owner y líder técnico.
+- Bloquea: T-028 y HU-001.
+- Plan de resolución: escribir RN-213 con su mensaje.
+- Estado: Resuelta el 15/11/2026 con autorización del usuario. RN-213: el correo cumple `^[^\s@]+@[^\s@]+\.[^\s@]+$`, con el mensaje "Ingrese un correo válido, por ejemplo lucia@example.com.".
+
+### PREG-077: ¿Qué RN cubre el código de segundo factor equivocado al iniciar sesión: RN-078 o una RN nueva?
+- Contexto: P-022 ataba el mensaje de código equivocado a RN-166, que solo trata de la activación. Detectada en 10-validation-log.md fila 30.
+- A quién preguntar: Product Owner y responsable de seguridad.
+- Bloquea: P-022 y la descomposición de HU-003 (Should).
+- Plan de resolución: atar el mensaje a una regla existente o crear una.
+- Estado: Resuelta el 15/11/2026 con autorización del usuario. Lo cubre RN-078: sin un código válido no se abre la sesión. El mensaje "El código no es correcto. Revíselo e intente de nuevo." queda atado a RN-166 y RN-078 en §2.9. No se crea ninguna RN.
+
+### PREG-078: ¿Qué datos de cada junta entrega API-022 para las tarjetas de "Mis juntas"?
+- Contexto: P-007 muestra en cada tarjeta "{ocupados} de {total} cupos" y "Su cuota: [estado]" de la ronda actual, pero API-022 solo entrega `id`, `name`, `status`, `role`, `is_participant`, `turn_number` y `current_round`. Hoy la app tendría que leer esos datos del snapshot (API-025) o pedir API-023 por cada junta. Detectada en auditorias/spec-finalizer.md (SF-08, mayor).
+- A quién preguntar: líder técnico, con visto bueno del Product Owner (cambia un contrato de 07-architecture.md).
+- Bloquea: el criterio completo de P-007 en T-022 y T-029. No bloquea el resto del MVP.
+- Plan de resolución: decidir antes de implementar T-022 si API-022 suma `occupied_slots`, `participant_count` y `current_round_status` (de la cuota propia), y actualizar API-022, T-016 y T-022 con su caso de prueba.
+
+### PREG-079: ¿Un agente de IA puede marcar una pregunta como "Resuelta" con una autorización general del usuario, o solo como "Propuesta"?
+- Contexto: este archivo dice que la respuesta de un agente queda "Propuesta" hasta que el Product Owner la apruebe. 09-ui-spec.md §7.1 marcó PREG-069, 070 y 072 como "Resuelta por el Agente UI Designer", y la v0.5 de este archivo resolvió PREG-069 a PREG-077 con la autorización del usuario del 15/11/2026. Detectada en auditorias/spec-finalizer.md (SF-09, mayor).
+- A quién preguntar: Product Owner. Toca los límites de los agentes, así que su respuesta puede requerir un cambio a PRINCIPIO-012 con aprobación humana.
+- Bloquea: la validez definitiva de PREG-069 a PREG-077 y de 03-reglas-de-negocio.md §1.5.
+- Plan de resolución: el Product Owner revisa PREG-069 a PREG-077 y confirma o revierte cada una. Después decide si las autorizaciones generales valen como aprobación y, si es así, se agrega a PRINCIPIO-012.
+
+### PREG-080: ¿Qué identificador en código usan "Cambio sin enviar", "Estado de la junta" y "Participante eliminado", y qué términos faltan en el glosario?
+- Contexto: 04-glosario.md da `pending_change`, `junta_status` y `deleted_participant`, pero 07-architecture.md usa el outbox con `client_change_id` y la tabla `client_changes`, la columna `juntas.status` y `users.deleted_at`. Además, 04 no define términos que se usan más de 20 veces: líder técnico, incidente, outbox, snapshot, ola de la encuesta (`wave`) y los estados de envío de un recordatorio (`accepted`, `failed`, `expired`). Detectada en auditorias/spec-finalizer.md (SF-10, mayor).
+- A quién preguntar: Product Owner y líder técnico.
+- Bloquea: la nomenclatura de T-017, T-019 y T-020. Mientras tanto, un agente sigue 07.
+- Plan de resolución: elegir un nombre por término, actualizar 04 o 07, y agregar a 04 los términos del dominio y una sección de términos técnicos antes de implementar T-017.
+
+### PREG-081: ¿En qué anchos verifica el pipeline que no haya scroll horizontal?
+- Contexto: PRINCIPIO-010 exige 360 a 1440 px. T-025 revisa solo 360 y 1440 px y T-023 solo 360 px, mientras que 09-ui-spec.md §4.7 y 10-validation-log.md fila 18 piden 360, 768, 1024 y 1440 px, que son los cortes de diseño. Detectada en auditorias/spec-finalizer.md (SF-12, mayor).
+- A quién preguntar: líder técnico.
+- Bloquea: el criterio de T-025.
+- Plan de resolución: decidir antes de implementar T-025 si se agregan 768 y 1024 px, y actualizar su criterio.
+
+### PREG-082: ¿Se dividen T-007, T-021, T-022 y T-023 para que cada una quepa en 2 horas?
+- Contexto: 08-backlog.md promete que cada tarea se completa en menos de 2 horas. T-007 junta 5 migraciones, el middleware de sesión, 3 endpoints y un guardián, y T-021 a T-023 juntan de 5 a 7 pantallas cada una. Detectada en auditorias/spec-finalizer.md (SF-13, mayor).
+- A quién preguntar: líder técnico.
+- Bloquea: la estimación de la ruta crítica (08, "Ruta crítica").
+- Plan de resolución: medir la primera de ellas al implementarla; si supera 2 horas, dividir las demás por pantalla o por endpoint con IDs nuevos, sin renumerar.
+
+### PREG-083: ¿Quién revisa 08-backlog.md, 09-ui-spec.md y 10-validation-log.md, y quién prueba los prototipos en un navegador?
+- Contexto: 08 v0.6, 09 v1.2 y 10 v1.2 están en "Borrador", y la validación de los prototipos a 360, 768, 1024 y 1440 px en un navegador sigue pendiente (10-validation-log.md fila 18). Los demás archivos están en "Revisado". Detectada en auditorias/spec-finalizer.md (SF-14, mayor).
+- A quién preguntar: Product Owner (revisión) y usuario (prueba en el navegador).
+- Bloquea: cerrar el Spec Pack como v1.0 aprobada. No bloquea empezar T-001 a T-019.
+- Plan de resolución: el Product Owner revisa los tres archivos y el usuario recorre los flujos de 09 §2 en un navegador antes de implementar T-020.
