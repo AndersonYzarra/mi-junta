@@ -1,10 +1,12 @@
 # Especificación de UI de Mi Junta
 
-Versión: 1.0
-Fecha: 14/11/2026
+Versión: 1.1
+Fecha: 15/11/2026
 Estado: Borrador
 
 Fuente: 00-constitucion.md v0.4, 02-alcance.md v0.4, 06-user-stories.md v0.4 y 07-architecture.md v0.4. Los textos de rechazo y de estado vienen del catálogo §2.9 de 03-reglas-de-negocio.md v0.4, y los nombres de los estados vienen de 04-glosario.md v0.4. La redactó el Agente UI Designer (prompts/clase3/01-ui-designer.xml).
+
+La v1.1 aplica las observaciones ✅ APLICADA de 10-validation-log.md v1.0, con la autorización del usuario del 15/11/2026: C-03 muestra a la vez el rechazo y el contador (fila 1), y P-012 agrega el aviso no bloqueante de la ronda 1 vencida (fila 10) y la nota sobre RN-007 (fila 19). No cambia ninguna RN ni ningún texto del catálogo.
 
 **Cómo leer este documento:**
 - `P-NNN` identifica una pantalla y `UF-NN` un flujo de usuario. Los IDs nunca se renumeran ni se reutilizan (PRINCIPIO-001).
@@ -272,7 +274,7 @@ Las pantallas de la sección 3 se arman con estos componentes. Sus medidas está
 
 - Se muestra mientras hay cambios en el outbox. Texto exacto: "1 cambio sin enviar." o "{n} cambios sin enviar." (RN-174).
 - A la derecha, el enlace "Ver" lleva a P-016. Fondo `--color-info-soft`, texto `--color-info`.
-- Si hay un cambio rechazado sin revisar, el indicador pasa a fondo `--color-danger-soft` con el texto "Un cambio no se pudo guardar. [Ver]" **[TEXTO UI]**.
+- Si hay un cambio rechazado sin revisar, el indicador pasa a fondo `--color-danger-soft` con el texto "Un cambio no se pudo guardar." **[TEXTO UI]**, seguido del contador "1 cambio sin enviar." o "{n} cambios sin enviar." (RN-174) mientras queden cambios en el outbox, y del enlace "Ver". Ejemplo: "Un cambio no se pudo guardar. 1 cambio sin enviar. [Ver]". El contador no se oculta, porque RN-174 pide mostrarlo siempre (10-validation-log.md, fila 1).
 
 #### C-04 · Botón no disponible
 
@@ -1255,6 +1257,8 @@ La lista va ordenada por número de turno. Desde 768 px, cada fila pone sus tres
 - Pasar a "Sí participo" sin cupos libres: "La junta no tiene cupos libres para que usted participe." (RN-109).
 - Pasar a "No participo" libera el cupo del organizador (RN-212). La opción muestra la ayuda "Si deja de participar, su cupo quedará libre." **[TEXTO UI]**.
 - Bajar la cantidad a los cupos ocupados pasa la junta a "Completa"; subirla en una junta "Completa" la devuelve a "Abierta" (RN-100, RN-101). P-011 lo refleja al volver.
+- **Ronda 1 ya vencida (antes de fijar el orden):** si la fecha escrita es anterior a hoy y no es anterior a la creación de la junta, se puede guardar (RN-009), pero no deja fijar el orden. Debajo del campo "Vencimiento de la ronda 1" aparece un aviso no bloqueante (`--color-warning-soft`, `role="status"`) con el texto "La fecha de vencimiento de la ronda 1 ya pasó. Cámbiela antes de fijar el orden de turnos." (RN-122). El aviso no impide "Guardar cambios" (10-validation-log.md, fila 10).
+- **RN-007 en la edición:** el grupo "Frecuencia" siempre tiene un valor elegido y no se puede desmarcar, así que el mensaje de RN-007 no aparece en esta pantalla. La regla se aplica en el servidor y se prueba con una petición directa a API-010 (10-validation-log.md, fila 19; T-011).
 
 **Wireframe (360 px, después de fijar el orden):**
 
@@ -1289,7 +1293,7 @@ La lista va ordenada por número de turno. Desde 768 px, cada fila pone sus tres
 
 Antes de fijar el orden, el wireframe es el de P-008 con los valores cargados, el título "Editar junta" y los botones "Guardar cambios" y "Cancelar".
 
-**Estados:** cargando, antes del orden, después del orden, con errores, enviando, sin conexión, sin permiso (`403`).
+**Estados:** cargando, antes del orden, con la ronda 1 vencida (aviso de RN-122), después del orden, con errores, enviando, sin conexión, sin permiso (`403`).
 
 ---
 
@@ -2363,7 +2367,7 @@ Estos textos no están en el catálogo §2.9 ni en las HU. Son textos de diseño
 
 | Pantalla | Texto | Base |
 |---|---|---|
-| C-03 | "Un cambio no se pudo guardar." | RN-172 |
+| C-03 | "Un cambio no se pudo guardar.", seguido del contador de RN-174 | RN-172, RN-174 |
 | C-06 | "Sin enviar" | RN-174 |
 | C-05 | "Formato DD/MM/AAAA" y "Ingrese la fecha con el formato DD/MM/AAAA, por ejemplo 30/11/2026." | RN-092, PRINCIPIO-003, PREG-072 |
 | C-08 | "Pago registrado.", "Cambios guardados.", "Código copiado.", "Datos copiados.", "Sorteo guardado.", "Gracias por responder." | — |

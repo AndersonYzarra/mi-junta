@@ -258,6 +258,10 @@
               return;
             }
             prefs[pref] = !previous;                              // RN-187, RN-073, RN-208
+            // Queda en la sesión del prototipo: las demás pantallas ven la preferencia nueva (fila 35 del validation log)
+            const patch = {};
+            patch[pref] = !previous;
+            M.store.patchUser(user.id, patch);
           }, 800);
         });
       });

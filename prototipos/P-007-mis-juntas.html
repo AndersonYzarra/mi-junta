@@ -101,6 +101,7 @@
     <aside class="proto-note" aria-label="Nota del prototipo">
       <p class="proto-note__title">Solo en el prototipo</p>
       <p id="nota-usuario"></p>
+      <p id="nota-correo" hidden>En la app, el enlace de verificación llega por correo. Para seguir UF-01: <a id="enlace-correo" href="P-002-verificar-correo.html">Abrir el enlace del correo (P-002)</a>.</p>
       <p id="nota-otros"></p>
     </aside>
   </main>
@@ -282,6 +283,8 @@
           showVerifyNotice = state === 'correo-sin-verificar' ||
             (emailUnverified && ['con-datos', 'vacio', 'sin-conexion'].indexOf(state) !== -1);
           $('aviso-correo').hidden = !showVerifyNotice;
+          // Fila 36 del validation log: el enlace del correo solo existe para Rosa (P-002 usa su enlace de ejemplo)
+          $('nota-correo').hidden = !(showVerifyNotice && user.id === 'user_301');
           $('btn-otro-enlace').hidden = false;
           $('btn-otro-enlace').disabled = false;
           $('btn-otro-enlace').removeAttribute('aria-busy');

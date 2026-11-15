@@ -1,14 +1,16 @@
 # Backlog de Mi Junta
 
-Versión: 0.4
-Fecha: 14/11/2026
-Estado: Revisado
+Versión: 0.5
+Fecha: 15/11/2026
+Estado: Borrador
 
 Fuente: 07-architecture.md v0.4, 06-user-stories.md v0.4, 03-reglas-de-negocio.md v0.4, 02-alcance.md v0.4 y 00-constitucion.md v0.4. Lo redactó el Agente Backlog Builder (prompts/clase2/04-backlog-builder.xml). La v0.4 resuelve los hallazgos críticos y mayores de auditorias/qa-clase2.md, con autorización del Product Owner del 14/11/2026: herramientas aprobadas para T-001, textos de los correos de cuenta, reparto del pozo en T-014, criterios que faltaban, dependencias corregidas y las tareas nuevas T-026 y T-027.
 
+La v0.5 agrega las tareas T-028 a T-030, que salen de las observaciones ⏳ BACKLOG de 10-validation-log.md v1.0, y suma al criterio de T-011 el caso de RN-007 en API-010 (fila 19 del log). Lo autorizó el usuario el 15/11/2026. Las tres tareas nuevas usan textos que todavía no están aprobados y los marcan [REQUIERE DECISIÓN]. Por eso las HU Should se descomponen desde T-031.
+
 **Cómo leer este documento:**
 - Cada tarea `T-NNN` la completa un agente de desarrollo de IA en menos de 2 horas. Tamaños: **S** (< 30 min), **M** (30 min - 1 h), **L** (1-2 h).
-- **Alcance de esta versión:** las 11 HU Must del MVP (F-01 a F-06, 02-alcance.md §3) y la infraestructura que necesitan. Las 8 HU Should están dentro del alcance, pero se descomponen en la próxima versión, desde T-028 (sección "Pendiente para la próxima versión"). Ninguna tarea toca el out-of-scope (NO-01 a NO-14).
+- **Alcance de esta versión:** las 11 HU Must del MVP (F-01 a F-06, 02-alcance.md §3) y la infraestructura que necesitan. Las 8 HU Should están dentro del alcance, pero se descomponen en la próxima versión, desde T-031 (sección "Pendiente para la próxima versión"). Ninguna tarea toca el out-of-scope (NO-01 a NO-14).
 - **Dependencias:** solo se listan las directas. Cada tarea depende solo de tareas con un número menor, así que el grafo no tiene ciclos.
 - **Tests dentro de cada tarea:** cada tarea de dominio incluye su migración y sus tests unitarios y de integración, escritos como escenarios Gherkin que citan su RN y usan los datos de ejemplo de 06-user-stories.md (PRINCIPIO-011). Los escenarios siguen la convención de PREG-055 (07-architecture.md §6.1): el test se llama `Escenario: RN-NNN <descripción>` y marca sus pasos con `// Dado`, `// Cuando` y `// Entonces`, sin ejecutor de Gherkin. Además, T-024, T-025 y T-026 son tareas de testing aparte.
 - **Límites del agente (PRINCIPIO-012):** solo usa las dependencias aprobadas de 07-architecture.md §6.3, no hace commit, push ni merge sin aprobación humana, y cualquier cambio en el sorteo, el cifrado, la autenticación o los permisos que se aparte de las ADR aprobadas necesita aprobación explícita.
@@ -18,14 +20,14 @@ Fuente: 07-architecture.md v0.4, 06-user-stories.md v0.4, 03-reglas-de-negocio.m
 
 ## Resumen
 
-**Total de tareas:** 27. **Esfuerzo estimado:** entre 22.5 h y 45 h (18 tareas L de 1 a 2 h y 9 tareas M de 30 min a 1 h).
+**Total de tareas:** 30. **Esfuerzo estimado:** entre 24 h y 48 h (18 tareas L de 1 a 2 h y 12 tareas M de 30 min a 1 h).
 
 ### Por prioridad
 
 | Prioridad | Tareas | IDs |
 |---|---|---|
-| Must | 27 | T-001 a T-027 |
-| Should | 0 | Próxima versión, desde T-028 |
+| Must | 30 | T-001 a T-030 |
+| Should | 0 | Próxima versión, desde T-031 |
 | Could | 0 | F-12 a F-15 no tienen reglas en 03-reglas-de-negocio.md |
 
 ### Por tipo
@@ -33,8 +35,8 @@ Fuente: 07-architecture.md v0.4, 06-user-stories.md v0.4, 03-reglas-de-negocio.m
 | Tipo | Tareas | IDs |
 |---|---|---|
 | Setup | 4 | T-001, T-002, T-005, T-027 |
-| Features (módulos de dominio y API) | 13 | T-003, T-004, T-007 a T-016, T-018 |
-| Integración (SMTP, sincronización, worker y pantallas conectadas a la API) | 7 | T-006, T-017, T-019 a T-023 |
+| Features (módulos de dominio y API) | 14 | T-003, T-004, T-007 a T-016, T-018, T-028 |
+| Integración (SMTP, sincronización, worker y pantallas conectadas a la API) | 9 | T-006, T-017, T-019 a T-023, T-029, T-030 |
 | Testing | 3 | T-024, T-025, T-026 |
 
 ### Por componente
@@ -50,13 +52,13 @@ Cada tarea se cuenta en su componente principal, el primero de su campo "Compone
 | `crypto` | 1 | T-004 |
 | `api` | 2 | T-005, T-026 |
 | `notifications` | 2 | T-006, T-018 |
-| `identity` | 3 | T-007, T-008, T-009 |
+| `identity` | 4 | T-007, T-008, T-009, T-028 |
 | `juntas` | 3 | T-010, T-011, T-012 |
 | `payments` | 1 | T-015 |
 | `junta-views` | 2 | T-016, T-024 |
 | `sync` | 1 | T-017 |
 | `scheduler` | 1 | T-019 |
-| `pwa` | 5 | T-020 a T-023, T-025 |
+| `pwa` | 7 | T-020 a T-023, T-025, T-029, T-030 |
 | `surveys` | 0 | Solo HU-018 (Should) |
 
 ### Por tamaño
@@ -64,22 +66,22 @@ Cada tarea se cuenta en su componente principal, el primero de su campo "Compone
 | Tamaño | Tareas | IDs | Horas |
 |---|---|---|---|
 | S (< 30 min) | 0 | — | 0 |
-| M (30 min - 1 h) | 9 | T-002, T-004, T-005, T-006, T-013, T-018, T-024, T-026, T-027 | 4.5 a 9 |
+| M (30 min - 1 h) | 12 | T-002, T-004, T-005, T-006, T-013, T-018, T-024, T-026 a T-030 | 6 a 12 |
 | L (1-2 h) | 18 | T-001, T-003, T-007 a T-012, T-014 a T-017, T-019 a T-023, T-025 | 18 a 36 |
 
 ### Cobertura de las HU Must
 
 | HU | Prioridad | Tareas |
 |---|---|---|
-| HU-001 | Must | T-004, T-006, T-007, T-021, T-024, T-025 |
-| HU-002 | Must | T-006, T-007, T-008, T-009, T-021, T-025 |
+| HU-001 | Must | T-004, T-006, T-007, T-021, T-024, T-025, T-028, T-029 |
+| HU-002 | Must | T-006, T-007, T-008, T-009, T-021, T-025, T-029 |
 | HU-004 | Must | T-003, T-010, T-022, T-025 |
 | HU-014 | Must | T-011, T-022, T-025 |
 | HU-005 | Must | T-012, T-022, T-025 |
 | HU-006 | Must | T-003, T-013, T-014, T-023, T-025 |
 | HU-008 | Must | T-015, T-016, T-023, T-025 |
-| HU-015 | Must | T-017, T-020, T-021, T-023, T-025 |
-| HU-010 | Must | T-016, T-017, T-020, T-023, T-024, T-025 |
+| HU-015 | Must | T-017, T-020, T-021, T-023, T-025, T-030 |
+| HU-010 | Must | T-016, T-017, T-020, T-023, T-024, T-025, T-029 |
 | HU-011 | Must | T-009, T-018, T-019, T-021, T-025 |
 | HU-019 | Must | T-004 (RN-202), T-024 (RN-202, RN-203), T-027 (RN-200, RN-201) |
 
@@ -93,7 +95,7 @@ La ruta crítica es la cadena de dependencias más larga, calculada con el máxi
 
 - 15 tareas (14 L y 1 M): entre 14.5 h y 29 h en serie.
 - **Empates:** T-004, T-005 y T-006 (M, dependen solo de T-001) empatan con T-002 antes de T-007. Un retraso en cualquiera de ellas también retrasa el final.
-- **Con holgura:** T-027 (termina hacia la hora 4 de 29), T-003 y T-013 (en paralelo después de T-001), T-009 (hacia la hora 9), T-018 y T-019 (hacia las horas 16 y 18), T-024 y T-026 (hacia la hora 22) y T-023 (hacia la hora 25).
+- **Con holgura:** T-027 (termina hacia la hora 4 de 29), T-003 y T-013 (en paralelo después de T-001), T-009 (hacia la hora 9), T-018 y T-019 (hacia las horas 16 y 18), T-024 y T-026 (hacia la hora 22), T-023 (hacia la hora 25), T-028 y T-030 (hacia la hora 26) y T-029 (hacia la hora 28).
 - **Lo que más alarga la ruta:** la cadena de juntas → sorteo → pagos → vistas → sync (T-010 a T-017) es secuencial, porque cada caso de uso necesita las tablas y los datos de prueba del anterior. Además, las pantallas de cuenta (T-021) van antes que las de la junta (T-022), porque unirse con un código guardado necesita la pantalla de inicio de sesión.
 
 ```mermaid
@@ -119,6 +121,9 @@ flowchart LR
     T019 & T021 & T022 & T023 & T024 --> T025[T-025]
     T005 & T017 --> T026[T-026]
     T002 --> T027[T-027]
+    T007 & T021 --> T028[T-028]
+    T021 & T022 & T023 --> T029[T-029]
+    T020 & T021 --> T030[T-030]
 
     classDef critical fill:#fde2e1,stroke:#c0392b,stroke-width:2px
     class T001,T002,T007,T008,T010,T011,T012,T014,T015,T016,T017,T020,T021,T022,T025 critical
@@ -126,15 +131,18 @@ flowchart LR
 
 ### Bloqueos externos (no son tareas del agente)
 
-Las herramientas de T-001 (ESLint, `@vitest/coverage-v8`, gitleaks, GitHub Actions) y el `proxy` de T-002 (Caddy con Let's Encrypt) quedaron aprobados el 14/11/2026 (07-architecture.md §6.3), y los textos de los correos de T-006 están en 03-reglas-de-negocio.md §2.9. Ninguna tarea del agente queda bloqueada.
+Las herramientas de T-001 (ESLint, `@vitest/coverage-v8`, gitleaks, GitHub Actions) y el `proxy` de T-002 (Caddy con Let's Encrypt) quedaron aprobados el 14/11/2026 (07-architecture.md §6.3), y los textos de los correos de T-006 están en 03-reglas-de-negocio.md §2.9. Solo T-028, T-029 y T-030 quedan bloqueadas, porque esperan una decisión del Product Owner (últimas filas de la tabla).
 
 | Bloqueo | Qué bloquea | Relación |
 |---|---|---|
 | Texto de la política de privacidad, que escribe el asesor legal | El lanzamiento de F-01, no el desarrollo de T-007 y T-021 | PREG-001, 02-alcance.md §5 |
-| HU-018 (Should) descompuesta desde T-028 e implementada | El lanzamiento del MVP | 02-alcance.md §3, KPI-05 |
+| HU-018 (Should) descompuesta desde T-031 e implementada | El lanzamiento del MVP | 02-alcance.md §3, KPI-05 |
 | Confirmar con el administrador de Microsoft 365 los límites de envío y la autenticación OAuth 2.0 del buzón | Que T-019 envíe en producción | R-15, 07-architecture.md §7 |
 | Dominio del producto | Que el `proxy` de T-002 obtenga el certificado de producción, y el despliegue | 02-alcance.md §6, PRINCIPIO-005 |
 | Operación del servidor (respaldos, certificados, SSH, monitoreo). El acceso registrado lo implementa T-027 | El lanzamiento | 07-architecture.md §6.4, R-14. La hace el líder técnico |
+| Formato del correo y RN-213 con su mensaje | T-028 | PREG-076 propuesta, 10-validation-log.md fila 27 |
+| Textos de 09 §6: vigencia del enlace en P-002, rol en una junta "Terminada" y error al cargar datos | T-029 | 10-validation-log.md filas 26, 28 y 32 |
+| Texto de 09 §6 del aviso de cambios sin enviar de otra cuenta | T-030 | 10-validation-log.md fila 22 |
 
 ---
 
@@ -248,7 +256,7 @@ Las herramientas de T-001 (ESLint, `@vitest/coverage-v8`, gitleaks, GitHub Actio
 - **Tamaño:** L (1-2 h)
 - **Dependencias:** T-010
 - **Descripción:** Implementar el guardián `requireJuntaRole(juntaId, "member" | "organizer")`, que responde `403` a quien no es miembro y `403` `NOT_ORGANIZER` a quien no organiza (RN-024, RN-077). Implementar API-010 con las mismas validaciones de API-009 y solo el nombre después de fijar el orden (RN-106 a RN-110). Al pasar a "No participo", la membresía del organizador queda con `occupies_slot = false` y se libera su cupo (RN-212); al subir la cantidad de participantes o liberar un cupo, una junta `full` vuelve a `open` (RN-101). Implementar API-011, que anula el código anterior (RN-020), y API-012, que libera el cupo y devuelve la junta a `open` si estaba `full` (RN-101, RN-112 a RN-115).
-- **Criterio de completitud:** Pasan los tests de HU-014: con 9 cupos ocupados, bajar a 8 participantes recibe `422` y bajar a 9 deja la junta en `full`; con la Junta Familia en `full` con 12 de 12 cupos, quitar a un familiar la deja con 11 de 12 en `open`, subir a 13 participantes la deja en `open`, y Carmen en "No participo" libera su cupo y la deja en `open`; Jorge con 10 de 10 cupos recibe `409` `NO_FREE_SLOT_FOR_ORGANIZER` al marcar que participa; después de regenerar, `K7MP4XR2` queda con `revoked_at`; Lucía recibe `403` en API-010, API-011 y API-012; y en una junta `in_progress`, cambiar la cuota y quitar a Pedro reciben `409` `TURN_ORDER_FIXED`, y cambiar el nombre se guarda.
+- **Criterio de completitud:** Pasan los tests de HU-014: con 9 cupos ocupados, bajar a 8 participantes recibe `422` y bajar a 9 deja la junta en `full`; con la Junta Familia en `full` con 12 de 12 cupos, quitar a un familiar la deja con 11 de 12 en `open`, subir a 13 participantes la deja en `open`, y Carmen en "No participo" libera su cupo y la deja en `open`; Jorge con 10 de 10 cupos recibe `409` `NO_FREE_SLOT_FOR_ORGANIZER` al marcar que participa; después de regenerar, `K7MP4XR2` queda con `revoked_at`; Lucía recibe `403` en API-010, API-011 y API-012; en una junta `in_progress`, cambiar la cuota y quitar a Pedro reciben `409` `TURN_ORDER_FIXED`, y cambiar el nombre se guarda; y una petición directa a API-010 con la frecuencia "bimestral" recibe `422` con "Elija una frecuencia: semanal, quincenal, mensual o cada cierta cantidad de días." (RN-007), un caso que la pantalla no puede producir (09 P-012; 10-validation-log.md fila 19).
 
 ### T-012: Unirse a una junta con el código y salir de ella
 
@@ -410,11 +418,46 @@ Las herramientas de T-001 (ESLint, `@vitest/coverage-v8`, gitleaks, GitHub Actio
 - **Descripción:** Escribir en `ops/` el script de acceso a producción del servidor dedicado (07-architecture.md §6.4). El script pide el identificador del incidente, inserta en `staff_access_log` quién accede, la fecha y hora en America/Lima y el incidente, con un rol de base de datos que solo puede insertar en esa tabla (RN-201), y recién después abre la consola de PostgreSQL. No ofrece ninguna forma de descifrar el DNI ni el celular (RN-202). Versionar en `ops/` la configuración de SSH del servidor, que solo acepta la llave del líder técnico y no acepta contraseñas (RN-200). Escribir los escenarios técnicos `Escenario: RN-200 …` y `Escenario: RN-201 …` (PREG-055). Aplicar la configuración en el servidor le corresponde al líder técnico.
 - **Criterio de completitud:** Pasan los escenarios de HU-019 contra el PostgreSQL de T-002: ejecutar el script con el incidente `INC-001` deja 1 fila en `staff_access_log` con quién accedió, `accessed_at` con desfase `-05:00` e `INC-001`; sin incidente, el script termina sin abrir la consola y sin dejar fila; el rol con el que inserta no puede hacer `UPDATE` ni `DELETE` sobre `staff_access_log`; y la configuración versionada de SSH tiene `PasswordAuthentication no` y una sola llave autorizada.
 
+### T-028: Validar el formato del correo al crear la cuenta
+
+- **HU relacionada:** HU-001
+- **Componente:** `identity`, `api` y `pwa`
+- **Prioridad:** Must
+- **Tamaño:** M (30 min - 1 h)
+- **Dependencias:** T-007, T-021
+- **Descripción:** Agregar a API-001 la validación del formato del correo con la regla RN-213 y su mensaje del catálogo §2.9. RN-213 todavía no existe: la crea el Product Owner al resolver PREG-076 (10-validation-log.md, fila 27). Hasta entonces, el formato aceptado y el mensaje quedan **[REQUIERE DECISIÓN]**, y la tarea no empieza (PRINCIPIO-012 a). El esquema `zod` de API-001 rechaza el correo mal formado con `422` y el mensaje en `fields.email`, antes de buscar si el correo ya existe (RN-150). "Crear cuenta" muestra el mismo mensaje debajo del campo "Correo" (C-05) al salir del campo y al enviar. La comparación sin distinguir mayúsculas de RN-191 no cambia.
+- **Criterio de completitud:** Pasan los tests con los casos de RN-213 y, como mínimo, estos: `lucia@example.com` y `Lucia@Example.com` se aceptan; `lucia.example.com` (sin `@`) recibe `422` con el mensaje de RN-213 en `fields.email` y no crea ninguna cuenta; y en Playwright, escribir `lucia.example.com` en "Crear cuenta" y salir del campo muestra ese mensaje con `aria-invalid="true"`.
+
+### T-029: Mostrar los textos nuevos de 09 §6 en la verificación del correo, Mis juntas y los errores de carga
+
+- **HU relacionada:** HU-001, HU-002, HU-010
+- **Componente:** `pwa`
+- **Prioridad:** Must
+- **Tamaño:** M (30 min - 1 h)
+- **Dependencias:** T-021, T-022, T-023
+- **Descripción:** Agregar a las pantallas tres textos de interfaz que 09 §6 todavía no define, marcados **[REQUIERE DECISIÓN]** hasta que el Product Owner los apruebe (10-validation-log.md, filas 26, 28 y 32):
+  - **P-002:** en el estado de enlace vencido o usado, la vigencia del enlace, que es de 86,400 s, es decir, 24 horas desde el envío (RN-152), con el mismo estilo que P-004 ("El enlace sirve por 1 hora.").
+  - **P-007:** en la tarjeta de una junta "Terminada" de la que el usuario es participante, su rol.
+  - **P-006 y P-010:** el error de red al cargar datos sin snapshot. Sigue el modelo de P-007 ("No pudimos cargar sus juntas. Revise su conexión e intente de nuevo."), con el botón "Intentar de nuevo", en lugar del texto de RN-170, que habla de una acción.
+
+  No agrega reglas, montos ni plazos (PRINCIPIO-012 a).
+- **Criterio de completitud:** En Playwright: con un enlace de verificación vencido, P-002 muestra el texto aprobado de la vigencia; un participante de una junta `finished` ve su rol en la tarjeta de P-007; con la red cortada y sin snapshot, P-006 y P-010 muestran el texto aprobado de error de carga y no el de RN-170, y "Intentar de nuevo" vuelve a pedir los datos; y el test de tuteo de T-024 pasa con los textos nuevos.
+
+### T-030: Avisar en "Iniciar sesión" de quién son los cambios sin enviar
+
+- **HU relacionada:** HU-015
+- **Componente:** `pwa` (outbox)
+- **Prioridad:** Must
+- **Tamaño:** M (30 min - 1 h)
+- **Dependencias:** T-020, T-021
+- **Descripción:** El outbox de T-020 guarda el `user_id` de cada cambio y los conserva cuando la sesión se cierra (RN-176). En "Iniciar sesión", el aviso "Tiene {n} cambios sin enviar. Inicie sesión para enviarlos." (09 §6) se muestra antes de iniciar sesión. Si inicia sesión otra cuenta, la app no envía los cambios de la cuenta anterior con esa sesión, los conserva para cuando vuelva esa cuenta y muestra un aviso que lo explica. Ese aviso lo define el Product Owner en 09 §6 y queda **[REQUIERE DECISIÓN]** (10-validation-log.md, fila 22). No cambia el borrado del dispositivo al cerrar sesión (RN-197).
+- **Criterio de completitud:** En Playwright: Jorge registra 2 pagos sin red y su sesión vence; Lucía inicia sesión en el mismo navegador, API-021 no recibe ningún cambio de Jorge y se ve el aviso aprobado; después Jorge inicia sesión y API-021 recibe sus 2 cambios en el orden en que se hicieron (RN-087).
+
 ---
 
 ## Pendiente para la próxima versión
 
-Estas HU Should están dentro del alcance (02-alcance.md §1) y se descomponen desde T-028, en el orden de 06-user-stories.md. Esta versión no crea sus tablas (`organizer_surveys`, `reported_payments`, `notification_outbox`, `overdue_notices`, `push_subscriptions`, `turn_assignments` y `verification_codes`).
+Estas HU Should están dentro del alcance (02-alcance.md §1) y se descomponen desde T-031, en el orden de 06-user-stories.md. Las tareas de HU-003 y HU-017 incluyen las observaciones ⏳ BACKLOG de 10-validation-log.md que no tienen ID propio: el código equivocado al iniciar sesión (fila 30) y el aviso después de activar o desactivar el segundo factor (fila 31) en HU-003, y el orden entre la contraseña y el diálogo de P-023 (fila 29) en HU-017. Esta versión no crea sus tablas (`organizer_surveys`, `reported_payments`, `notification_outbox`, `overdue_notices`, `push_subscriptions`, `turn_assignments` y `verification_codes`).
 
 | Orden | HU | Funcionalidad | Componentes | Nota |
 |---|---|---|---|---|

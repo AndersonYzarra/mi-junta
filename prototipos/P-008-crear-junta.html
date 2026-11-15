@@ -178,7 +178,7 @@
       <aside class="proto-note" aria-label="Nota del prototipo">
         <p class="proto-note__title">Solo en el prototipo</p>
         <p id="nota-usuario"></p>
-        <p>El código de invitación lo genera el servidor (RN-015, RN-016) y se ve en la junta. datos.js no guarda juntas nuevas: al crear, se abre la Junta Familia como si fuera la junta creada.</p>
+        <p>El código de invitación lo genera el servidor (RN-015, RN-016) y se ve en la junta. Al crear, la junta queda guardada en la sesión del prototipo y se abre en P-011, como lo haría API-009. "Restablecer los datos de ejemplo" del índice la borra.</p>
         <p id="nota-otros"></p>
       </aside>
     </div>
@@ -408,6 +408,51 @@
         if (busy) submitBtn.setAttribute('aria-busy', 'true'); else submitBtn.removeAttribute('aria-busy');
       }
 
+      // Código de 8 caracteres con byte mod 32 (RN-015) que no choca con otro, vigente o no (RN-016)
+      function newInviteCode() {
+        const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        const used = data.inviteCodes.map(function (c) { return c.code; });
+        const bytes = new Uint8Array(8);
+        let code;
+        do {
+          window.crypto.getRandomValues(bytes);
+          code = Array.prototype.map.call(bytes, function (b) { return alphabet[b % 32]; }).join('');
+        } while (used.indexOf(code) !== -1);
+        return code;
+      }
+
+      /* Guarda la junta creada en la sesión del prototipo, como lo haría API-009 (fila 34 del validation log) */
+      function createJunta() {
+        const now = data.meta.now;
+        const participates = checked('participa') === 'si';
+        const freq = checked('frecuencia');
+        const juntaId = 'junta_' + Date.now().toString(36);
+        M.store.addJunta({
+          id: juntaId,
+          name: f.nombre.value.trim(),
+          organizerId: user.id,
+          organizerParticipates: participates,
+          contributionAmountCents: M.parseMoneyInput(f.cuota.value),
+          participantCount: Number(f.participantes.value),
+          frequency: freq,
+          frequencyDays: freq === 'every_n_days' ? Number(f.cadaDias.value) : null,
+          round1DueDate: M.parseDateInput(f.vencimiento.value),
+          reminderLeadDays: Number(f.aviso.value),
+          juntaRules: f.reglas.value.trim() || null,
+          status: 'open',                                       // RN-099
+          createdAt: now,
+          createdOn: today,
+          turnOrderFixedAt: null,
+        });
+        // El organizador ocupa un cupo solo si participa (RN-006)
+        M.store.addMembership({
+          juntaId: juntaId, userId: user.id, isOrganizer: true,
+          occupiesSlot: participates, slotTakenAt: participates ? now : null, leftAt: null,
+        });
+        M.store.addInviteCode({ code: newInviteCode(), juntaId: juntaId, createdAt: now, revokedAt: null, revokeReason: null });
+        return juntaId;
+      }
+
       $('form-junta').addEventListener('submit', function (event) {
         event.preventDefault();
         if (offline) { $('motivo-crear').focus(); return; }      // C-04: no se crea ninguna junta
@@ -421,10 +466,11 @@
             showSummary([{ id: 'nombre', text: M.message('RN-153') }]);
             return;
           }
-          // 201: la junta "Abierta" con su código. Se representa con la Junta Familia.
+          // 201: la junta "Abierta" con su código (RN-099). Queda en la sesión del prototipo.
+          const juntaId = createJunta();
           location.href = firstJunta
-            ? 'P-024-encuesta-kpi-05.html?desde=P-011&junta=junta_familia&usuario=user_123'
-            : 'P-011-junta-organizador.html?junta=junta_familia&usuario=user_123&aviso=creada';
+            ? 'P-024-encuesta-kpi-05.html?desde=P-011&junta=' + juntaId + '&' + userParam
+            : 'P-011-junta-organizador.html?junta=' + juntaId + '&' + userParam + '&aviso=creada';
         }, 900);
       });
 

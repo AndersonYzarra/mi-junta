@@ -467,8 +467,9 @@
   /* ------------------------------------------------------------------------
      Cambios de esta sesión del prototipo (iteración 1, auditorias/prototype-review.md)
 
-     Lo que una pantalla guarda (unirse, quitar, editar la junta, regenerar el
-     código, fijar el orden, registrar o informar un pago, cerrar sesión)
+     Lo que una pantalla guarda (crear una junta, unirse, quitar, editar la
+     junta, regenerar el código, fijar el orden, registrar o informar un pago,
+     verificar el correo, las preferencias de notificación y cerrar sesión)
      queda en sessionStorage y se aplica aquí, antes de calcular las rondas y
      las cuotas, para que las demás pantallas lo muestren. Representa lo que
      guardaría el servidor y dura lo que dura la pestaña. MiJunta.store.reset()
@@ -479,7 +480,7 @@
 
   function emptyStore() {
     return {
-      users: [], userPatches: {}, memberships: [], membershipPatches: [], juntas: {}, inviteCodes: [],
+      users: [], userPatches: {}, memberships: [], membershipPatches: [], newJuntas: [], juntas: {}, inviteCodes: [],
       draws: [], turnAssignments: [], contributions: {}, history: {},
       clearedDevices: [], closedSurveys: [],
     };
@@ -519,6 +520,10 @@
   stored.membershipPatches.forEach(function (p) {
     const m = memberships.find(function (x) { return sameMember(x, p); });
     if (m) Object.assign(m, p.patch);
+  });
+  // Juntas creadas en P-008 (iteración 2, validation log fila 34)
+  stored.newJuntas.forEach(function (n) {
+    if (!juntas.some(function (x) { return x.id === n.id; })) juntas.push(Object.assign({}, n));
   });
   Object.keys(stored.juntas).forEach(function (id) {
     const j = juntas.find(function (x) { return x.id === id; });
@@ -1345,6 +1350,11 @@
       });
       const m = memberships.find(function (x) { return sameMember(x, ref); });
       if (m) Object.assign(m, patch);
+    },
+    // Junta creada en P-008, "Abierta" (RN-099)
+    addJunta: function (j) {
+      updateStore(function (s) { if (!s.newJuntas.some(function (x) { return x.id === j.id; })) s.newJuntas.push(j); });
+      if (!juntaById[j.id]) { const copy = Object.assign({}, j); juntas.push(copy); juntaById[j.id] = copy; }
     },
     patchJunta: function (juntaId, patch) {
       updateStore(function (s) { s.juntas[juntaId] = Object.assign(s.juntas[juntaId] || {}, patch); });

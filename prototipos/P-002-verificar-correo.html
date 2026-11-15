@@ -116,7 +116,9 @@
         verifyBtn.disabled = true;
         verifyBtn.setAttribute('aria-busy', 'true');
         setTimeout(function () {
-          states.set(token === 'usado' ? 'error' : 'exito');           // API-002: 200 o 410
+          // API-002: 200 o 410. Con 200, el correo queda verificado en la sesión del prototipo (RN-153)
+          if (token !== 'usado') M.store.patchUser(user.id, { emailVerifiedAt: data.meta.now });
+          states.set(token === 'usado' ? 'error' : 'exito');
         }, 800);
       });
 
