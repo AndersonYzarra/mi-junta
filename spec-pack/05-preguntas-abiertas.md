@@ -1,12 +1,25 @@
 # Preguntas abiertas
 
-Versión: 0.4
+Versión: 0.5
 Fecha: 14/11/2026
 Estado: Alineado con las decisiones del Product Owner
 
 Decisiones pendientes detectadas al redactar la constitución, el Project Brief y el alcance. Mientras una pregunta siga abierta, todo lo que dependa de ella se marca [REQUIERE DECISIÓN]. Una pregunta resuelta conserva su ID y lleva la línea "Estado: Resuelta" con la fecha y la decisión. Una pregunta con "Estado: Propuesta" tiene una respuesta redactada por un agente que no rige hasta que el Product Owner la apruebe (PRINCIPIO-012). Al aprobarla, "Propuesta" se cambia por "Resuelta".
 
 **Alineación del 14/11/2026:** el Product Owner respondió todas las preguntas abiertas (03-reglas-de-negocio.md §1.3). Quedan abiertas a propósito PREG-011, PREG-014 y PREG-022, que no bloquean esta versión, y las nuevas PREG-049 a PREG-054, que salieron de esas respuestas y se resolvieron el mismo día en una segunda ronda. Las decisiones marcadas "provisional" las tomó el Product Owner y se confirman con el asesor legal.
+
+**Auditoría QA del backlog del 14/11/2026:** auditorias/qa-clase2.md abrió PREG-055 a PREG-068, que se resolvieron el mismo día con la autorización del Product Owner (03-reglas-de-negocio.md §1.4). Cada hallazgo mayor tiene su pregunta:
+
+| Hallazgo | Pregunta | Hallazgo | Pregunta |
+|---|---|---|---|
+| C-01 | PREG-055 (Gherkin; herramientas en 07-architecture.md §6.3) | M-06 | PREG-061 |
+| C-02 | — (textos en 03-reglas-de-negocio.md §2.9) | M-07 | PREG-062 |
+| M-01 | PREG-058 | M-08 | PREG-063 |
+| M-02 | PREG-059 | M-09 | PREG-064 |
+| M-03 | PREG-060 | M-10 | PREG-065 |
+| M-04 | PREG-056 | M-11 | PREG-066 |
+| M-05 | PREG-057 | M-12 | PREG-067 |
+| Cierre: RN Must sin HU | PREG-068 | | |
 
 ---
 
@@ -397,3 +410,101 @@ Decisiones pendientes detectadas al redactar la constitución, el Project Brief 
 - Bloquea: HU-018 y la medición de KPI-05.
 - Plan de resolución: decidir antes de implementar F-18. Las opciones son que la encuesta sea obligatoria, que se pueda posponer y se vuelva a mostrar al día siguiente, o que se pueda cerrar sin volver a mostrarla.
 - Estado: Resuelta el 14/11/2026 por el Product Owner (segunda ronda de la alineación). Sí. El organizador puede cerrar la encuesta sin responderla (RN-210); esa encuesta no se le vuelve a mostrar (RN-211), y la de los 3 meses se cuenta desde que respondió o cerró la primera (RN-205).
+
+### PREG-055: ¿Cómo se escriben y ejecutan los escenarios Gherkin que exige PRINCIPIO-011?
+- Contexto: PRINCIPIO-011 pide al menos un escenario Gherkin (Dado / Cuando / Entonces) por RN, y 08-backlog.md pide que los tests de cada tarea sean escenarios Gherkin. Ninguna dependencia aprobada ejecuta archivos `.feature`. Detectada en auditorias/qa-clase2.md (C-01).
+- A quién preguntar: Product Owner y líder técnico.
+- Bloquea: la definición de terminado de cada tarea de dominio de 08-backlog.md.
+- Plan de resolución: elegir entre aprobar un ejecutor de Gherkin o escribir los escenarios con Vitest y Playwright.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner (03-reglas-de-negocio.md §1.4). Sin ejecutor nuevo. Cada test de Vitest o Playwright se llama `Escenario: RN-NNN <descripción>` (o `Escenario: PRINCIPIO-NNN …` para un escenario técnico), y su cuerpo marca los pasos con los comentarios `// Dado`, `// Cuando` y `// Entonces`. Un script del pipeline, sin dependencias, falla si un test no sigue ese formato (07-architecture.md §6.1, T-001).
+
+### PREG-056: ¿Qué pasa con el cupo del organizador si deja de participar antes de fijar el orden de turnos?
+- Contexto: RN-106 permite que el organizador edite "su participación" antes del sorteo, y RN-109 cubre el caso de pasar a participar. Ninguna regla dice qué pasa al pasar de "Sí participo" a "No participo": si se libera su cupo, si la junta vuelve a "Abierta" y si sigue en la lista de entrada del sorteo (RN-030, RN-123). Detectada en auditorias/qa-clase2.md (M-04).
+- A quién preguntar: Product Owner.
+- Bloquea: HU-014 y T-011.
+- Plan de resolución: decidir antes de implementar API-010.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. Se libera su cupo (RN-212). Si la junta estaba "Completa", vuelve a "Abierta" (RN-101), y al fijar el orden el organizador no entra en la lista de entrada (RN-030) ni recibe cuotas (RN-044). Si después vuelve a "Sí participo", ocupa un cupo solo si hay uno libre (RN-109), y para la lista de entrada cuenta el momento en que lo volvió a ocupar (RN-123).
+
+### PREG-057: ¿Desde cuándo se cuentan los 3600 segundos del bloqueo de RN-117?
+- Contexto: RN-117 rechaza los intentos de unirse "durante los 3600 segundos siguientes" a 10 códigos inválidos, pero 07-architecture.md y T-012 describían una ventana deslizante de los últimos 3600 s. Con 9 códigos inválidos a las 10:00 y el décimo a las 10:59, una lectura bloquea hasta las 11:59 y la otra deja intentar desde las 11:00:01. Detectada en auditorias/qa-clase2.md (M-05).
+- A quién preguntar: Product Owner.
+- Bloquea: HU-005, API-013 y T-012.
+- Plan de resolución: confirmar la lectura antes de implementar API-013.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. Vale el texto de RN-117: el bloqueo dura 3600 s desde el décimo código inválido de los últimos 3600 s. Los intentos rechazados durante el bloqueo no se validan y no cuentan como inválidos. RN-117 lleva un ejemplo nuevo con estos instantes.
+
+### PREG-058: ¿Qué tarea asigna el turno y el receptor del pozo de cada ronda según el resultado del sorteo?
+- Contexto: RN-036 y RN-037 definen el turno y quién recibe el pozo de cada ronda, y 07-architecture.md guarda `rounds.pot_recipient_id`, pero ninguna tarea de 08-backlog.md lo describía ni lo probaba. Es una decisión sobre dinero (PRINCIPIO-012 g). Detectada en auditorias/qa-clase2.md (M-01).
+- A quién preguntar: Product Owner y líder técnico.
+- Bloquea: HU-006, T-014, T-016 y T-023.
+- Plan de resolución: asignarlo a la tarea del sorteo y agregar su prueba.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. `fixTurnOrder` asigna `pot_recipient_id` de la ronda k al participante en la posición k de `result` y arma la entrada sin el organizador que no participa (RN-030). T-014 lo prueba con una semilla inyectada (07-architecture.md §2.2).
+
+### PREG-059: ¿Los criterios de completitud de las tareas deben cubrir todos los criterios de sus HU Must?
+- Contexto: varias tareas se podían cerrar sin probar criterios aprobados de su HU: el `403` de quien no es organizador al registrar o desmarcar un pago (RN-051), salir de una junta antes del orden (RN-111, RN-113, RN-101), el código inexistente (RN-116), la ronda 1 vencida al sortear (RN-122), la próxima cuota vacía en la ronda 10 (RN-119) y el cálculo del pozo (RN-041). Detectada en auditorias/qa-clase2.md (M-02).
+- A quién preguntar: líder técnico.
+- Bloquea: T-003, T-011, T-012, T-014, T-015, T-016 y T-023.
+- Plan de resolución: agregar cada caso al criterio de su tarea.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. Sí. 08-backlog.md v0.4 agrega los casos con los datos de ejemplo de cada HU, y cada RN Must queda citada por al menos una tarea.
+
+### PREG-060: ¿Cómo se prueba desmarcar un pago sin conexión, y qué ve el usuario si el servidor lo rechaza?
+- Contexto: HU-015 promete "registrar y desmarcar pagos sin conexión" y RN-170 permite desmarcar sin red, pero ningún criterio ni tarea probaba el tipo `correct_payment`, y §2.9 no tenía el `{motivo}` de su rechazo. Detectada en auditorias/qa-clase2.md (M-03).
+- A quién preguntar: Product Owner.
+- Bloquea: HU-015, T-017, T-020 y T-023.
+- Plan de resolución: agregar criterios a HU-015 y el texto del rechazo a §2.9.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. HU-015 suma un criterio Positivo y uno Negativo [QA2]. El `{motivo}` es "el pago de {nombre} de la ronda {n} ya no estaba registrado" (03-reglas-de-negocio.md §2.9, derivado), y T-017, T-020 y T-023 lo prueban.
+
+### PREG-061: ¿API-026 rechaza una corrida repetida del job del mismo día o la procesa de forma idempotente?
+- Contexto: API-026 decía `409 JOB_ALREADY_RUNNING` "si ya hay una corrida para esa fecha", pero también que la restricción única "impide duplicar si la corrida se repite", y T-019 esperaba `already_sent = 1` en la segunda corrida. Detectada en auditorias/qa-clase2.md (M-06).
+- A quién preguntar: líder técnico.
+- Bloquea: T-019.
+- Plan de resolución: definir un solo comportamiento en el contrato.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. `409` solo mientras otra corrida de esa fecha está en curso; una corrida repetida después de terminar responde `202` y cuenta en `already_sent` lo que ya se envió (07-architecture.md, API-026).
+
+### PREG-062: ¿Qué tarea construye el middleware de sesión y en qué orden van las pantallas?
+- Contexto: T-007 usaba la sesión antes de que T-008 construyera el middleware; el criterio de T-020 necesitaba pantallas de T-021 y T-023, y el de T-022 necesitaba el inicio de sesión de T-021 sin depender de ella. Detectada en auditorias/qa-clase2.md (M-07).
+- A quién preguntar: líder técnico.
+- Bloquea: T-007, T-008, T-020, T-022 y la ruta crítica.
+- Plan de resolución: reordenar las tareas sin crear ciclos.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. El middleware y el cierre de sesión por inactividad (RN-159) pasan a T-007; T-020 se prueba con un arnés; T-022 depende de T-021. La ruta crítica pasa a 15 tareas, de 14.5 h a 29 h (08-backlog.md v0.4).
+
+### PREG-063: ¿Qué tareas verifican el p95, el contraste, el tamaño de los controles y del texto, el tuteo y el acceso del equipo?
+- Contexto: PRINCIPIO-010 fija p95 ≤ 500 ms, contraste ≥ 4.5:1, áreas táctiles ≥ 44 × 44 px y texto ≥ 16 px; 07-architecture.md §6.1 pide un test de tuteo (RN-090), un linter de nombres y escenarios de RN-200 y RN-201. Ninguna tarea los verificaba, y un análisis de axe-core de nivel A no revisa el contraste ni el tamaño. Detectada en auditorias/qa-clase2.md (M-08).
+- A quién preguntar: líder técnico.
+- Bloquea: el cumplimiento de PRINCIPIO-002, PRINCIPIO-010 y PRINCIPIO-011.
+- Plan de resolución: agregarlos a tareas existentes o crear tareas nuevas.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. T-025 suma la regla `color-contrast` y la medición de 44 × 44 px y 16 px; T-024 suma los tests de tuteo y de nombres; las tareas nuevas T-026 (p95 por ruta) y T-027 (script de acceso con `staff_access_log`) cubren el resto.
+
+### PREG-064: ¿Qué componente termina TLS y renueva el certificado del dominio?
+- Contexto: PRINCIPIO-005 exige TLS 1.2 o superior, pero el despliegue solo tenía la app, el worker y PostgreSQL, y `next start` sirve HTTP. Detectada en auditorias/qa-clase2.md (M-09).
+- A quién preguntar: Product Owner y líder técnico (dependencia y servicio externo, PRINCIPIO-012 e y h).
+- Bloquea: el despliegue y T-002.
+- Plan de resolución: elegir un proxy inverso y aprobarlo.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. Un componente `proxy` con Caddy y certificados de Let's Encrypt, en su propio contenedor y único con puertos expuestos (07-architecture.md §2.1 y §6.3; T-002 y T-005).
+
+### PREG-065: ¿Qué HU verifica cada contrato después de dividir HU-004 y HU-008?
+- Contexto: 07-architecture.md trazaba API-010 a API-012 a HU-004 y API-021 a HU-008 en su índice, aunque el detalle y §8.1 decían HU-014 y HU-015; además, las listas de HU de `notifications` y `api` no coincidían entre secciones. Detectada en auditorias/qa-clase2.md (M-10).
+- A quién preguntar: líder técnico.
+- Bloquea: la trazabilidad de HU-014 y HU-015.
+- Plan de resolución: alinear todas las secciones con §8.1.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. API-010 a API-012 trazan a HU-014 y API-021 a HU-015 y HU-009. Se corrigieron §2.1, §4.2, §4.4, §4.6, §8.1 y §8.2 de 07-architecture.md, y T-021 traza también a HU-015.
+
+### PREG-066: ¿RN-142 es Must aunque solo aplique con el push, y RN-204 debe estar en una HU Must?
+- Contexto: RN-142 (correo y push cuentan como un recordatorio) era MUST, pero solo aplica con F-07 (Should). RN-204 (encuesta) es SHOULD y estaba en HU-004, que es Must. Detectada en auditorias/qa-clase2.md (M-11).
+- A quién preguntar: Product Owner.
+- Bloquea: la priorización del MVP.
+- Plan de resolución: alinear la prioridad de cada regla con la de su HU.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. RN-142 pasa a SHOULD sin cambiar su significado; RN-204 sale de HU-004 y queda en HU-018, y el campo `survey_pending` de API-009 queda marcado Should.
+
+### PREG-067: ¿El MVP puede salir al mercado sin la encuesta de F-18?
+- Contexto: 02-alcance.md dice que F-18 tiene que estar lista para medir la línea base de KPI-05 con las primeras 10 juntas, pero 08-backlog.md la dejaba para la próxima versión sin relación con el lanzamiento. Detectada en auditorias/qa-clase2.md (M-12).
+- A quién preguntar: Product Owner.
+- Bloquea: la medición de KPI-05.
+- Plan de resolución: decidir si F-18 bloquea el lanzamiento.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. No. F-18 sigue siendo Should, pero el MVP no sale al mercado sin ella (02-alcance.md §3); figura como bloqueo del lanzamiento en 08-backlog.md.
+
+### PREG-068: ¿Qué HU cubre RN-200 a RN-203, que son Must y no tienen interacción del usuario?
+- Contexto: RN-200 a RN-203 (acceso del equipo a producción, registro del acceso, nada de descifrado a mano y nada de usar pagos para créditos) eran las únicas reglas Must sin HU; solo tenían escenarios técnicos. Detectada en el cierre de auditorias/qa-clase2.md.
+- A quién preguntar: Product Owner.
+- Bloquea: la trazabilidad regla → HU de todas las RN Must.
+- Plan de resolución: crear una HU con esos escenarios o aceptar la excepción.
+- Estado: Resuelta el 14/11/2026 con autorización del Product Owner. Se crea HU-019 (Must, F-01 y F-04), cuyos criterios son escenarios técnicos que prueban T-004, T-024 y T-027.

@@ -1,8 +1,10 @@
 # Alcance de Mi Junta
 
-Versión: 0.4
+Versión: 0.5
 Fecha: 14/11/2026
 Estado: Revisado
+
+La v0.5 incorpora las decisiones del 14/11/2026 sobre la auditoría QA del backlog (auditorias/qa-clase2.md), tomadas con autorización del Product Owner: F-18 sale junto con el MVP, y se aprobaron las herramientas del pipeline y el `proxy` de TLS (sección 6).
 
 Fuente: 01-project-brief.md v0.2, 00-constitucion.md v0.2, 03-reglas-de-negocio.md v0.2, las decisiones del Product Owner del 14/11/2026 (sección 7) y las decisiones del Product Owner del 14/11/2026 sobre la auditoría QA (auditorias/qa-clase1.md) y sobre la alineación de pendientes (sección 7 y 03-reglas-de-negocio.md v0.3 §1.3). El rol que crea y gestiona la junta se llama "organizador" (PREG-010, resuelta).
 
@@ -74,7 +76,7 @@ Todas las funcionalidades de esta sección tienen prioridad W (Won't) en esta ve
 
 ## 3. MVP (Minimum Viable Product)
 
-El MVP está formado por F-01 a F-06. Con solo eso, una organizadora como Carmen crea su cuenta aceptando la política de privacidad. Crea una o varias juntas con la cuota en S/, la cantidad de participantes, la frecuencia (semanal, quincenal, mensual o cada cierta cantidad de días), la fecha de vencimiento y los días de aviso previo, y decide si ella también participa. Después comparte el código de la junta con sus familiares, que crean su cuenta y se unen con ese código. Cuando se llenan los cupos, ejecuta el sorteo, que queda registrado y que cualquier miembro puede reproducir con su semilla. En cada ronda recibe las cuotas fuera de la app (Yape, Plin o efectivo) y las marca como pagadas. Mientras tanto, la app envía a cada participante un correo antes del vencimiento, otro ese mismo día y hasta 5 después mientras no pague, en lugar de los 30 a 40 mensajes de WhatsApp que hoy envía ella. Una participante como Lucía abre la app, incluso sin conexión, y ve su turno, si su pago quedó registrado y quién falta pagar, sin preguntarle a nadie. Hay cosas que el MVP no hace: el participante no informa su propio pago, no hay notificaciones push, no hay segundo factor, el orden de turnos siempre sale del sorteo y las reglas de la junta se siguen acordando fuera de la app. Aun así, con los pagos que registra F-04 ya se pueden medir KPI-01, KPI-03 y KPI-04, y KPI-05 depende sobre todo de F-06 y de la encuesta de F-18, que conviene publicar junto con el MVP para medir la línea base.
+El MVP está formado por F-01 a F-06. Con solo eso, una organizadora como Carmen crea su cuenta aceptando la política de privacidad. Crea una o varias juntas con la cuota en S/, la cantidad de participantes, la frecuencia (semanal, quincenal, mensual o cada cierta cantidad de días), la fecha de vencimiento y los días de aviso previo, y decide si ella también participa. Después comparte el código de la junta con sus familiares, que crean su cuenta y se unen con ese código. Cuando se llenan los cupos, ejecuta el sorteo, que queda registrado y que cualquier miembro puede reproducir con su semilla. En cada ronda recibe las cuotas fuera de la app (Yape, Plin o efectivo) y las marca como pagadas. Mientras tanto, la app envía a cada participante un correo antes del vencimiento, otro ese mismo día y hasta 5 después mientras no pague, en lugar de los 30 a 40 mensajes de WhatsApp que hoy envía ella. Una participante como Lucía abre la app, incluso sin conexión, y ve su turno, si su pago quedó registrado y quién falta pagar, sin preguntarle a nadie. Hay cosas que el MVP no hace: el participante no informa su propio pago, no hay notificaciones push, no hay segundo factor, el orden de turnos siempre sale del sorteo y las reglas de la junta se siguen acordando fuera de la app. Aun así, con los pagos que registra F-04 ya se pueden medir KPI-01, KPI-03 y KPI-04, y KPI-05 depende sobre todo de F-06 y de la encuesta de F-18. F-18 sigue siendo Should, pero el MVP no sale al mercado sin ella, para medir la línea base de KPI-05 con las primeras 10 juntas (decisión del 14/11/2026, auditorias/qa-clase2.md M-12).
 
 ---
 
@@ -129,7 +131,7 @@ Siguen vigentes los supuestos S-01 a S-08 de 01-project-brief.md. Estos supuesto
 | Envío de correo con `nodemailer` por `smtp.office365.com` (Microsoft 365) | F-01, F-06, F-08, F-11 y F-16 | Decidido (PREG-052). Microsoft 365 es un servicio externo aprobado por el Product Owner el 14/11/2026 (PRINCIPIO-012 h). Riesgos de spam y de límites de envío (R-11, R-15) |
 | Servicios de Web Push de los navegadores (Google, Apple, Mozilla) | F-07 | Se necesita después del MVP |
 | Servidor dedicado de la empresa en Perú, con Next.js, el worker y PostgreSQL en contenedores Docker | Todas las funcionalidades | Decidido (PREG-051) |
-| Dominio y certificado TLS | PRINCIPIO-005 | Pendiente |
+| Dominio y certificado TLS | PRINCIPIO-005 | Dominio pendiente. El certificado lo obtiene y renueva el `proxy` (Caddy con Let's Encrypt), aprobado el 14/11/2026 (07-architecture.md §6.3) |
 | Claves de cifrado fuera de la base de datos y del repositorio | PRINCIPIO-005 | Decidido: variables de entorno de los contenedores, desde un `.env` que solo existe en el servidor (PREG-050) |
 | Tareas programadas que se ejecutan en hora de America/Lima | F-06 y F-16 | Definidas: un worker en el servidor dedicado (07-architecture.md, ADR-007) |
 | Navegador con Service Worker y almacenamiento local | Funcionamiento sin conexión (PRINCIPIO-009) | Navegadores mínimos definidos (sección 5) |
@@ -137,6 +139,7 @@ Siguen vigentes los supuestos S-01 a S-08 de 01-project-brief.md. Estos supuesto
 | Asesor legal | Texto de la política de privacidad y confirmación de las decisiones provisionales | Pendiente |
 | Encuesta a organizadores, al crear la primera junta y a los 3 meses | Medir KPI-05 y validar S-03, S-04, S-10, S-11 y S-12 | Decidida: dentro de la app, sin servicio externo (F-18, PREG-021) |
 | axe-core, Lighthouse CI, Vitest y Playwright | PRINCIPIO-010 y PRINCIPIO-011 | Aprobadas el 14/11/2026 (07-architecture.md §6.3) |
+| ESLint, `@vitest/coverage-v8`, gitleaks, `drizzle-kit`, GitHub y GitHub Actions | Pipeline, cobertura, escaneo de secretos y migraciones (PRINCIPIO-005, PRINCIPIO-009, PRINCIPIO-011) | Aprobadas el 14/11/2026 (07-architecture.md §6.3, auditorias/qa-clase2.md C-01) |
 
 ---
 

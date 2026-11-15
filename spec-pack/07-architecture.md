@@ -1,10 +1,10 @@
 # Arquitectura de Mi Junta
 
-Versión: 0.5
+Versión: 0.6
 Fecha: 14/11/2026
 Estado: Aprobado por el Product Owner
 
-Fuente: 00-constitucion.md v0.4, 01-project-brief.md v0.3, 02-alcance.md v0.3, 03-reglas-de-negocio.md v0.3, 04-glosario.md v0.3, 05-preguntas-abiertas.md v0.3 y 06-user-stories.md v0.4.0. Lo redactó el Agente Architect (prompts/clase2/03-architect.xml). La v0.4 incorpora las decisiones del Product Owner del 14/11/2026: servidor dedicado en la nube bajo control de la empresa, correo por SMTP, ADR aceptadas y dependencias aprobadas. La v0.5 incorpora la segunda ronda (PREG-049 a PREG-054): servidor en Perú, contenedores Docker, claves en variables de entorno y correo con `nodemailer` por `smtp.office365.com`.
+Fuente: 00-constitucion.md v0.5, 01-project-brief.md v0.3, 02-alcance.md v0.5, 03-reglas-de-negocio.md v0.5, 04-glosario.md v0.3, 05-preguntas-abiertas.md v0.5 y 06-user-stories.md v0.5.0. Lo redactó el Agente Architect (prompts/clase2/03-architect.xml). La v0.4 incorpora las decisiones del Product Owner del 14/11/2026: servidor dedicado en la nube bajo control de la empresa, correo por SMTP, ADR aceptadas y dependencias aprobadas. La v0.5 incorpora la segunda ronda (PREG-049 a PREG-054): servidor en Perú, contenedores Docker, claves en variables de entorno y correo con `nodemailer` por `smtp.office365.com`. La v0.6 resuelve los hallazgos críticos y mayores de auditorias/qa-clase2.md, con autorización del Product Owner del 14/11/2026: componente `proxy` para TLS, herramientas del pipeline, convención Gherkin (PREG-055), RN-212, RN-117 aclarada, reparto del pozo en el sorteo, HU-019 en la trazabilidad y correcciones de trazabilidad.
 
 **Cómo leer este documento:**
 - Las versiones exactas se fijan el día en que empieza el desarrollo (PRINCIPIO-009). Las dependencias de la sección 6.3 quedaron aprobadas el 14/11/2026, salvo las que esa tabla marca como pendientes; cualquier otra necesita aprobación humana (PRINCIPIO-012 e y h).
@@ -35,6 +35,7 @@ flowchart LR
     end
 
     subgraph Server["Servidor dedicado de la empresa, en Perú<br/>(contenedores Docker)"]
+        PRX["proxy: Caddy<br/>TLS ≥ 1.2, HTTP → HTTPS, certificados"]
         subgraph App["Aplicación Next.js (monolito modular, TypeScript)"]
             API["api: Route Handlers /api<br/>sesión, autorización por rol, validación"]
             IAM["identity"]
@@ -61,8 +62,9 @@ flowchart LR
     MAIL[["Microsoft 365<br/>smtp.office365.com (nodemailer)"]]
     PUSH[["Web Push de los navegadores<br/>(F-07, Should)"]]
 
-    UI -- "HTTPS TLS ≥ 1.2" --> API
-    IDB -. "POST /sync/changes<br/>al reconectar" .-> API
+    UI -- "HTTPS TLS ≥ 1.2" --> PRX
+    IDB -. "POST /sync/changes<br/>al reconectar" .-> PRX
+    PRX -- "HTTP en la red interna" --> API
     App --> DB
     Worker --> DB
     CRY --> SEC
@@ -95,16 +97,17 @@ flowchart LR
 | `pwa` (cliente) | Pantallas, formularios, Service Worker, snapshot local, cola de cambios sin conexión (*outbox*), indicador de cambios sin enviar | Next.js (App Router, React Server Components), TypeScript, Service Worker, IndexedDB | HU-001 a HU-018 (pantallas); HU-009, HU-010 y HU-015 (sin conexión) |
 | `api` | Route Handlers bajo `/api`: sesión, protección CSRF, validación de entrada, autorización por rol, formato de errores, límites de frecuencia | Next.js Route Handlers, TypeScript | Todas las HU |
 | `identity` | Cuentas, consentimiento, mayoría de edad y versiones de la política, verificación del correo, inicio de sesión, bloqueo por intentos, recuperación de contraseña, sesiones, segundo factor, preferencias de recordatorios y borrado de la cuenta | TypeScript, PostgreSQL, `argon2` | HU-001, HU-002, HU-003, HU-011 (preferencias), HU-017 |
-| `crypto` | Cifrado AES-256-GCM del DNI y el celular, índice ciego HMAC-SHA256 para la unicidad del DNI, hash de tokens y códigos, lectura de claves desde el gestor de secretos | `node:crypto` (sin dependencias) | HU-001 (y HU-003 para los códigos) |
+| `crypto` | Cifrado AES-256-GCM del DNI y el celular, índice ciego HMAC-SHA256 para la unicidad del DNI y del celular, hash de tokens y códigos, lectura de las claves desde variables de entorno (PREG-050) | `node:crypto` (sin dependencias) | HU-001, HU-019 (y HU-003 para los códigos) |
 | `juntas` | Crear y editar juntas, máquina de estados de la junta, códigos de invitación, unirse, salir y quitar participantes | TypeScript, PostgreSQL (bloqueo de fila para el último cupo) | HU-004, HU-005, HU-013, HU-014, HU-017 |
 | `turn-order` | Sorteo `fisher-yates-v1`, asignación manual, generación de rondas y cuotas, cálculo de vencimientos | TypeScript; submódulos puros `draw-engine` y `calendar`; `node:crypto` | HU-004 (validación del aviso), HU-006, HU-007 |
 | `payments` | Registrar y desmarcar pagos, pagos informados, confirmar y rechazar, clasificación "a tiempo" o "atrasado", transición a "Terminada" | TypeScript, PostgreSQL | HU-008, HU-009, HU-015 |
 | `sync` | Recibir los cambios hechos sin conexión, aplicarlos en orden, idempotencia por `client_change_id`, resultado por cambio; entregar el snapshot | TypeScript, PostgreSQL | HU-009, HU-010, HU-015 |
 | `junta-views` | Proyección de lectura por rol: detalle de la junta, miembros, cuotas del organizador, registro del sorteo y de la asignación manual, ronda actual y próxima cuota | TypeScript, consultas SQL de solo lectura | HU-006 (ver sorteo), HU-007 (ver asignación), HU-008 (pantalla "Pagos"), HU-010 |
 | `surveys` | Mostrar y guardar la encuesta de KPI-05 al crear la primera junta y a los 3 meses | TypeScript, PostgreSQL | HU-018 |
-| `notifications` | Planificar y enviar recordatorios, avisos al organizador y al participante, aviso de cuotas vencidas, suscripciones push, conteo de envíos | TypeScript en el worker; adaptador SMTP (`nodemailer` con `smtp.office365.com`) y adaptador Web Push (`web-push`) | HU-009 (avisos), HU-011, HU-012, HU-016 |
+| `notifications` | Planificar y enviar recordatorios, avisos al organizador y al participante, aviso de cuotas vencidas, suscripciones push, conteo de envíos, correos de la cuenta | TypeScript en el worker; adaptador SMTP (`nodemailer` con `smtp.office365.com`) y adaptador Web Push (`web-push`) | HU-001 y HU-002 (correos de la cuenta), HU-003 (código), HU-009 (avisos), HU-011, HU-012, HU-016 |
 | `scheduler` (worker) | Ejecutar a las 09:00:00 en America/Lima el job de recordatorios y el de avisos de cuotas vencidas, y procesar la cola de avisos | Proceso Node.js del mismo repositorio en el servidor dedicado, con la zona del cron fijada en America/Lima | HU-011, HU-012, HU-016 |
 | PostgreSQL | Persistencia, restricciones de unicidad, triggers de inmutabilidad, transacciones | PostgreSQL en el servidor dedicado, operado por el líder técnico (R-14) | Todas las HU |
+| `proxy` | Terminar TLS 1.2 o superior, redirigir HTTP a HTTPS, obtener y renovar el certificado del dominio y reenviar las peticiones a la app por la red interna con `X-Forwarded-Proto` | Caddy en su propio contenedor Docker, con certificados de Let's Encrypt (ACME) | Todas las HU (PRINCIPIO-005) |
 
 ### 2.2 Detalle por componente
 
@@ -117,6 +120,7 @@ flowchart LR
 - **Envío:** al detectar conexión (evento `online`, `visibilitychange` o una petición que vuelve a responder), la app envía el outbox con `POST /sync/changes` en el orden en que se hicieron (RN-087). No se confía solo en `navigator.onLine`: una petición que falla por red se trata como "sin conexión". La API Background Sync se usa donde existe (Chrome para Android) y no se depende de ella, porque Safari no la tiene.
 - **Sesión vencida:** si el envío recibe `401`, el outbox se conserva y se envía después de que el mismo usuario vuelva a iniciar sesión (RN-176). Un cambio nunca se envía con la sesión de otro usuario.
 - **Acciones que exigen conexión:** los botones de las acciones que no están en RN-170 (crear cuenta, iniciar sesión, crear o editar la junta, regenerar el código, unirse, salir, sortear, asignar el orden, segundo factor) quedan deshabilitados sin red con "Necesita conexión a internet para hacer esto." (RN-170), y el sorteo con "Necesita conexión a internet para ejecutar el sorteo." (RN-029).
+- **Crear cuenta:** la casilla de consentimiento y la de mayoría de edad aparecen desmarcadas (RN-088), y "Crear cuenta" sigue deshabilitado mientras la casilla de consentimiento esté desmarcada (RN-089).
 - **Formatos:** un único módulo `format` muestra montos como `S/ 1,250.50` (RN-091), fechas como DD/MM/AAAA (RN-092) y horas como HH:MM de 24 h (RN-177), convertidas a America/Lima (RN-093).
 
 #### `api`
@@ -136,17 +140,19 @@ flowchart LR
 - `encryptField(plaintext) → {ciphertext, iv, key_id}` con AES-256-GCM, IV aleatorio de 96 bits por valor y el `key_id` guardado junto al dato para poder rotar claves (PRINCIPIO-005).
 - `blindIndex(dni) → HMAC-SHA256(clave_indice, dni)`, con una clave distinta de la de cifrado, para buscar duplicados sin descifrar (RN-151).
 - Las claves llegan al contenedor como variables de entorno, desde un archivo `.env` que solo existe en el servidor, está en `.gitignore` y solo lo lee su dueño. Se leen al iniciar el proceso y nunca se escriben en la base de datos, el repositorio ni los logs (PRINCIPIO-005, PREG-050).
+- El descifrado es una función privada del módulo que solo usa el proceso de la app; ninguna ruta, script ni pantalla lo expone (RN-202, HU-019).
 
 #### `juntas`
-- Crea la junta en estado `open` (RN-099) con todas las validaciones de RN-002 a RN-012, RN-096 y RN-097, y le asigna un código de invitación (RN-015, RN-016).
+- Crea la junta en estado `open` (RN-099) con todas las validaciones de RN-002 a RN-012, RN-096 y RN-097, guarda la cuota en céntimos enteros convertida desde el texto sin `float` (RN-040, ADR-008), y le asigna un código de invitación (RN-015, RN-016).
 - Mantiene la máquina de estados `open` → `full` → `in_progress` → `finished` (RN-099 a RN-104), siempre dentro de la misma transacción que la causa.
 - Unirse por código: quita los espacios y pasa a mayúsculas el código (RN-190); un código anulado no suma al límite de RN-117 (RN-192). Bloquea la fila de la junta (`SELECT … FOR UPDATE`) para que, si dos personas piden el último cupo al mismo tiempo, solo una lo ocupe (RN-018).
-- Edición antes de fijar el orden con las mismas validaciones que al crear (RN-106 a RN-109); después solo el nombre (RN-110).
+- Edición antes de fijar el orden con las mismas validaciones que al crear (RN-106 a RN-109); después solo el nombre (RN-110). Si el organizador pasa a "No participo", su membresía queda con `occupies_slot = false`, se libera su cupo y la junta vuelve a `open` si estaba `full` (RN-212, RN-101). Si vuelve a "Sí participo", ocupa un cupo libre (RN-109) con un `slot_taken_at` nuevo (RN-123).
+- Límite de códigos inválidos (RN-117, PREG-057): al registrar un intento `invalid`, si la cuenta suma 10 `invalid` en los 3600 s anteriores (incluido ese), se guarda `users.invite_blocked_until = attempted_at + 3600 s`. Mientras `now() < invite_blocked_until`, API-013 responde `429` antes de validar el código y no registra el intento.
 
 #### `turn-order`
 - `draw-engine` (puro): implementa `fisher-yates-v1` exactamente como el anexo A (RN-124), con `HMAC-SHA256` de `node:crypto` y muestreo por rechazo. Se prueba con el vector del anexo A.
 - `calendar` (puro): calcula el vencimiento de cada ronda para semanal, quincenal, mensual y cada N días, incluido el último día del mes y el 29 de febrero (RN-046 a RN-050), y valida el aviso previo contra el periodo (RN-012, RN-098).
-- Caso de uso `fixTurnOrder`: en una sola transacción bloquea la junta, comprueba los cupos llenos (RN-027, RN-126), que el orden no esté fijado (RN-028, RN-125) y que la ronda 1 no esté vencida (RN-122); genera la semilla con `crypto.randomBytes(32)` (RN-031); guarda el registro inmutable (RN-034); crea las rondas y las cuotas `pending` (RN-013, RN-042 a RN-045); anula el código (RN-019, RN-129) y pasa la junta a `in_progress` (RN-102).
+- Caso de uso `fixTurnOrder`: en una sola transacción bloquea la junta, comprueba los cupos llenos (RN-027, RN-126), que el orden no esté fijado (RN-028, RN-125) y que la ronda 1 no esté vencida (RN-122); arma la lista de entrada solo con las membresías que ocupan cupo, ordenadas por `slot_taken_at`, sin el organizador que no participa (RN-030, RN-123); genera la semilla con `crypto.randomBytes(32)` (RN-031); guarda el registro inmutable (RN-034, RN-035); crea las rondas y asigna `pot_recipient_id` de la ronda k al participante en la posición k de `result` (RN-036, RN-037); crea las cuotas `pending` (RN-013, RN-042 a RN-045); anula el código (RN-019, RN-129) y pasa la junta a `in_progress` (RN-102).
 
 #### `payments`
 - Registrar: solo sobre una cuota `pending` (RN-130), con fecha de pago no futura ni anterior a la creación de la junta (RN-054, RN-132), y clasifica el pago (RN-055, RN-056). Permite rondas futuras (RN-133).
@@ -163,15 +169,26 @@ flowchart LR
 #### `junta-views`
 - Calcula la ronda actual y la próxima cuota con la fecha de hoy en America/Lima (definiciones de 04-glosario.md, RN-022, RN-119).
 - Tiene un serializador por rol: `memberView`, `organizerView` y `nonParticipantOrganizerView` (RN-022, RN-118, RN-120). Ninguno incluye `email`, `phone` ni `dni` de otra persona (RN-023, PRINCIPIO-006).
+- Entrega a cada participante su número de turno y el estado de cada una de sus cuotas (RN-025, RN-026, API-023), y el pozo como `contribution_amount_cents × participant_count` (RN-041).
+- Ninguna vista, ruta ni exportación entrega pagos para evaluar créditos (RN-203, NO-04, HU-019).
 
 #### `notifications` y `scheduler`
 - Job diario `daily-reminders`: arranca a las 09:00:00 en America/Lima, decide qué cuotas reciben recordatorio hoy (sección 3.4) y debe terminar de enviarlos antes de las 09:15:00 (RN-066).
 - Cada recordatorio se guarda en `reminders` con una restricción única por cuota y día, para que volver a ejecutar el job no duplique envíos.
-- Un correo y su push se guardan como un solo recordatorio (RN-142), y cuenta como enviado cuando el proveedor acepta el correo (RN-143).
+- Un correo y su push se guardan como un solo recordatorio (RN-142, Should desde 03-reglas-de-negocio.md v0.5), y cuenta como enviado cuando el servicio de correo o el servicio push lo acepta (RN-143).
+- Correos de la cuenta: el de verificación y el de recuperación usan el asunto y el cuerpo de §2.9 de 03-reglas-de-negocio.md (RN-152, RN-155) y se envían aunque el usuario haya desactivado los recordatorios (RN-188).
 - El contenido trae la junta, la ronda, el monto y el vencimiento (RN-144), trata de "usted" (RN-090) y no menciona a otros miembros (RN-145).
 - Aviso al organizador (RN-139) y aviso de pago rechazado al participante (RN-194): el worker procesa `notification_outbox` en cuanto se confirma la transacción.
 - Job diario `overdue-notices` (F-16): a las 09:00:00 envía al organizador que no lo desactivó (RN-209) un correo por cada junta con una ronda que venció ayer y tiene cuotas `pending` (RN-196). Se guarda en `overdue_notices` con `UNIQUE (round_id)`.
 - Si el servidor SMTP no acepta un correo, se reintenta hasta las 09:15:00 (RN-199). Se respeta la preferencia de RN-187, salvo para los correos de la cuenta (RN-188).
+
+#### `proxy`
+- Caddy en su propio contenedor es el único punto expuesto a internet (puertos 80 y 443). Termina TLS 1.2 o superior, redirige HTTP a HTTPS y obtiene y renueva el certificado del dominio con Let's Encrypt (PRINCIPIO-005).
+- Reenvía las peticiones a la app por la red interna con `X-Forwarded-Proto`; la app agrega HSTS y solo confía en ese encabezado cuando viene del `proxy` (§4.1).
+
+#### PostgreSQL y operación
+- Los hechos auditables (`draws`, `turn_assignments`, `payments`, `payment_corrections`, `consents`) tienen el trigger que rechaza `UPDATE` y `DELETE`, y el rol de la app no tiene esos privilegios (RN-035, RN-058, RN-128, RN-134, ADR-003).
+- Solo el líder técnico entra a producción, por SSH con su llave y solo para un incidente (RN-200). El script de acceso de `ops/` pide el incidente y escribe la fila de `staff_access_log` antes de abrir la consola (RN-201, T-027, HU-019).
 
 ---
 
@@ -221,6 +238,7 @@ erDiagram
         text encryption_key_id
         smallint failed_login_count
         timestamptz login_locked_until
+        timestamptz invite_blocked_until
         bool two_factor_enabled
         timestamptz age_confirmed_at
         bool email_reminders_enabled
@@ -315,7 +333,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 
 | Tabla | Atributos clave | Restricciones y notas | RN |
 |---|---|---|---|
-| `users` | `name` (2 a 80), `email`, `email_normalized` (en minúsculas), `email_verified_at`, `password_hash`, `dni_ciphertext`, `dni_blind_index`, `phone_ciphertext`, `phone_blind_index`, `encryption_key_id`, `failed_login_count`, `login_locked_until`, `two_factor_enabled`, `age_confirmed_at`, `email_reminders_enabled` y `overdue_notices_enabled` (por defecto `true`), `deleted_at` | `UNIQUE (email_normalized)`, `UNIQUE (dni_blind_index)` y `UNIQUE (phone_blind_index)` donde no son nulos. DNI y celular nulos permitidos. No existen columnas de fecha de nacimiento ni de foto. Al borrar la cuenta, `name`, `email`, `password_hash`, el DNI y el celular quedan en nulo y `deleted_at` se llena; las vistas muestran "Participante eliminado". | RN-146 a RN-151, RN-075, RN-149, RN-180, RN-181, RN-183, RN-185, RN-187, RN-209 |
+| `users` | `name` (2 a 80), `email`, `email_normalized` (en minúsculas), `email_verified_at`, `password_hash`, `dni_ciphertext`, `dni_blind_index`, `phone_ciphertext`, `phone_blind_index`, `encryption_key_id`, `failed_login_count`, `login_locked_until`, `invite_blocked_until` (RN-117), `two_factor_enabled`, `age_confirmed_at`, `email_reminders_enabled` y `overdue_notices_enabled` (por defecto `true`), `deleted_at` | `UNIQUE (email_normalized)`, `UNIQUE (dni_blind_index)` y `UNIQUE (phone_blind_index)` donde no son nulos. DNI y celular nulos permitidos. No existen columnas de fecha de nacimiento ni de foto. Al borrar la cuenta, `name`, `email`, `password_hash`, el DNI y el celular quedan en nulo y `deleted_at` se llena; las vistas muestran "Participante eliminado". | RN-146 a RN-151, RN-075, RN-149, RN-180, RN-181, RN-183, RN-185, RN-187, RN-209 |
 | `privacy_policy_versions` | `version` (PK, por ejemplo `"1.0"`), `published_at`, `is_current` | Una sola fila con `is_current = true`. El texto de la política está bloqueado por PREG-001. | RN-168 |
 | `consents` | `user_id`, `policy_version`, `accepted_at` | Solo se agregan filas: aceptar la 1.1 conserva la fila de la 1.0. `policy_version` y `consent_accepted_at` de la API salen de la fila más reciente. | RN-082 a RN-084, RN-169 |
 | `sessions` | `user_id`, `token_hash`, `created_at`, `last_seen_at`, `revoked_at` | Se considera cerrada si `now() − last_seen_at > 2592000 s`. Cambiar la contraseña revoca las demás. | RN-158, RN-159 |
@@ -329,7 +347,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 | `juntas` | `organizer_id`, `name` (3 a 60), `contribution_amount_cents` (1000 a 500000, múltiplo de 10), `participant_count` (2 a 50), `frequency` (`weekly`, `every_15_days`, `monthly`, `every_n_days`), `frequency_days` (2 a 60, solo para `every_n_days`), `round1_due_date`, `reminder_lead_days` (1 a 7), `organizer_participates`, `junta_rules` (F-09), `status` (`open`, `full`, `in_progress`, `finished`), `created_at`, `created_on`, `turn_order_fixed_at` | `CHECK` para cada rango. `created_on` es la fecha de creación en America/Lima, usada por RN-009 y RN-132. | RN-002 a RN-012, RN-096, RN-099 a RN-110 |
 | `memberships` | `junta_id`, `user_id`, `is_organizer`, `occupies_slot`, `slot_taken_at`, `left_at`, `removed_by` | `UNIQUE (junta_id, user_id) WHERE left_at IS NULL`. El organizador que no participa tiene `occupies_slot = false`. Salir o ser quitado llena `left_at` y libera el cupo. `slot_taken_at` ordena la lista de entrada del sorteo. | RN-006, RN-021, RN-111 a RN-115, RN-123 |
 | `invite_codes` | `code` (PK, 8 caracteres), `junta_id`, `created_at`, `revoked_at`, `revoke_reason` (`regenerated`, `turn_order_fixed`) | La clave primaria sobre todos los códigos, vigentes o no, impide reutilizar uno. `UNIQUE (junta_id) WHERE revoked_at IS NULL`: un solo código vigente por junta. | RN-015, RN-016, RN-019, RN-020, RN-129 |
-| `invite_code_attempts` | `user_id`, `attempted_at`, `outcome` (`joined`, `already_member`, `invalid`, `revoked`, `full`) | Permite contar los códigos inválidos de los últimos 3600 s. | RN-117 |
+| `invite_code_attempts` | `user_id`, `attempted_at`, `outcome` (`joined`, `already_member`, `invalid`, `revoked`, `full`) | Permite contar los códigos inválidos de los últimos 3600 s. Al llegar al décimo, se fija `users.invite_blocked_until` 3600 s después; los intentos durante el bloqueo no se registran (PREG-057). Solo `invalid` cuenta para el límite (RN-192). | RN-116, RN-117, RN-192 |
 
 #### Orden de turnos, rondas y cuotas
 
@@ -406,7 +424,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 
 | Tema | Convención |
 |---|---|
-| Base | Todas las rutas son relativas a `/api`. Solo HTTPS con TLS 1.2 o superior; HTTP redirige a HTTPS (PRINCIPIO-005). |
+| Base | Todas las rutas son relativas a `/api`. Solo HTTPS con TLS 1.2 o superior; HTTP redirige a HTTPS (PRINCIPIO-005). El `proxy` termina TLS y hace la redirección; la app agrega HSTS y solo confía en `X-Forwarded-Proto` cuando la petición llega desde el `proxy`. |
 | Formato | JSON UTF-8. Campos en `snake_case` (04-glosario.md). |
 | Autenticación | Cookie `session` con `HttpOnly`, `Secure` y `SameSite=Lax`. Sin sesión válida: `401`. |
 | CSRF | Toda petición que cambia datos lleva el encabezado `X-Requested-With: mi-junta` y el servidor comprueba `Origin`. |
@@ -448,9 +466,9 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 | API-007 | `POST /password-resets/confirm` | HU-002 | Must | No |
 | API-008 | `GET /me` y `POST /consents` | HU-002 | Must | No |
 | API-009 | `POST /juntas` | HU-004 | Must | No |
-| API-010 | `PATCH /juntas/{id}` | HU-004 | Must | No |
-| API-011 | `POST /juntas/{id}/invite-code` | HU-004 | Must | No |
-| API-012 | `DELETE /juntas/{id}/members/{user_id}` | HU-004 | Must | No |
+| API-010 | `PATCH /juntas/{id}` | HU-014 | Must | No |
+| API-011 | `POST /juntas/{id}/invite-code` | HU-014 | Must | No |
+| API-012 | `DELETE /juntas/{id}/members/{user_id}` | HU-014 | Must | No |
 | API-013 | `POST /memberships` | HU-005 | Must | No |
 | API-014 | `DELETE /juntas/{id}/membership` | HU-005 | Must | No |
 | API-015 | `POST /juntas/{id}/draw` | HU-006 | Must | No (RN-029) |
@@ -459,7 +477,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 | API-018 | `POST /contributions/{id}/payment-corrections` | HU-008 | Must | Sí, por outbox |
 | API-019 | `PATCH /payments/{id}` | HU-008 | Must | — (siempre `405`) |
 | API-020 | `GET /juntas/{id}/contributions` | HU-008, HU-010 | Must | Lectura desde el snapshot |
-| API-021 | `POST /sync/changes` | HU-008, HU-009 | Must | Es el envío del outbox |
+| API-021 | `POST /sync/changes` | HU-015, HU-009 | Must | Es el envío del outbox |
 | API-022 | `GET /juntas` | HU-010 | Must | Lectura desde el snapshot |
 | API-023 | `GET /juntas/{id}` | HU-010 | Must | Lectura desde el snapshot |
 | API-024 | `GET /juntas/{id}/members` | HU-010 | Must | Lectura desde el snapshot |
@@ -643,7 +661,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 - Mientras el usuario no acepta la versión vigente, la app no le muestra sus juntas (RN-168), pero el servidor no bloquea sus rutas ni su outbox y sus recordatorios siguen saliendo (RN-189).
 - `GET /me` también entrega `email_reminders_enabled` (API-032).
 
-### 4.4 Juntas e invitación (HU-004, HU-005)
+### 4.4 Juntas e invitación (HU-004, HU-014, HU-005)
 
 #### API-009 · `POST /juntas` — Crear una junta
 
@@ -706,7 +724,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 - El ajuste automático del aviso a periodo − 1 (RN-098) lo hace la app al elegir la frecuencia; el servidor solo valida RN-012.
 - La conversión `"20.80"` → `2080` se hace con aritmética de enteros sobre el texto, nunca con `parseFloat` (PRINCIPIO-003).
 - `junta_rules` pertenece a F-09 (Should, HU-013) y acepta hasta 2,000 caracteres (RN-179).
-- Si es la primera junta del organizador, la respuesta trae `"survey_pending": true` y la app muestra la encuesta de API-034 (RN-204).
+- **Should (HU-018):** cuando se implemente F-18, si es la primera junta del organizador, la respuesta trae `"survey_pending": true` y la app muestra la encuesta de API-034 (RN-204). En el MVP Must este campo no existe.
 
 #### API-010 · `PATCH /juntas/{id}` — Editar la junta
 
@@ -716,7 +734,8 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 
 | Estado | `code` | Cuándo | RN | `message` |
 |---|---|---|---|---|
-| `200` | — | Cambio válido; si `participant_count` baja a los cupos ocupados, la junta pasa a `full` | RN-100, RN-106, RN-107 | — |
+| `200` | — | Cambio válido; si `participant_count` baja a los cupos ocupados, la junta pasa a `full`; si sube en una junta `full`, vuelve a `open` | RN-100, RN-101, RN-106, RN-107 | — |
+| `200` | — | `organizer_participates` pasa a `false`: se libera el cupo del organizador y una junta `full` vuelve a `open` | RN-212, RN-101 | — |
 | `403` | `NOT_ORGANIZER` | Quien pide no es el organizador | RN-077 | `null` |
 | `409` | `TURN_ORDER_FIXED` | Junta `in_progress` o `finished` y el cambio no es solo `name` | RN-110 | "La junta ya fijó su orden de turnos. Solo puede cambiar su nombre." |
 | `422` | `PARTICIPANTS_BELOW_OCCUPIED` | Cantidad menor que los cupos ocupados | RN-108 | "La junta ya tiene 9 cupos ocupados. Ingrese al menos 9 participantes." |
@@ -774,7 +793,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 | `422` | `INVITE_CODE_INVALID` | No corresponde a ninguna junta | RN-116 | "Este código no es válido." |
 | `422` | `INVITE_CODE_REVOKED` | Código regenerado o anulado al fijar el orden | RN-019, RN-020, RN-129 | "Este código ya no es válido." |
 | `409` | `JUNTA_FULL` | Todos los cupos ocupados, incluida la carrera por el último cupo | RN-018 | "Esta junta ya no tiene cupos disponibles." |
-| `429` | `TOO_MANY_INVALID_CODES` | 10 códigos inválidos en 3600 s | RN-117 | "Demasiados códigos no válidos. Intente de nuevo en 1 hora." |
+| `429` | `TOO_MANY_INVALID_CODES` | Durante los 3600 s posteriores al décimo código inválido de los últimos 3600 s (`invite_blocked_until`); se evalúa antes de validar el código y no registra intento | RN-117 | "Demasiados códigos no válidos. Intente de nuevo en 1 hora." |
 
 - El caso `401` se evalúa antes que cualquier otro y no registra intento. La app guarda el código ingresado y lo vuelve a enviar después de que la persona crea su cuenta o inicia sesión.
 - Antes de validar, el servidor quita los espacios y pasa las letras a mayúsculas: ` t9qw3hz5 ` vale como `T9QW3HZ5` (RN-190). Un código anulado responde `INVITE_CODE_REVOKED` y no suma al límite de RN-117 (RN-192).
@@ -838,7 +857,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 - **HU:** HU-006. **Autorización:** cualquier miembro (RN-121). **Response `200`:** el objeto `draw` de API-015.
 - **Estados:** `200`; `403` si no es miembro (RN-024); `404` `DRAW_NOT_FOUND` si la junta no fijó su orden o lo fijó a mano, con `message: null`.
 
-### 4.6 Pagos y sincronización (HU-008)
+### 4.6 Pagos y sincronización (HU-008, HU-015)
 
 #### API-017 · `POST /contributions/{id}/payment` — Registrar un pago
 
@@ -995,7 +1014,7 @@ El diagrama muestra las 24 tablas y sus relaciones, pero solo los atributos de l
 - `type` acepta solo las acciones de RN-170: `register_payment`, `correct_payment`, `report_payment`, `confirm_reported_payment` y `reject_reported_payment`. Cualquier otro tipo se rechaza con `CHANGE_TYPE_NOT_ALLOWED_OFFLINE` (RN-170).
 - Cada cambio se aplica con el mismo caso de uso que su ruta individual, en el orden recibido (RN-087), y se responde uno por uno. Un rechazo no detiene los cambios siguientes. La app muestra cada rechazo (RN-172) y saca del outbox los cambios con resultado.
 - Un `client_change_id` repetido devuelve el resultado guardado en `client_changes`, sin aplicar el cambio otra vez.
-- El `{motivo}` de cada rechazo usa los textos de §2.9: "el pago de {nombre} de la ronda {n} ya estaba registrado" o "su pago informado de la ronda {n} no se guardó porque la cuota ya no estaba pendiente" (RN-172).
+- El `{motivo}` de cada rechazo usa los textos de §2.9: "el pago de {nombre} de la ronda {n} ya estaba registrado" (`register_payment` sobre una cuota que no está `pending`, RN-130), "el pago de {nombre} de la ronda {n} ya no estaba registrado" (`correct_payment` sobre una cuota que no está `paid`, RN-131) o "su pago informado de la ronda {n} no se guardó porque la cuota ya no estaba pendiente" (RN-135) (RN-172).
 - **Estados:** `200` con un resultado por cambio; `401` si la sesión venció: la app conserva el outbox (RN-176); `400` si el cuerpo no es una lista válida.
 
 ```mermaid
@@ -1160,7 +1179,7 @@ HU-011 no tiene una ruta para el usuario: el participante solo recibe el correo.
 |---|---|---|---|
 | `202` | — | Corrida terminada o en curso | RN-066 a RN-072, RN-140 a RN-145 |
 | `401` | `JOB_UNAUTHORIZED` | Falta el secreto o no coincide | — |
-| `409` | `JOB_ALREADY_RUNNING` | Ya hay una corrida para esa fecha | — |
+| `409` | `JOB_ALREADY_RUNNING` | Hay otra corrida **en curso** para esa fecha. Una corrida que se repite después de terminar responde `202` y cuenta en `already_sent` lo que ya estaba en `reminders` | — |
 
 - Reglas de selección: sección 3.4. Cada envío se guarda en `reminders` antes de llamar al proveedor y se actualiza con su resultado; la restricción `UNIQUE (contribution_id, scheduled_on)` impide duplicar si la corrida se repite.
 - Ejemplo del correo de Pedro (asunto y primera línea): "Junta Oficina: su cuota de la ronda 1, de S/ 1,000.00, vence el 30/11/2026" (RN-144, RN-090, RN-091, RN-092). Va al correo de su cuenta (RN-067) y no nombra a otros miembros (RN-145).
@@ -1244,7 +1263,7 @@ Todas las ADR están en estado **Aceptada**: el Product Owner las aprobó el 14/
 - **Contexto:** PRINCIPIO-009 fija Next.js, TypeScript y PostgreSQL. El producto lo mantiene 1 líder técnico asistido por IA (R-08), y F-06 necesita tareas programadas en hora de America/Lima (02-alcance.md §6).
 - **Decisión:** una sola aplicación Next.js sirve las pantallas y la API (Route Handlers bajo `/api`), organizada en módulos de dominio (`identity`, `juntas`, `turn-order`, `payments`, `sync`, `junta-views`, `notifications`, `crypto`) con dependencias en una sola dirección: rutas → casos de uso → dominio → infraestructura. Un proceso worker del mismo repositorio ejecuta los jobs. Estructura sugerida: `src/app/` (pantallas y rutas), `src/modules/<módulo>/{domain,application,infrastructure}`, `src/worker/`.
 - **Alternativas:** (a) backend separado (por ejemplo NestJS) con el frontend en Next.js: dos despliegues y dos contratos para una sola persona; (b) microservicios por dominio: transacciones distribuidas entre el sorteo, las cuotas y los pagos, que hoy ocurren en una sola transacción (RN-013, RN-042, RN-102).
-- **Hosting (decisión del 14/11/2026):** un servidor dedicado de la empresa, ubicado en Perú (PREG-051). La app Next.js, el worker y PostgreSQL corren en contenedores Docker, orquestados con Docker Compose en el mismo servidor (PREG-050).
+- **Hosting (decisión del 14/11/2026):** un servidor dedicado de la empresa, ubicado en Perú (PREG-051). La app Next.js, el worker, PostgreSQL y el `proxy` (Caddy) corren en contenedores Docker, orquestados con Docker Compose en el mismo servidor (PREG-050). Solo el `proxy` expone puertos hacia internet (80 y 443).
 - **Consecuencias:** un despliegue y un lenguaje; las transacciones que cruzan módulos (sortear y generar cuotas) quedan en una sola base. El worker corre como proceso persistente con el cron del propio servidor. Los parches, respaldos, certificados TLS y monitoreo los opera el líder técnico (R-14, sección 6.4). Los límites entre módulos se cuidan con reglas de importación en el linter.
 
 ### ADR-002: Sin conexión con snapshot y outbox; el servidor aplica en orden de llegada y valida
@@ -1312,16 +1331,16 @@ Todas las ADR están en estado **Aceptada**: el Product Owner las aprobó el 14/
 | Principio | Restricción técnica | Cómo se cumple o se verifica |
 |---|---|---|
 | PRINCIPIO-001 | Diagramas en Mermaid; IDs nunca se renumeran | Este documento usa Mermaid. Los contratos (`API-NNN`) y las ADR (`ADR-NNN`) toman el siguiente número libre y no se reutilizan. |
-| PRINCIPIO-002 | Código, tablas, columnas, rutas y códigos de error en inglés, salvo `junta`; comentarios y commits en español; textos de usuario en español de Perú con "usted" | Linter de nombres; catálogo de mensajes §2.9 como única fuente de textos; test que busca "tú" y formas de tuteo en los textos (RN-090). |
+| PRINCIPIO-002 | Código, tablas, columnas, rutas y códigos de error en inglés, salvo `junta`; comentarios y commits en español; textos de usuario en español de Perú con "usted" | Linter de nombres: reglas `camelcase` e `id-match` del núcleo de ESLint, que rechazan identificadores con tildes o "ñ", y un test de esquema que exige `snake_case` ASCII en tablas y columnas (T-024); que el nombre esté en inglés se revisa en la revisión humana. Catálogo de mensajes §2.9 como única fuente de textos. Test que busca "tú" y formas de tuteo en el catálogo y en las plantillas de correo (RN-090, T-024). |
 | PRINCIPIO-003 | Céntimos enteros; `date` y `timestamptz`; America/Lima; patrones de DNI y celular | ADR-008; `CHECK` en la base; módulo `format`; tests con la hora que cambia de día entre UTC y Lima (HU-010). |
 | PRINCIPIO-004 | Sin pasarelas, SDK de pagos, cuentas ni tarjetas | Test de esquema que falla si aparece una columna como `bank_account_number`; revisión de dependencias. |
-| PRINCIPIO-005 | AES-256-GCM en la aplicación, clave fuera de la base y del repositorio, TLS ≥ 1.2, Argon2id o bcrypt ≥ 12, logs sin DNI ni celular, acceso del equipo restringido y registrado | ADR-005 y ADR-006; escaneo de secretos en el pipeline; test de logs; HSTS y redirección a HTTPS. Escenarios técnicos de RN-200 a RN-202: solo la llave SSH del líder técnico entra a producción, cada acceso deja una fila en `staff_access_log` y una búsqueda en el repositorio no encuentra ninguna función que descifre fuera del proceso de la app. |
+| PRINCIPIO-005 | AES-256-GCM en la aplicación, clave fuera de la base y del repositorio, TLS ≥ 1.2, Argon2id o bcrypt ≥ 12, logs sin DNI ni celular, acceso del equipo restringido y registrado | ADR-005 y ADR-006; escaneo de secretos con gitleaks en el pipeline; test de logs; TLS en el `proxy` (Caddy), HSTS en la app y redirección a HTTPS. Escenarios técnicos de RN-200 a RN-202: solo la llave SSH del líder técnico entra a producción, cada acceso deja una fila en `staff_access_log` a través del script de acceso (T-027) y una búsqueda en el repositorio no encuentra ninguna función que descifre fuera del proceso de la app (T-024). |
 | PRINCIPIO-006 | Lista blanca por rol, validación en el servidor | ADR-009; tests de contrato por ruta y rol (API-020, API-023, API-024, API-025). Escenario técnico de RN-203: ninguna ruta ni exportación entrega pagos para evaluar créditos. |
 | PRINCIPIO-007 | Consentimiento con versión y hora; solo correo y push | `consents` solo de inserción; `notifications` solo tiene adaptadores de correo y Web Push; ninguna dependencia de SMS ni WhatsApp. |
 | PRINCIPIO-008 | CSPRNG de 256 bits, `fisher-yates-v1`, registro inmutable, orden manual inmutable | ADR-003 y ADR-004; vector del anexo A en los tests. |
 | PRINCIPIO-009 | Next.js, TypeScript y PostgreSQL con versiones exactas, sin `^` ni `~`; funciona sin conexión | Las versiones se fijan el día en que empieza el desarrollo; el pipeline falla si `package.json` tiene `^` o `~`; ADR-002. |
-| PRINCIPIO-010 | 360 a 1440 px sin scroll horizontal; WCAG 2.2 A; LCP ≤ 2.5 s, CLS ≤ 0.1, TBT ≤ 200 ms en Lighthouse móvil; API p95 ≤ 500 ms | axe-core y Lighthouse en el pipeline; métrica de latencia por ruta con alerta sobre el p95. |
-| PRINCIPIO-011 | ≥ 80 % de líneas; 100 % de líneas y ramas en `draw-engine`, `calendar` y el cálculo de cuotas; Gherkin por RN; sin `.skip` ni `.only` | Umbrales de cobertura por carpeta; linter que prohíbe `.skip` y `.only`; un escenario por RN citando su ID. |
+| PRINCIPIO-010 | 360 a 1440 px sin scroll horizontal; WCAG 2.2 A; LCP ≤ 2.5 s, CLS ≤ 0.1, TBT ≤ 200 ms en Lighthouse móvil; API p95 ≤ 500 ms | axe-core y Lighthouse en el pipeline. axe-core corre con las reglas de nivel A y además `color-contrast` (≥ 4.5:1); un test de Playwright mide que cada control interactivo tenga al menos 44 × 44 px y que el texto base tenga al menos 16 px, porque el nivel A de WCAG no verifica esos valores (T-025). El p95 de cada ruta Must se mide en el pipeline con 100 peticiones por ruta sobre los datos de ejemplo, y en producción el logger guarda la duración de cada petición para la alerta sobre el p95 (T-026). |
+| PRINCIPIO-011 | ≥ 80 % de líneas; 100 % de líneas y ramas en `draw-engine`, `calendar` y el cálculo de cuotas; Gherkin por RN; sin `.skip` ni `.only` | Umbrales de cobertura por carpeta con `@vitest/coverage-v8`; linter que prohíbe `.skip` y `.only`; un escenario por RN citando su ID. **Convención Gherkin (PREG-055):** sin ejecutor de `.feature`; cada test de Vitest o Playwright se llama `Escenario: RN-NNN <descripción>` (o `Escenario: PRINCIPIO-NNN …` para un escenario técnico) y marca sus pasos con los comentarios `// Dado`, `// Cuando` y `// Entonces`. Un script del pipeline sin dependencias falla si un test no sigue el formato (T-001). |
 | PRINCIPIO-012 | Sin dependencias ni servicios externos sin aprobación | Sección 6.3: dependencias aprobadas el 14/11/2026 y las que siguen pendientes. |
 
 ### 6.2 Contexto peruano: Android de gama baja y conexión intermitente
@@ -1353,8 +1372,15 @@ Todas las ADR están en estado **Aceptada**: el Product Owner las aprobó el 14/
 | Microsoft 365 (`smtp.office365.com`) | Entregar los correos | Servicio externo aprobado el 14/11/2026 (PREG-052, PRINCIPIO-012 h) |
 | Servidor dedicado en Perú con Docker y Docker Compose | Todo el producto | Decidido (PREG-050, PREG-051) |
 | Variables de entorno desde un `.env` en el servidor | Claves de AES, del índice ciego, de los códigos, del job y de OAuth de Microsoft 365 | Decidido (PREG-050) |
+| `drizzle-kit` | Generar y aplicar las migraciones de Drizzle | Aprobada el 14/11/2026, como parte de Drizzle (auditorias/qa-clase2.md, C-01) |
+| ESLint y `eslint-config-next` | Linter del pipeline: reglas del núcleo para `.skip` y `.only`, límites entre módulos (ADR-001) y nombres (PRINCIPIO-002), sin plugins adicionales | Aprobada el 14/11/2026 (C-01) |
+| `@vitest/coverage-v8` | Medir la cobertura de Vitest con umbrales por carpeta (PRINCIPIO-011) | Aprobada el 14/11/2026 (C-01) |
+| `@axe-core/playwright` y `@lhci/cli` | Ejecutar axe-core dentro de Playwright y Lighthouse CI en el pipeline (PRINCIPIO-010) | Aprobadas el 14/11/2026, como parte de axe-core y Lighthouse CI (C-01) |
+| gitleaks | Escanear el repositorio en busca de secretos en el pipeline (PRINCIPIO-005) | Aprobada el 14/11/2026 (C-01) |
+| GitHub (repositorio) y GitHub Actions | Alojar el repositorio, donde ya está, y ejecutar el pipeline. No reciben datos de producción ni el `.env` | Servicio externo aprobado el 14/11/2026 (C-01, PRINCIPIO-012 h) |
+| Caddy y Let's Encrypt | `proxy` que termina TLS ≥ 1.2, redirige HTTP a HTTPS y renueva el certificado del dominio por ACME | Aprobados el 14/11/2026 (auditorias/qa-clase2.md, M-09, PRINCIPIO-012 e y h) |
 
-`node:crypto`, Service Worker, IndexedDB y la Notifications API son parte de la plataforma y no se cuentan como dependencias nuevas.
+`node:crypto`, Service Worker, IndexedDB y la Notifications API son parte de la plataforma y no se cuentan como dependencias nuevas. Los escenarios Gherkin no usan ejecutor propio (PREG-055). El cron que dispara el worker a las 09:00 es el del sistema operativo de la imagen del contenedor, con `TZ=America/Lima`; no se usa una librería de npm para programar tareas.
 
 ### 6.4 Operación del servidor dedicado
 
@@ -1363,12 +1389,12 @@ Como la app corre en un servidor propio (R-14), el diseño incluye estas tareas 
 | Tarea | Qué se hace | Relación |
 |---|---|---|
 | Respaldos | Respaldo automático de PostgreSQL, guardado fuera del servidor y cifrado, con una restauración de prueba antes del lanzamiento | R-14, RN-058 (los pagos no se pierden) |
-| Certificados | Certificado TLS del dominio con renovación automática; HTTP redirige a HTTPS | PRINCIPIO-005 |
-| Acceso | Solo por SSH con la llave del líder técnico; cada acceso deja una fila en `staff_access_log` | RN-200, RN-201 |
-| Red | Solo los puertos HTTPS y SSH abiertos; PostgreSQL y la ruta interna de API-026 escuchan solo en la red interna | PRINCIPIO-005 |
+| Certificados | Caddy obtiene y renueva el certificado TLS del dominio con Let's Encrypt y redirige HTTP a HTTPS | PRINCIPIO-005 |
+| Acceso | Solo por SSH con la llave del líder técnico. El script de acceso a producción pide el incidente y escribe la fila en `staff_access_log` antes de abrir la consola de PostgreSQL (T-027) | RN-200, RN-201 |
+| Red | Solo los puertos 80 y 443 del `proxy` y el puerto SSH abiertos; la app, PostgreSQL y la ruta interna de API-026 escuchan solo en la red interna | PRINCIPIO-005 |
 | Parches y monitoreo | Actualizaciones de seguridad del sistema operativo y alertas de caída, de disco lleno y del p95 de la API | PRINCIPIO-010, R-14 |
 | Hora | El servidor sincroniza su reloj, y el contenedor del worker usa `TZ=America/Lima` para su cron | RN-066 |
-| Contenedores | La app, el worker y PostgreSQL corren en contenedores Docker con Docker Compose; los datos de PostgreSQL van en un volumen que se respalda | R-14, PREG-050 |
+| Contenedores | La app, el worker, PostgreSQL y el `proxy` corren en contenedores Docker con Docker Compose; los datos de PostgreSQL van en un volumen que se respalda | R-14, PREG-050 |
 | Secretos | El `.env` vive solo en el servidor, con permisos solo para su dueño, fuera del repositorio y con un respaldo cifrado aparte; el pipeline escanea el repositorio para detectar secretos | PRINCIPIO-005, PREG-050 |
 | Correo | Se mide cada día cuántos correos salen en la ventana de 09:00 a 09:15 y cuántos quedaron `expired` por el límite de Microsoft 365 | R-11, R-15 |
 
@@ -1394,7 +1420,7 @@ Quedan dos tareas, que no son decisiones:
 | HU | Prioridad | Componentes | Contratos |
 |---|---|---|---|
 | HU-001 | Must | `pwa`, `api`, `identity`, `crypto`, `notifications` (correo de verificación) | API-001, API-002, API-003 |
-| HU-002 | Must | `pwa`, `api`, `identity` | API-004, API-005, API-006, API-007, API-008 |
+| HU-002 | Must | `pwa`, `api`, `identity`, `notifications` (correo de recuperación) | API-004, API-005, API-006, API-007, API-008 |
 | HU-004 | Must | `pwa`, `api`, `juntas`, `turn-order` (`calendar` para RN-012) | API-009 |
 | HU-014 | Must | `pwa`, `api`, `juntas` | API-010, API-011, API-012 |
 | HU-005 | Must | `pwa`, `api`, `juntas` | API-013, API-014 |
@@ -1402,7 +1428,7 @@ Quedan dos tareas, que no son decisiones:
 | HU-008 | Must | `pwa`, `api`, `payments`, `junta-views` | API-017, API-018, API-019, API-020 |
 | HU-015 | Must | `pwa` (outbox), `sync`, `payments` | API-017, API-018, API-021 |
 | HU-010 | Must | `pwa` (snapshot), `api`, `junta-views`, `sync` | API-020, API-022, API-023, API-024, API-025 |
-| HU-011 | Must | `scheduler`, `notifications`, `identity` (preferencias) | API-026, API-032 |
+| HU-011 | Must | `pwa` (preferencias), `api`, `scheduler`, `notifications`, `identity` (preferencias) | API-026, API-032 |
 | HU-009 | Should | `pwa`, `api`, `payments`, `sync`, `notifications` | API-021, API-027, API-028 |
 | HU-012 | Should | `pwa`, `notifications` | API-026, API-031 |
 | HU-016 | Should | `scheduler`, `notifications` | API-026 |
@@ -1411,21 +1437,23 @@ Quedan dos tareas, que no son decisiones:
 | HU-003 | Should | `pwa`, `api`, `identity`, `crypto`, `notifications` | API-004, API-030 |
 | HU-013 | Should | `juntas`, `junta-views` | API-009, API-010, API-023 (`junta_rules`) |
 | HU-017 | Should | `pwa`, `api`, `identity`, `juntas` | API-033 |
+| HU-019 | Must | `crypto` (RN-202), `junta-views` (RN-203), PostgreSQL y operación (`staff_access_log`, script de acceso, RN-200, RN-201) | — (sin ruta: escenarios técnicos) |
 
 ### 8.2 Componentes → HU
 
 | Componente | HU |
 |---|---|
 | `pwa` | HU-001 a HU-018 |
-| `api` | HU-001 a HU-010, HU-013, HU-014, HU-017, HU-018 |
+| `api` | HU-001 a HU-018 |
 | `identity` | HU-001, HU-002, HU-003, HU-011, HU-017 |
-| `crypto` | HU-001, HU-003 |
+| `crypto` | HU-001, HU-003, HU-019 |
 | `juntas` | HU-004, HU-005, HU-013, HU-014, HU-017 |
 | `turn-order` | HU-004, HU-006, HU-007 |
 | `payments` | HU-008, HU-009, HU-015 |
 | `sync` | HU-009, HU-010, HU-015 |
-| `junta-views` | HU-006, HU-007, HU-008, HU-010 |
+| `junta-views` | HU-006, HU-007, HU-008, HU-010, HU-019 |
 | `surveys` | HU-018 |
-| `notifications` | HU-001, HU-003, HU-009, HU-011, HU-012, HU-016 |
+| `notifications` | HU-001, HU-002, HU-003, HU-009, HU-011, HU-012, HU-016 |
 | `scheduler` | HU-011, HU-012, HU-016 |
-| PostgreSQL | HU-001 a HU-018 |
+| PostgreSQL | HU-001 a HU-019 |
+| `proxy` | HU-001 a HU-018 |

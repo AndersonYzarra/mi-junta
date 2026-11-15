@@ -1,10 +1,10 @@
 # Reglas de negocio de Mi Junta
 
-Versión: 0.4
+Versión: 0.5
 Fecha: 2026-11-14
 Estado: Alineado con las decisiones del Product Owner
 
-Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y las decisiones del Product Owner del 2026-11-14 (sección 1.1, sección 1.2 sobre auditorias/qa-clase1.md y sección 1.3 sobre la alineación de pendientes). Este catálogo cubre las funcionalidades Must (F-01 a F-06) y Should (F-07 a F-11) de 02-alcance.md. Las funcionalidades Could (F-12 a F-15) quedan para una versión posterior.
+Fuente: 00-constitucion.md v0.2, 01-project-brief.md v0.2, 02-alcance.md v0.2 y las decisiones del Product Owner del 2026-11-14 (sección 1.1, sección 1.2 sobre auditorias/qa-clase1.md, sección 1.3 sobre la alineación de pendientes y sección 1.4 sobre auditorias/qa-clase2.md). Este catálogo cubre las funcionalidades Must (F-01 a F-06) y Should (F-07 a F-11) de 02-alcance.md. Las funcionalidades Could (F-12 a F-15) quedan para una versión posterior.
 
 **Cómo leer este catálogo:**
 - Cada regla tiene un solo DEBE / NO DEBE / PUEDE (PRINCIPIO-001) y necesita al menos un escenario Gherkin que cite su ID (PRINCIPIO-011).
@@ -128,6 +128,18 @@ El Product Owner respondió el 2026-11-14 las preguntas abiertas y los temas pen
 | Encuesta de KPI-05 (segunda ronda) | El organizador puede cerrarla sin responder | PREG-054 | RN-205, RN-210, RN-211 |
 
 **Textos y detalles derivados:** los textos de RN-180, RN-181, RN-182, RN-194, RN-196 y RN-198, el cálculo de `{n}` en el mensaje de RN-164, el contenido de RN-185 y RN-186 el momento "al empezar" de RN-204, el texto de RN-207, la preferencia propia de RN-208, RN-211 y el cambio de RN-205 (contar desde que se respondió o se cerró la primera encuesta) los redactó el Agente Architect a partir de estas decisiones, con el estilo de los textos ya aprobados. Están marcados "derivada" en su fuente y el Product Owner puede corregirlos sin cambiar las decisiones.
+
+### 1.4 Decisiones del 2026-11-14 sobre la auditoría QA del backlog
+
+El Agente QA de backlog redactó estas decisiones para resolver los hallazgos críticos y mayores de auditorias/qa-clase2.md, con la autorización explícita del Product Owner del 2026-11-14 para modificar el spec-pack (PRINCIPIO-012). Son derivadas: el Product Owner puede revertirlas.
+
+| Tema | Decisión | Pregunta | Reglas | Hallazgo |
+|---|---|---|---|---|
+| Correos de la cuenta | Asunto y cuerpo del correo de verificación y del de recuperación de contraseña, en el estilo de los textos aprobados | — | Sección 2.9 (RN-152, RN-155) | C-02 |
+| El organizador deja de participar | Antes de fijar el orden, si el organizador pasa de "Sí participo" a "No participo", se libera su cupo; la junta vuelve a "Abierta" si estaba "Completa" (RN-101) y él no entra en la lista de entrada (RN-030) | PREG-056 | RN-212 | M-04 |
+| Bloqueo por códigos inválidos | RN-117 se aplica como está escrita: el bloqueo dura 3600 s desde el décimo código inválido. Los intentos rechazados durante el bloqueo no se validan y no cuentan como inválidos | PREG-057 | RN-117 (aclarada) | M-05 |
+| Desmarcar sin conexión | Texto del `{motivo}` cuando se desmarca sin conexión un pago que ya no estaba registrado | — | Sección 2.9 (RN-172) | M-03 |
+| Prioridad de RN-142 | Pasa de MUST a SHOULD, porque solo aplica cuando existe el push (F-07, Should). Su significado no cambia | — | RN-142 | M-11 |
 
 ---
 
@@ -511,6 +523,18 @@ El sistema DEBE aceptar como reglas de la junta solo un texto de hasta 2,000 car
 
 ---
 
+**RN-212** | Categoría: Juntas | Prioridad: MUST | Fuente: decisión del 2026-11-14 sobre auditorias/qa-clase2.md (M-04, PREG-056), derivada por el Agente QA de backlog con autorización del Product Owner
+
+Patrón EARS: Event-driven
+
+Cuando el organizador cambia su participación de "Sí participo" a "No participo" en una junta "Abierta" o "Completa", el sistema DEBE liberar su cupo.
+
+✅ **Ejemplo:** la Junta Familia está "Completa" con 12 de 12 cupos y Carmen participa. Carmen cambia a "No participo": la junta queda con 11 de 12 cupos y vuelve a "Abierta" (RN-101). Cuando otro familiar ocupa el cupo libre y Carmen sortea, la lista de entrada no incluye a Carmen (RN-030) y no se le generan cuotas (RN-044).
+
+❌ **Contraejemplo:** Carmen pasa a "No participo" y sigue ocupando un cupo, o su identificador queda en la lista de entrada del sorteo.
+
+---
+
 ### 2.2 Participantes
 
 ---
@@ -731,13 +755,15 @@ Si un usuario ingresa un código que no corresponde a ninguna junta, entonces el
 
 ---
 
-**RN-117** | Categoría: Participantes | Prioridad: MUST | Fuente: Product Owner a propuesta QA (2026-11-14, PREG-038)
+**RN-117** | Categoría: Participantes | Prioridad: MUST | Fuente: Product Owner a propuesta QA (2026-11-14, PREG-038) · Aclarada: inicio del bloqueo (2026-11-14, PREG-057, auditorias/qa-clase2.md M-05)
 
 Patrón EARS: Unwanted
 
 Si una cuenta ingresa 10 códigos de invitación inválidos en 3600 segundos, entonces el sistema DEBE rechazar sus intentos de unirse a una junta durante los 3600 segundos siguientes.
 
 ✅ **Ejemplo:** entre las `10:00` y las `10:20`, Rosa ingresa 10 códigos que no existen. A las `10:25` ingresa `T9QW3HZ5`, que es válido, y se rechaza. A las `11:21` se acepta.
+
+✅ **Ejemplo (inicio del bloqueo):** Rosa ingresa 9 códigos que no existen a las `10:00` y el décimo a las `10:59:00`. Los 3600 segundos se cuentan desde ese décimo código: a las `11:30` `T9QW3HZ5` se rechaza, y desde las `11:59:00` se acepta. Los intentos rechazados durante el bloqueo no se validan, así que no cuentan como códigos inválidos.
 
 ❌ **Contraejemplo:** una cuenta prueba 5,000 códigos en una hora.
 
@@ -1655,7 +1681,7 @@ Si el momento de un recordatorio ya pasó cuando se genera la cuota, entonces el
 
 ---
 
-**RN-142** | Categoría: Notificaciones | Prioridad: MUST | Fuente: Product Owner a propuesta QA (2026-11-14, PREG-041)
+**RN-142** | Categoría: Notificaciones | Prioridad: SHOULD | Fuente: Product Owner a propuesta QA (2026-11-14, PREG-041) · Modificada: prioridad MUST → SHOULD, porque solo aplica con el push de F-07 (2026-11-14, auditorias/qa-clase2.md M-11)
 
 Patrón EARS: Ubiquitous
 
@@ -2713,7 +2739,7 @@ Si el organizador cierra una encuesta de KPI-05 sin responderla, entonces la app
 
 ### 2.9 Mensajes al usuario
 
-Texto exacto que ve el usuario cuando una regla rechaza algo. Siguen RN-090 a RN-093. `{n}` y `{nombre}` son valores que calcula el sistema. En RN-164, `{n}` es la cantidad de minutos, redondeada hacia arriba, que faltan para que el pedido más antiguo de los últimos 900 segundos salga de esa ventana (derivado, sección 1.3). Los textos de RN-180, RN-181, RN-182, RN-198 y RN-207 son derivados (sección 1.3).
+Texto exacto que ve el usuario cuando una regla rechaza algo, y texto de los correos de la cuenta. Siguen RN-090 a RN-093. `{n}`, `{nombre}`, `{enlace}`, `{fecha}` (DD/MM/AAAA) y `{hora}` (HH:MM en America/Lima) son valores que calcula el sistema. Los textos de los correos de la cuenta y el `{motivo}` de un pago que ya no estaba registrado son derivados (sección 1.4). En RN-164, `{n}` es la cantidad de minutos, redondeada hacia arriba, que faltan para que el pedido más antiguo de los últimos 900 segundos salga de esa ventana (derivado, sección 1.3). Los textos de RN-180, RN-181, RN-182, RN-198 y RN-207 son derivados (sección 1.3).
 
 | RN | Situación | Mensaje |
 |---|---|---|
@@ -2769,6 +2795,11 @@ Texto exacto que ve el usuario cuando una regla rechaza algo. Siguen RN-090 a RN
 | RN-172 | Cambio rechazado al sincronizar | "No se pudo guardar un cambio hecho sin conexión: {motivo}." |
 | RN-172 | `{motivo}` de un pago ya registrado | "el pago de {nombre} de la ronda {n} ya estaba registrado" |
 | RN-172 | `{motivo}` de un pago informado sobre una cuota que ya no estaba pendiente | "su pago informado de la ronda {n} no se guardó porque la cuota ya no estaba pendiente" |
+| RN-172 | `{motivo}` de un pago desmarcado sin conexión que ya no estaba registrado | "el pago de {nombre} de la ronda {n} ya no estaba registrado" |
+| RN-152 | Correo de verificación: asunto | "Mi Junta: verifique su correo" |
+| RN-152 | Correo de verificación: cuerpo | "Hola, {nombre}. Para terminar de crear su cuenta en Mi Junta, abra este enlace: {enlace}. El enlace sirve hasta el {fecha} a las {hora}. Si usted no creó esta cuenta, ignore este correo." |
+| RN-155 | Correo de recuperación de contraseña: asunto | "Mi Junta: recupere su contraseña" |
+| RN-155 | Correo de recuperación de contraseña: cuerpo | "Hola, {nombre}. Recibimos un pedido para cambiar la contraseña de su cuenta. Para cambiarla, abra este enlace: {enlace}. El enlace sirve una sola vez, hasta el {fecha} a las {hora}. Si usted no lo pidió, ignore este correo y su contraseña seguirá igual." |
 | RN-174 | Un cambio pendiente | "1 cambio sin enviar." |
 | RN-174 | Dos o más cambios pendientes | "{n} cambios sin enviar." |
 | RN-179 | Reglas de la junta demasiado largas | "Las reglas de la junta pueden tener hasta 2,000 caracteres." |
@@ -2782,7 +2813,7 @@ Texto exacto que ve el usuario cuando una regla rechaza algo. Siguen RN-090 a RN
 
 ## 3. Temas pendientes
 
-Las RN nuevas toman el siguiente número libre (RN-212 en adelante). Los temas que esta sección tenía en la v0.2 se resolvieron el 2026-11-14 (sección 1.3).
+Las RN nuevas toman el siguiente número libre (RN-213 en adelante). Los temas que esta sección tenía en la v0.2 se resolvieron el 2026-11-14 (sección 1.3).
 
 | Tema | Qué falta | Estado |
 |---|---|---|

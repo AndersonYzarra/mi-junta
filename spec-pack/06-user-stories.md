@@ -1,6 +1,6 @@
 # Historias de usuario de Mi Junta
 
-Versión: 0.4.1
+Versión: 0.5.0
 Fecha: 14/11/2026
 Estado: Alineado con las decisiones del Product Owner
 
@@ -25,6 +25,11 @@ Fuente: 01-project-brief.md v0.2 (PRD), 02-alcance.md v0.2, 03-reglas-de-negocio
 - La v0.4.1 incorpora la segunda ronda de respuestas del 14/11/2026 (PREG-049 a PREG-054).
 - Cada HU termina con una **Revisión QA**: resultado INVEST, valores concretos, conformidad con la constitución y cobertura positivo / negativo / borde.
 
+**Marca de la auditoría QA del backlog (v0.5.0):**
+- **[QA2]**: criterio agregado para resolver un hallazgo de auditorias/qa-clase2.md, con su tipo (Positivo, Negativo o Borde). Usa las decisiones de 03-reglas-de-negocio.md v0.5 §1.4, aprobadas con autorización del Product Owner del 14/11/2026. Ningún criterio anterior cambió su texto.
+- HU-004 ya no lista RN-204 entre sus reglas relacionadas, porque esa regla Should solo se verifica en HU-018 (M-11).
+- HU-019 es una HU Must nueva para RN-200 a RN-203, las únicas reglas Must que no tenían HU. Sus criterios son escenarios técnicos, porque esas reglas no tienen pantalla.
+
 ---
 
 ## Resumen priorizado
@@ -41,16 +46,17 @@ Fuente: 01-project-brief.md v0.2 (PRD), 02-alcance.md v0.2, 03-reglas-de-negocio
 | 8 | HU-015 | Registrar y desmarcar pagos sin conexión | Must | F-04 | 4 | HU-008 |
 | 9 | HU-010 | Ver el estado compartido de la junta | Must | F-05 | 5 | HU-006 |
 | 10 | HU-011 | Recibir recordatorios de cuota por correo | Must | F-06 | 5 | HU-006 |
-| 11 | HU-009 | Informar el pago de mi cuota | Should | F-08 | 4 | HU-008 |
-| 12 | HU-012 | Recibir los recordatorios también como notificación push | Should | F-07 | 5 | HU-011 |
-| 13 | HU-016 | Recibir el aviso de cuotas vencidas | Should | F-16 | 5 | HU-011 |
-| 14 | HU-018 | Responder la encuesta de KPI-05 | Should | F-18 | 6 | HU-004 |
-| 15 | HU-007 | Asignar el orden de turnos sin sorteo | Should | F-10 | 3 | HU-005 |
-| 16 | HU-013 | Escribir las reglas de la junta para que todos las lean | Should | F-09 | 2 | HU-004 |
-| 17 | HU-017 | Borrar mi cuenta | Should | F-17 | 1 | HU-001 |
-| 18 | HU-003 | Activar el segundo factor por correo | Should | F-11 | 1 | HU-002 |
+| 11 | HU-019 | Proteger mis datos frente al equipo y a usos no consentidos | Must | F-01, F-04 | 1 | HU-001 |
+| 12 | HU-009 | Informar el pago de mi cuota | Should | F-08 | 4 | HU-008 |
+| 13 | HU-012 | Recibir los recordatorios también como notificación push | Should | F-07 | 5 | HU-011 |
+| 14 | HU-016 | Recibir el aviso de cuotas vencidas | Should | F-16 | 5 | HU-011 |
+| 15 | HU-018 | Responder la encuesta de KPI-05 | Should | F-18 | 6 | HU-004 |
+| 16 | HU-007 | Asignar el orden de turnos sin sorteo | Should | F-10 | 3 | HU-005 |
+| 17 | HU-013 | Escribir las reglas de la junta para que todos las lean | Should | F-09 | 2 | HU-004 |
+| 18 | HU-017 | Borrar mi cuenta | Should | F-17 | 1 | HU-001 |
+| 19 | HU-003 | Activar el segundo factor por correo | Should | F-11 | 1 | HU-002 |
 
-Las 10 HU Must forman el MVP de 02-alcance.md §3 (F-01 a F-06). El orden de las Should sigue su impacto en los KPI: HU-009 y HU-016 reducen el trabajo del organizador (KPI-05), HU-012 mitiga R-01 y R-10 (KPI-04), HU-018 mide KPI-05 y conviene publicarla con el MVP para tomar la línea base, HU-007 atiende PREG-018, HU-013 atiende PREG-016, HU-017 atiende PREG-006 y HU-003 es opcional para el usuario.
+Las 11 HU Must forman el MVP de 02-alcance.md §3 (F-01 a F-06). El orden de las Should sigue su impacto en los KPI: HU-009 y HU-016 reducen el trabajo del organizador (KPI-05), HU-012 mitiga R-01 y R-10 (KPI-04), HU-018 mide KPI-05 y conviene publicarla con el MVP para tomar la línea base, HU-007 atiende PREG-018, HU-013 atiende PREG-016, HU-017 atiende PREG-006 y HU-003 es opcional para el usuario.
 
 ---
 
@@ -200,6 +206,36 @@ Funcionalidades: F-01 (Must), F-11 (Should) y F-17 (Should).
 
 ---
 
+### HU-019: Proteger mis datos frente al equipo y a usos no consentidos
+
+**Prioridad:** Must
+
+**Como** usuario de Mi Junta, **quiero** que solo el líder técnico pueda entrar a los datos de producción, solo para un incidente registrado y sin poder descifrar mi DNI ni mi celular, y que mis pagos no se usen para evaluar créditos, **para** confiarle mis datos a la app.
+
+**Criterios de aceptación:**
+- [QA2] **Positivo.** DADO QUE el líder técnico necesita revisar el incidente `INC-001`, CUANDO entra a producción con el script de acceso el 20/11/2026 a las 21:05:00 e indica `INC-001`, ENTONCES `staff_access_log` guarda una fila con quién accedió, `accessed_at = "2026-11-20T21:05:00-05:00"` e `INC-001`, y recién después se abre la consola de PostgreSQL. (RN-201)
+- [QA2] **Negativo.** DADO QUE una persona del equipo de Mi Junta distinta del líder técnico intenta entrar al servidor de producción, CUANDO se conecta por SSH con su propia llave o con una contraseña, ENTONCES el servidor rechaza la conexión, porque la configuración de SSH solo acepta la llave del líder técnico y tiene `PasswordAuthentication no`. (RN-200)
+- [QA2] **Negativo.** DADO QUE el líder técnico ejecuta el script de acceso, CUANDO no indica ningún incidente, ENTONCES el script termina sin abrir la consola y `staff_access_log` no cambia. (RN-200, RN-201)
+- [QA2] **Negativo.** DADO QUE Lucía registró el DNI `45678912` y el celular `987654321`, CUANDO el líder técnico consulta `users` durante un incidente, ENTONCES `dni_ciphertext` y `phone_ciphertext` no contienen esos valores, y una búsqueda en el repositorio no encuentra ninguna ruta, script ni pantalla que llame al descifrado fuera del proceso de la app. (RN-202)
+- [QA2] **Negativo.** DADO QUE Jorge registró los pagos de Lucía de las rondas 1 y 2 de la Junta Oficina, CUANDO se revisan todas las rutas de la API y las exportaciones, ENTONCES ninguna entrega esos pagos para evaluar créditos, porque Lucía no dio un consentimiento específico para ese uso. (RN-203)
+- [QA2] **Borde.** DADO QUE `staff_access_log` tiene la fila del incidente `INC-001`, CUANDO el rol con el que inserta el script intenta un `UPDATE` o un `DELETE` sobre esa fila, ENTONCES la base de datos lo rechaza y la fila sigue igual. (RN-201)
+
+**Reglas de negocio relacionadas:** RN-200, RN-201, RN-202, RN-203
+
+**Notas:**
+- Agregada el 14/11/2026 en el cierre de auditorias/qa-clase2.md, para que toda RN Must tenga una HU. Antes, estas 4 reglas solo tenían escenarios técnicos (07-architecture.md §6.1).
+- Traza a F-01 (datos personales de la cuenta, PRINCIPIO-005) y a F-04 (pagos registrados, RN-203 y NO-04).
+- No tiene pantalla ni ruta propia. Sus criterios se prueban con escenarios técnicos (PREG-055): T-027 para RN-200 y RN-201, y T-004 y T-024 para RN-202 y RN-203.
+- Las decisiones de PREG-048 y PREG-015 son provisionales del Product Owner y se confirman con el asesor legal.
+
+**Revisión QA:**
+- **INVEST:** cumple I, N, V, E, S y T. **V:** el valor es la confianza del usuario en el manejo de sus datos (PREG-048), no una pantalla.
+- **Valores concretos:** el incidente `INC-001` es un dato de prueba, no un formato de negocio.
+- **Constitución:** cumple PRINCIPIO-005 (acceso del equipo restringido y registrado, sin descifrado a mano) y PRINCIPIO-011 (un escenario por RN).
+- **Cobertura:** positivo (acceso registrado), negativo (otra persona del equipo, sin incidente, sin descifrado, sin uso para créditos) y borde (registro inmutable).
+
+---
+
 ## Épica 2 · Creación y conformación de la junta
 
 Funcionalidades: F-02 (Must) y F-09 (Should).
@@ -224,7 +260,7 @@ Funcionalidades: F-02 (Must) y F-09 (Should).
 - [NUEVO] **Borde.** DADO QUE el 14/11/2026 Carmen completa el formulario, CUANDO ingresa la cuota "10.00" o "5000.00", 2 o 50 participantes, "cada 2 días" con 1 día de aviso o "cada 60 días" con 7 días de aviso, o un nombre de 3 caracteres ("Fam") o de 60 caracteres, ENTONCES la junta se crea, y las cuotas se guardan como `1000` y `500000`. (RN-003, RN-005, RN-008, RN-010, RN-012, RN-096, RN-040)
 - [NUEVO] **Borde.** DADO QUE Carmen ingresa la cuota "1000" o "1000.5", CUANDO pulsa "Crear junta", ENTONCES se guarda `100000` o `100050`; y con "1,000" o "20.805" ve "Ingrese el monto solo con números y un punto decimal, por ejemplo 1250.50.". (RN-097, RN-040)
 
-**Reglas de negocio relacionadas:** RN-001, RN-002, RN-003, RN-004, RN-005, RN-006, RN-007, RN-008, RN-009, RN-010, RN-011, RN-012, RN-015, RN-016, RN-040, RN-096, RN-097, RN-098, RN-099, RN-170, RN-204
+**Reglas de negocio relacionadas:** RN-001, RN-002, RN-003, RN-004, RN-005, RN-006, RN-007, RN-008, RN-009, RN-010, RN-011, RN-012, RN-015, RN-016, RN-040, RN-096, RN-097, RN-098, RN-099, RN-170
 
 **Notas:**
 - RN-016 tiene fuente "Business Analyst" y la validó el Product Owner el 14/11/2026.
@@ -257,8 +293,11 @@ Funcionalidades: F-02 (Must) y F-09 (Should).
 - [NUEVO] **Negativo.** DADO QUE la Junta Oficina ya fijó su orden de turnos, CUANDO Jorge intenta quitar a Pedro, ENTONCES se rechaza con "La junta ya fijó su orden de turnos. Ya no es posible quitar participantes." y Pedro sigue siendo miembro con todas sus cuotas. (RN-114, RN-112) [ALINEACIÓN] agrega el mensaje.
 - [NUEVO] **Borde.** DADO QUE la Junta Familia está "Abierta" con 9 cupos ocupados, CUANDO Carmen baja la cantidad de participantes a 9, ENTONCES el cambio se guarda y la junta pasa a `full`. (RN-108, RN-100)
 - [ALINEACIÓN] **Negativo.** DADO QUE el navegador de Carmen está en modo "Offline", CUANDO intenta cambiar la cuota de la Junta Familia, regenerar su código o quitar a un participante, ENTONCES ve "Necesita conexión a internet para hacer esto." y la junta no cambia. (RN-170)
+- [QA2] **Borde.** DADO QUE la Junta Familia está "Completa" con 12 de 12 cupos y no fijó su orden de turnos, CUANDO Carmen quita a un familiar que se unió por error, ENTONCES la junta queda con 11 de 12 cupos y vuelve a `open`. (RN-112, RN-113, RN-101)
+- [QA2] **Borde.** DADO QUE la Junta Familia está "Completa" con 12 de 12 cupos, CUANDO Carmen sube la cantidad de participantes a 13, ENTONCES el cambio se guarda, la junta queda con 12 de 13 cupos y vuelve a `open`. (RN-106, RN-107, RN-101)
+- [QA2] **Positivo.** DADO QUE la Junta Familia está "Completa" con 12 de 12 cupos y Carmen participa, CUANDO Carmen cambia a "No participo", ENTONCES la junta queda con 11 de 12 cupos y vuelve a `open`; y cuando otro familiar ocupa ese cupo y Carmen sortea, la lista de entrada no incluye a `user_123` y ninguna cuota está a su nombre. (RN-212, RN-101, RN-030, RN-044)
 
-**Reglas de negocio relacionadas:** RN-020, RN-024, RN-077, RN-100, RN-101, RN-106, RN-107, RN-108, RN-109, RN-110, RN-112, RN-113, RN-114, RN-170
+**Reglas de negocio relacionadas:** RN-020, RN-024, RN-030, RN-044, RN-077, RN-100, RN-101, RN-106, RN-107, RN-108, RN-109, RN-110, RN-112, RN-113, RN-114, RN-170, RN-212
 
 **Notas:**
 - Nace de la división de HU-004 aprobada el 14/11/2026. Sus criterios vienen de HU-004 v0.3.1 sin cambios, salvo el mensaje del criterio de quitar a Pedro.
@@ -296,6 +335,7 @@ Funcionalidades: F-02 (Must) y F-09 (Should).
 - [NUEVO] **Borde.** DADO QUE entre las 10:00 y las 10:20 Rosa ingresó 9 códigos que no existen, CUANDO a las 10:25 ingresa `T9QW3HZ5` y la Junta Familia tiene un cupo libre, ENTONCES se une a la junta. (RN-117)
 - [ALINEACIÓN] **Positivo.** DADO QUE la Junta Familia tiene un cupo libre y su código es `T9QW3HZ5`, CUANDO Rosa, con su correo verificado, ingresa ` t9qw3hz5 ` (en minúsculas y con espacios), ENTONCES se une a la junta. (RN-190)
 - [ALINEACIÓN] **Borde.** DADO QUE entre las 10:00 y las 10:20 Rosa ingresó 9 códigos que no existen y el código anulado `K7MP4XR2`, CUANDO a las 10:25 ingresa `T9QW3HZ5` y la Junta Familia tiene un cupo libre, ENTONCES se une, porque el código anulado no cuenta como inválido. (RN-192, RN-117)
+- [QA2] **Borde.** DADO QUE Rosa ingresó 9 códigos que no existen a las 10:00 y el décimo a las 10:59:00, y la Junta Familia tiene un cupo libre, CUANDO ingresa `T9QW3HZ5` a las 11:30, ENTONCES se rechaza con "Demasiados códigos no válidos. Intente de nuevo en 1 hora."; y si lo ingresa a las 11:59:00, se une a la junta. (RN-117)
 
 **Reglas de negocio relacionadas:** RN-017, RN-018, RN-019, RN-020, RN-021, RN-100, RN-101, RN-111, RN-113, RN-114, RN-115, RN-116, RN-117, RN-153, RN-170, RN-190, RN-192
 
@@ -482,8 +522,10 @@ Funcionalidades: F-04 (Must) y F-08 (Should). Desde la v0.4.0, el registro sin c
 - [ALINEACIÓN] **Positivo.** DADO QUE la tablet de Jorge no tiene conexión, CUANDO registra solo el pago de Lucía, ENTONCES ve "1 cambio sin enviar."; y cuando registra también el de Pedro, ve "2 cambios sin enviar.". (RN-174)
 - [ALINEACIÓN] **Negativo.** DADO QUE la tablet de Jorge tiene 2 cambios sin enviar, CUANDO pulsa "Cerrar sesión", ENTONCES ve "Hay cambios sin enviar (2). Si cierra sesión ahora, se perderán." y puede cancelar; si confirma, la app borra del dispositivo sus juntas y los 2 cambios. (RN-198, RN-197)
 - [ALINEACIÓN] **Borde.** DADO QUE Jorge cerró sesión en la tablet, CUANDO otra persona abre la app en esa tablet en modo "Offline", ENTONCES no ve la Junta Oficina ni la Junta Ventas. (RN-197)
+- [QA2] **Positivo.** DADO QUE el 28/11/2026 el pago de Lucía de la ronda 1 está registrado y la tablet de Jorge no tiene conexión, CUANDO Jorge lo desmarca a las 18:45, ENTONCES ve "1 cambio sin enviar."; y al reconectar, el servidor guarda la corrección con `performed_at = "2026-11-28T18:45:00-05:00"`, conserva el pago original y la cuota vuelve a `pending`. (RN-170, RN-174, RN-087, RN-173, RN-057, RN-058, RN-059)
+- [QA2] **Negativo.** DADO QUE a las 18:45 Jorge desmarcó sin conexión en su tablet el pago de Lucía de la ronda 1 y a las 18:50 lo desmarcó desde su celular con conexión, CUANDO la tablet reconecta a las 19:00, ENTONCES el cambio de la tablet se rechaza, no se guarda una segunda corrección y la tablet muestra "No se pudo guardar un cambio hecho sin conexión: el pago de Lucía de la ronda 1 ya no estaba registrado.". (RN-131, RN-171, RN-172)
 
-**Reglas de negocio relacionadas:** RN-087, RN-170, RN-171, RN-172, RN-173, RN-174, RN-176, RN-197, RN-198
+**Reglas de negocio relacionadas:** RN-057, RN-058, RN-059, RN-087, RN-131, RN-170, RN-171, RN-172, RN-173, RN-174, RN-176, RN-197, RN-198
 
 **Notas:**
 - Nace de la división de HU-008 aprobada el 14/11/2026. Sus 3 primeros criterios vienen de HU-008 v0.3.1 sin cambios.
@@ -734,8 +776,9 @@ Funcionalidad: F-18 (Should).
 | HU-016 | ⚠️ | ✅ | ✅ | ✅ | ✅ | ✅ | Reutiliza el worker de HU-011. Revisión QA pendiente. |
 | HU-017 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | El caso del organizador quedó definido con RN-207. Revisión QA pendiente. |
 | HU-018 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Cerrar la encuesta sin responder quedó definido con RN-210 y RN-211. Revisión QA pendiente. |
+| HU-019 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Agregada en el cierre de auditorias/qa-clase2.md. Sus criterios son escenarios técnicos. |
 
-**Negociable:** ninguna HU fija pantallas, endpoints ni tecnología más allá de lo que ya exigen las RN y la constitución. **Testable:** después de las dos correcciones, cada criterio tiene valores concretos (montos, fechas, horas, cupos, códigos y mensajes exactos) y se puede escribir como escenario Gherkin que cite sus RN (PRINCIPIO-011). Las 18 HU terminan con al menos un criterio positivo, uno negativo y uno de borde.
+**Negociable:** ninguna HU fija pantallas, endpoints ni tecnología más allá de lo que ya exigen las RN y la constitución. **Testable:** después de las dos correcciones, cada criterio tiene valores concretos (montos, fechas, horas, cupos, códigos y mensajes exactos) y se puede escribir como escenario Gherkin que cite sus RN (PRINCIPIO-011). Las 19 HU terminan con al menos un criterio positivo, uno negativo y uno de borde.
 
 ---
 
@@ -745,10 +788,10 @@ Funcionalidad: F-18 (Should).
 
 | Funcionalidad | Prioridad | HU |
 |---|---|---|
-| F-01 Cuenta con consentimiento | M | HU-001, HU-002 |
+| F-01 Cuenta con consentimiento | M | HU-001, HU-002, HU-019 |
 | F-02 Crear junta e invitar por código | M | HU-004, HU-014, HU-005 |
 | F-03 Sorteo auditable | M | HU-006 |
-| F-04 Registro de pagos | M | HU-008, HU-015 |
+| F-04 Registro de pagos | M | HU-008, HU-015, HU-019 (RN-203) |
 | F-05 Estado compartido de la junta | M | HU-010 |
 | F-06 Recordatorios por correo | M | HU-011 |
 | F-07 Notificaciones push | S | HU-012 |
@@ -767,7 +810,7 @@ Funcionalidad: F-18 (Should).
 
 ### Reglas de 03-reglas-de-negocio.md
 
-Las 211 reglas, de RN-001 a RN-211, están trazadas a al menos una de las 18 HU, excepto **RN-200 a RN-203**: el acceso del equipo a producción y el uso de datos para préstamos no tienen interacción del usuario, así que se verifican con escenarios técnicos (07-architecture.md §6.1), cada uno citando su RN (PRINCIPIO-011).
+Las 212 reglas, de RN-001 a RN-212, están trazadas a al menos una de las 19 HU. **RN-200 a RN-203** (el acceso del equipo a producción y el uso de datos para préstamos) no tienen interacción del usuario: desde el 14/11/2026 están en HU-019, cuyos criterios se verifican con escenarios técnicos (07-architecture.md §6.1), cada uno citando su RN (PRINCIPIO-011).
 
 La revisión QA encontró además estas reglas que tenían HU pero ningún criterio de su tipo, y que ahora lo tienen:
 
